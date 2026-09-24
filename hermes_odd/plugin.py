@@ -7,7 +7,8 @@ missing optional ``ctx`` method is skipped with a logged warning.
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from .commands import CommandRegistry, CommandSpec, build_registry
 from .prompt import SECTION_ID, SECTION_MAX_CHARS, build_odd_section

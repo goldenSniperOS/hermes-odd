@@ -28,8 +28,8 @@ registered with Hermes (``odd-commands``). Gateways accept both
 from __future__ import annotations
 
 import re
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
-from typing import Callable, Dict, Iterator, List, Optional
 
 COMMAND_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 COMMAND_NAME_MAX_CHARS = 32
@@ -60,9 +60,7 @@ def validate_command_name(name: str) -> None:
     if not isinstance(name, str) or not COMMAND_NAME_RE.fullmatch(name):
         raise ValueError(f"odd command name {name!r} must match [a-z0-9_]+")
     if len(name) > COMMAND_NAME_MAX_CHARS:
-        raise ValueError(
-            f"odd command name {name!r} exceeds {COMMAND_NAME_MAX_CHARS} characters"
-        )
+        raise ValueError(f"odd command name {name!r} exceeds {COMMAND_NAME_MAX_CHARS} characters")
     if name.startswith("_") or name.endswith("_") or "__" in name:
         # Telegram sanitization collapses and strips these, which would break
         # the round-trip back to the registered key.
@@ -73,7 +71,7 @@ class CommandRegistry:
     """Ordered collection of :class:`CommandSpec` with unique names."""
 
     def __init__(self) -> None:
-        self._specs: Dict[str, CommandSpec] = {}
+        self._specs: dict[str, CommandSpec] = {}
 
     def add(self, spec: CommandSpec) -> CommandSpec:
         validate_command_name(spec.name)
@@ -84,10 +82,10 @@ class CommandRegistry:
         self._specs[spec.name] = spec
         return spec
 
-    def get(self, name: str) -> Optional[CommandSpec]:
+    def get(self, name: str) -> CommandSpec | None:
         return self._specs.get(name)
 
-    def all(self) -> List[CommandSpec]:
+    def all(self) -> list[CommandSpec]:
         return list(self._specs.values())
 
     def __iter__(self) -> Iterator[CommandSpec]:

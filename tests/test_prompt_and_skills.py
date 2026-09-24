@@ -114,9 +114,17 @@ class SkillFileTests(unittest.TestCase):
 
     def test_skills_avoid_hermes_injection_patterns(self) -> None:
         # tools/skills_tool.py _INJECTION_PATTERNS logs a warning on load.
-        patterns = ["ignore previous instructions", "ignore all previous", "you are now",
-                    "disregard your", "forget your instructions", "new instructions:",
-                    "system prompt:", "<system>", "]]>"]
+        patterns = [
+            "ignore previous instructions",
+            "ignore all previous",
+            "you are now",
+            "disregard your",
+            "forget your instructions",
+            "new instructions:",
+            "system prompt:",
+            "<system>",
+            "]]>",
+        ]
         for path in SKILLS_DIR.glob("*/SKILL.md"):
             text = path.read_text(encoding="utf-8").lower()
             for pattern in patterns:
@@ -192,11 +200,11 @@ class CanonicalProvenanceTests(unittest.TestCase):
     def test_vendored_render_matches_its_sha(self) -> None:
         import hashlib
 
-        raw = (REPO_ROOT / "upstream" / "odd-routing-hermes.canonical.md").read_text(encoding="utf-8")
-        header, _, body = raw.partition("\n-->\n")
-        fields = dict(
-            line.split(": ", 1) for line in header.splitlines()[1:] if ": " in line
+        raw = (REPO_ROOT / "upstream" / "odd-routing-hermes.canonical.md").read_text(
+            encoding="utf-8"
         )
+        header, _, body = raw.partition("\n-->\n")
+        fields = dict(line.split(": ", 1) for line in header.splitlines()[1:] if ": " in line)
         self.assertEqual(fields["agent_id"], "hermes")
         self.assertRegex(fields["source_commit"], r"^[0-9a-f]{40}$")
         self.assertEqual(hashlib.sha256(body.encode("utf-8")).hexdigest(), fields["block_sha256"])

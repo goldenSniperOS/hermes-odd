@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 import sys
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -20,12 +21,12 @@ class FakeContext:
     """Records every ``register_*`` call made by the plugin."""
 
     def __init__(self) -> None:
-        self.commands: Dict[str, Dict[str, Any]] = {}
-        self.hooks: List[tuple] = []
-        self.prompt_sections: List[Dict[str, Any]] = []
-        self.tools: List[Dict[str, Any]] = []
-        self.skills: Dict[str, Dict[str, Any]] = {}
-        self.calls: List[str] = []
+        self.commands: dict[str, dict[str, Any]] = {}
+        self.hooks: list[tuple] = []
+        self.prompt_sections: list[dict[str, Any]] = []
+        self.tools: list[dict[str, Any]] = []
+        self.skills: dict[str, dict[str, Any]] = {}
+        self.calls: list[str] = []
 
     def register_command(
         self,
@@ -56,7 +57,7 @@ class FakeContext:
         name: str,
         path: Path,
         description: str = "",
-        frontmatter: Optional[Mapping[str, Any]] = None,
+        frontmatter: Mapping[str, Any] | None = None,
     ) -> None:
         # Mirrors PluginContext.register_skill validation (hermes_cli/plugins.py).
         self.calls.append("register_skill")

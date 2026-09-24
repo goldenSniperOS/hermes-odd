@@ -1,0 +1,41 @@
+name: Bug report
+description: Something in hermes-odd does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you got, and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: hermes-odd version (plugin.yaml or hermes plugins list)
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: hermes-version
+    attributes:
+      label: Hermes version (hermes --version)
+    validations:
+      required: true
+  - type: input
+    id: surface
+    attributes:
+      label: Where (CLI, TUI, or gateway platform)
+      placeholder: "CLI / Telegram / Discord / Slack ..."
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: grep hermes-odd ~/.hermes/logs/*.log | tail -30 (remove secrets and personal data)
+      render: text

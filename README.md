@@ -65,6 +65,26 @@ Restart the Hermes CLI or gateway so the plugin loads, then check it:
 hermes plugins list
 ```
 
+## Updating
+
+A plugin installed with `hermes plugins install` is a git checkout in
+`~/.hermes/plugins/hermes-odd`. Update it with:
+
+```bash
+hermes plugins update hermes-odd
+```
+
+This runs `git pull --ff-only` in the plugin directory (local edits are
+autostashed and re-applied). If you installed a pinned commit with `--ref`,
+reinstall instead:
+
+```bash
+hermes plugins install goldenSniperOS/hermes-odd --ref <40-char-commit-sha> --force --enable
+```
+
+Restart the Hermes CLI or gateway afterwards. Release notes on GitHub list
+the exact commit of each release.
+
 ## gentle-ai requirement
 
 > [!IMPORTANT]
@@ -118,12 +138,23 @@ registered name exactly.
 
 ## Development
 
-The plugin uses the Python standard library only. Tests use `unittest` and do
-not import Hermes. Run them from the repository root with the Hermes venv:
+The plugin uses the Python standard library only. Tests use `unittest`, do
+not import Hermes, and also run under pytest. From the repository root:
 
 ```bash
+# tests (Hermes venv python; no extra packages needed)
 ~/.hermes/hermes-agent/venv/bin/python -m unittest discover -s tests -v
+
+# lint and format (any ruff >= 0.6: ruff, uvx ruff or pipx run ruff)
+ruff check . && ruff format --check .
+
+# end-to-end smoke: loads the plugin through Hermes' PluginManager in a
+# throwaway HERMES_HOME; never touches ~/.hermes, no network, no model calls
+~/.hermes/hermes-agent/venv/bin/python scripts/smoke_e2e.py
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow and release process
+and [docs/design.md](docs/design.md) for the architecture.
 
 Layout:
 
@@ -136,6 +167,8 @@ Layout:
 - `skills/` — lazy plugin skills.
 - `upstream/` — vendored canonical sources for drift tracking.
 - `tests/` — `unittest` suite with a fake plugin context.
+- `scripts/smoke_e2e.py` — isolated load through Hermes' own plugin manager.
+- `docs/design.md` — architecture, prompt budget and Hermes API facts.
 
 ## Credits and acknowledgements
 

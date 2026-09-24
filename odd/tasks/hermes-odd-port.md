@@ -71,7 +71,7 @@ gateway.
 
 - [x] T1 Plugin scaffold: `plugin.yaml`, `__init__.py` `register(ctx)`, package layout,
       unittest harness with a fake `ctx`, README (install, gentle-ai binary-only rule).
-- [ ] T1b Project packaging modeled on goldenSniperOS/hermes-telegram-voicenote:
+- [x] T1b Project packaging modeled on goldenSniperOS/hermes-telegram-voicenote:
       `pyproject.toml` (entry point `hermes_agent.plugins`, ruff config, dev extras),
       `CHANGELOG.md` (Keep a Changelog), CI (ruff + tests on 3.11/3.12 + build), release
       workflow (tag == pyproject == plugin.yaml == `__version__`, tag on main, CHANGELOG

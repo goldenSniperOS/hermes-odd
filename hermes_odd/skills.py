@@ -1,6 +1,17 @@
 """Discovery and registration of the plugin's lazy skills.
 
-Each ``skills/<name>/SKILL.md`` in the plugin root is registered with
+Skills live in ``skills/`` at the repository root. Two install layouts are
+supported (see :func:`resolve_skills_dir` and ``docs/design.md``):
+
+* git clone (``hermes plugins install``): ``<plugin dir>/skills``;
+* wheel (``pip install``, entry point ``hermes_agent.plugins``):
+  ``pyproject.toml`` maps ``skills/`` to the data-only package
+  ``hermes_odd/_skills``.
+
+If neither exists, registration logs one warning and registers no skills;
+it never raises.
+
+Each ``skills/<name>/SKILL.md`` is registered with
 ``PluginContext.register_skill(name, path, description="", frontmatter=None)``
 (``hermes_cli/plugins.py``). Hermes exposes it as ``hermes-odd:<name>``;
 plugin skills stay out of the always-on skills index and load on demand via
@@ -17,18 +28,35 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 logger = logging.getLogger("hermes_odd")
 
-PLUGIN_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_DIR = PLUGIN_ROOT / "skills"
+PACKAGE_DIR = Path(__file__).resolve().parent
+PLUGIN_ROOT = PACKAGE_DIR.parent
 SKILL_FILE = "SKILL.md"
+# Candidate skill directories, most specific first: the wheel data package
+# (inside ``hermes_odd``) wins over a root-level ``skills/`` so a stray
+# ``site-packages/skills`` from another distribution is never picked up.
+SKILLS_DIR_CANDIDATES = (PACKAGE_DIR / "_skills", PLUGIN_ROOT / "skills")
 # Mirrors agent.skill_utils._NAMESPACE_RE.
 SKILL_NAME_RE = re.compile(r"^[a-zA-Z0-9_-]+$")
 REQUIRED_KEYS = ("name", "description", "version")
+
+
+def resolve_skills_dir(candidates: Sequence[Path] = SKILLS_DIR_CANDIDATES) -> Path | None:
+    """Return the first candidate directory holding at least one skill."""
+    for candidate in candidates:
+        if candidate.is_dir() and any(candidate.glob(f"*/{SKILL_FILE}")):
+            return candidate
+    return None
+
+
+# ``None`` when the install carries no skills; register_skills then warns.
+SKILLS_DIR: Path | None = resolve_skills_dir()
 
 
 class FrontmatterError(ValueError):
@@ -40,7 +68,7 @@ class SkillSpec:
     name: str
     path: Path
     description: str
-    frontmatter: Dict[str, Any] = field(default_factory=dict)
+    frontmatter: dict[str, Any] = field(default_factory=dict)
 
 
 def _parse_scalar(raw: str) -> Any:
@@ -57,7 +85,7 @@ def _parse_scalar(raw: str) -> Any:
     return value
 
 
-def parse_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
+def parse_frontmatter(text: str) -> tuple[dict[str, Any], str]:
     """Parse the leading ``---`` block; return ``(frontmatter, body)``."""
     if text.startswith("\ufeff"):
         text = text[1:]
@@ -69,8 +97,8 @@ def parse_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
     block = text[4:end]
     body = text[end + 5 :]
 
-    root: Dict[str, Any] = {}
-    stack: List[Tuple[int, Dict[str, Any]]] = [(-1, root)]
+    root: dict[str, Any] = {}
+    stack: list[tuple[int, dict[str, Any]]] = [(-1, root)]
     for lineno, line in enumerate(block.splitlines(), start=2):
         if not line.strip() or line.lstrip().startswith("#"):
             continue
@@ -86,7 +114,7 @@ def parse_frontmatter(text: str) -> Tuple[Dict[str, Any], str]:
         if rest.strip():
             parent[key] = _parse_scalar(rest)
         else:
-            child: Dict[str, Any] = {}
+            child: dict[str, Any] = {}
             parent[key] = child
             stack.append((indent, child))
     return root, body
@@ -104,20 +132,26 @@ def load_skill(skill_dir: Path) -> SkillSpec:
         raise FrontmatterError(f"{path}: name {name!r} must match directory {skill_dir.name!r}")
     if not SKILL_NAME_RE.match(name):
         raise FrontmatterError(f"{path}: name {name!r} must match [a-zA-Z0-9_-]+")
-    hermes = (frontmatter.get("metadata") or {}).get("hermes") if isinstance(
-        frontmatter.get("metadata"), dict
-    ) else None
-    if not isinstance(hermes, dict) or not isinstance(hermes.get("tags"), list) or not hermes.get(
-        "category"
+    hermes = (
+        (frontmatter.get("metadata") or {}).get("hermes")
+        if isinstance(frontmatter.get("metadata"), dict)
+        else None
+    )
+    if (
+        not isinstance(hermes, dict)
+        or not isinstance(hermes.get("tags"), list)
+        or not hermes.get("category")
     ):
         raise FrontmatterError(f"{path}: frontmatter needs metadata.hermes.tags and .category")
-    return SkillSpec(name=name, path=path, description=frontmatter["description"], frontmatter=frontmatter)
+    return SkillSpec(
+        name=name, path=path, description=frontmatter["description"], frontmatter=frontmatter
+    )
 
 
-def discover_skills(skills_dir: Path = SKILLS_DIR) -> List[SkillSpec]:
+def discover_skills(skills_dir: Path | None = SKILLS_DIR) -> list[SkillSpec]:
     """Return every valid skill under ``skills_dir``; invalid ones are logged."""
-    specs: List[SkillSpec] = []
-    if not skills_dir.is_dir():
+    specs: list[SkillSpec] = []
+    if skills_dir is None or not skills_dir.is_dir():
         return specs
     for skill_dir in sorted(p for p in skills_dir.iterdir() if p.is_dir()):
         if not (skill_dir / SKILL_FILE).is_file():
@@ -129,11 +163,17 @@ def discover_skills(skills_dir: Path = SKILLS_DIR) -> List[SkillSpec]:
     return specs
 
 
-def register_skills(ctx: Any, skills_dir: Path = SKILLS_DIR) -> int:
+def register_skills(ctx: Any, skills_dir: Path | None = SKILLS_DIR) -> int:
     """Register every shipped skill with Hermes; return how many succeeded."""
     register_skill = getattr(ctx, "register_skill", None)
     if not callable(register_skill):
         logger.warning("hermes-odd: ctx.register_skill is unavailable; skills skipped")
+        return 0
+    if skills_dir is None or not skills_dir.is_dir():
+        logger.warning(
+            "hermes-odd: no skills directory found (looked in %s); skills skipped",
+            ", ".join(str(p) for p in SKILLS_DIR_CANDIDATES),
+        )
         return 0
     registered = 0
     for spec in discover_skills(skills_dir):

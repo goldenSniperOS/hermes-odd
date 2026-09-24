@@ -7,3 +7,10 @@
 # Python
 __pycache__/
 *.pyc
+
+# Build and tool artifacts
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/

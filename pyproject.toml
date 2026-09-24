@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hermes-odd"
+version = "0.1.0"
+description = "Hermes Agent plugin: Organic Driven Development (ODD) and receipt-driven development (RDD) workflow harness."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+authors = [{ name = "Adrian Ruiz" }]
+keywords = ["hermes-agent", "plugin", "odd", "rdd", "workflow", "review"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<9", "ruff>=0.6,<1"]
+
+[project.urls]
+Homepage = "https://github.com/goldenSniperOS/hermes-odd"
+Issues = "https://github.com/goldenSniperOS/hermes-odd/issues"
+Changelog = "https://github.com/goldenSniperOS/hermes-odd/blob/main/CHANGELOG.md"
+
+[project.entry-points."hermes_agent.plugins"]
+hermes-odd = "hermes_odd:register"
+
+# The lazy skills and vendored upstream sources live at the repository root so
+# the git-clone install (``hermes plugins install``) finds them next to
+# ``plugin.yaml``. For a wheel they are mapped into data-only subpackages of
+# ``hermes_odd``; ``hermes_odd.skills`` looks there first. See docs/design.md.
+[tool.setuptools]
+packages = ["hermes_odd", "hermes_odd.commands", "hermes_odd._skills", "hermes_odd._upstream"]
+
+[tool.setuptools.package-dir]
+"hermes_odd._skills" = "skills"
+"hermes_odd._upstream" = "upstream"
+
+[tool.setuptools.package-data]
+"hermes_odd._skills" = ["*/SKILL.md", "**/*.md"]
+"hermes_odd._upstream" = ["*.md", "*.json"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# The ODD section is prompt text: one line per paragraph, wrapping would change
+# the prompt the model sees.
+"hermes_odd/prompt.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

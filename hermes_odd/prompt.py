@@ -16,7 +16,8 @@ into the prompt to save budget):
 
 from __future__ import annotations
 
-from typing import Any, Mapping, Optional
+from collections.abc import Mapping
+from typing import Any
 
 SECTION_ID = "hermes-odd-workflow"
 SECTION_MAX_CHARS = 4000
@@ -62,7 +63,7 @@ Before substantial work load with `skill_view`: hermes-odd:odd-workflow (routing
 """
 
 
-def build_odd_section(session_info: Optional[Mapping[str, Any]] = None) -> str:
+def build_odd_section(session_info: Mapping[str, Any] | None = None) -> str:
     """Return the compact ODD section. ``session_info`` is accepted for the
     Hermes callable contract; the text is static today."""
     return ODD_SECTION.strip()

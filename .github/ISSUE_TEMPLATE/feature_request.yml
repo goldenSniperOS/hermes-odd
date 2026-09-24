@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an improvement to hermes-odd
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What are you trying to do in Hermes?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - label: This is not an SDD feature (hermes-odd does not ship SDD).
+          required: true

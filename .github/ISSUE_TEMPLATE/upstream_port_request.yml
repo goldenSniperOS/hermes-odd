@@ -1,0 +1,42 @@
+name: Upstream port request
+description: Port a gentle-ai or gentle-shell feature, fix, or skill to hermes-odd
+labels: [upstream-port, needs-triage]
+body:
+  - type: dropdown
+    id: upstream
+    attributes:
+      label: Upstream project
+      options:
+        - gentle-ai
+        - gentle-shell (npm gentle-pi)
+    validations:
+      required: true
+  - type: input
+    id: release
+    attributes:
+      label: Upstream release or commit
+      description: Tag (for example v3.7.1) or full commit SHA.
+    validations:
+      required: true
+  - type: textarea
+    id: feature
+    attributes:
+      label: Feature
+      description: What changed upstream, with links to files, commits, or release notes.
+    validations:
+      required: true
+  - type: dropdown
+    id: portable
+    attributes:
+      label: Portable to Hermes?
+      description: Pi-only aesthetics, Pi runtime plumbing, and SDD are not portable.
+      options:
+        - "Yes: maps to a Hermes surface (prompt section, skill, command, hook, tool)"
+        - "No: Pi-only or SDD (explain below)"
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: mapping
+    attributes:
+      label: Hermes mapping or reason it is not portable

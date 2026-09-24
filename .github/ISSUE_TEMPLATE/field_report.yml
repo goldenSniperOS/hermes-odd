@@ -1,0 +1,65 @@
+name: Field report
+description: hermes-odd misbehaved on a real agent (workflow skipped, prompt dropped, command wrong or missing)
+labels: [field-report, needs-triage]
+body:
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: Symptom
+      options:
+        - The agent ignored the ODD workflow or a delegation trigger
+        - The hermes-odd prompt section was missing or truncated
+        - A hermes-odd skill was not found or not loaded
+        - A /odd_* command did not answer or answered wrongly
+        - Output differed between the CLI and a gateway
+        - Review (RDD) or gentle-ai CLI problem
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you sent, what you got, and what you expected.
+    validations:
+      required: true
+  - type: input
+    id: plugin-version
+    attributes:
+      label: hermes-odd version
+    validations:
+      required: true
+  - type: input
+    id: hermes-version
+    attributes:
+      label: Hermes version (hermes --version)
+    validations:
+      required: true
+  - type: input
+    id: gentle-ai-version
+    attributes:
+      label: gentle-ai version (gentle-ai version)
+  - type: input
+    id: platform
+    attributes:
+      label: Surface or gateway platform
+      placeholder: "CLI / TUI / Telegram / Discord / Slack ..."
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Main model and context length
+      placeholder: "provider/model, 200k"
+  - type: textarea
+    id: doctor
+    attributes:
+      label: /odd_doctor output
+      description: Paste the output of /odd_doctor (/odd-doctor in the CLI) if your version has it.
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: grep hermes-odd ~/.hermes/logs/*.log | tail -30 (remove secrets and personal data)
+      render: text
