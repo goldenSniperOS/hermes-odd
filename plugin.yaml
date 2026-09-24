@@ -1,0 +1,17 @@
+name: gentle-hermes
+version: 0.1.0
+manifest_version: 2
+kind: standalone
+description: >-
+  Gentle workflow for Hermes: Organic Driven Development (ODD) and
+  receipt-driven review (RDD) ported from gentle-shell and gentle-ai, with
+  plain-text slash commands that answer identically in the CLI and every
+  gateway without calling the model.
+author: goldenSniperOS
+license: MIT
+homepage: https://github.com/goldenSniperOS/gentle-hermes
+tags: [workflow, odd, rdd, review, gentle-ai]
+# Settings live under plugins.entries.gentle-hermes.settings; none are defined yet.
+config_schema: {}
+provides_tools: []
+provides_hooks: []

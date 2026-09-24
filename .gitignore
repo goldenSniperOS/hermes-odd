@@ -1,0 +1,9 @@
+# Local Pi runtime state
+.atl/
+
+# Local CodeGraph index
+.codegraph/
+
+# Python
+__pycache__/
+*.pyc
