@@ -54,9 +54,19 @@ class RegisterTests(unittest.TestCase):
             self.assertRegex(telegram_name, TELEGRAM_SAFE)
             self.assertEqual(telegram_name.replace("_", "-"), key)
 
-    def test_no_hooks_or_tools_registered_yet(self) -> None:
-        self.assertEqual(self.ctx.hooks, [])
+    def test_registers_observer_hooks_only(self) -> None:
+        names = sorted(name for name, _ in self.ctx.hooks)
+        self.assertEqual(
+            names, ["on_session_start", "post_tool_call", "subagent_start", "subagent_stop"]
+        )
+        self.assertNotIn("pre_tool_call", names)  # fails closed on timeout in Hermes
         self.assertEqual(self.ctx.tools, [])
+
+    def test_manifest_lists_the_registered_hooks(self) -> None:
+        manifest = (REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8")
+        line = next(ln for ln in manifest.splitlines() if ln.startswith("provides_hooks:"))
+        for name, _ in self.ctx.hooks:
+            self.assertIn(name, line)
 
 
 class DefensiveRegistrationTests(unittest.TestCase):

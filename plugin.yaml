@@ -15,4 +15,4 @@ tags: [workflow, odd, rdd, review, gentle-ai-compatible]
 # Settings live under plugins.entries.hermes-odd.settings; none are defined yet.
 config_schema: {}
 provides_tools: []
-provides_hooks: []
+provides_hooks: [on_session_start, subagent_start, post_tool_call, subagent_stop]

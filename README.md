@@ -18,8 +18,8 @@ preflight, or `gentle-sdd-*` commands.
 ## Status
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
-ships lazy ODD skills, and registers one command, `/odd_commands`.
-Viewers and RDD integration are planned (see
+ships lazy ODD skills, and registers `/odd_commands` and `/odd_agents`
+(unreleased). The other viewers and RDD integration are planned (see
 [Planned commands](#planned-commands)).
 
 ## What gets injected
@@ -130,12 +130,19 @@ registered name exactly.
 | Command | What it does |
 |---|---|
 | `/odd_commands` | Lists hermes-odd commands |
+| `/odd_agents [id\|all]` | Shows your `delegate_task` subagents: running first, then the last 24 h (up to 10; `all` lists up to 50, one line each). An id prefix shows one run: goal, role, status, timings, parent session and platform, a tool timeline and the child's summary |
+
+`/odd_agents` records only metadata, from Hermes' `subagent_start`,
+`post_tool_call` and `subagent_stop` hooks: per tool call the name,
+ok/error and duration. Tool arguments and results are never stored. Records
+live in the profile's plugin state, so a run started from Telegram is visible
+in the CLI of the same profile. Stopping a subagent from the command is not
+supported (Hermes has no safe plugin API for it); ask the agent to stop it.
 
 ## Planned commands
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:agents` + agents card | `/odd_agents [id]` | hooks `subagent_start/stop` + `ctx.state` |
 | `gentle:changes` | `/odd_changes` | `post_tool_call` on write/patch tools |
 | `todo` card + ODD feature doc | `/odd_tasks [feature]` | reads `odd/tasks/*.md` |
 | `gentle:status` | `/odd_status` | plugin, binary, review mode, prompt budget |

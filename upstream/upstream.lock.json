@@ -185,17 +185,30 @@
       ]
     },
     "viewers": {
-      "status": "pending",
+      "status": "partial",
       "tasks": ["T3", "T4", "T5", "T6"],
-      "description": "Plain-text viewer commands: /odd_agents, /odd_tasks, /odd_changes, /odd_status, /odd_doctor, /odd_commands (only /odd_commands ships today).",
+      "description": "Plain-text viewer commands: /odd_agents, /odd_tasks, /odd_changes, /odd_status, /odd_doctor, /odd_commands (/odd_commands and /odd_agents ship; T4-T6 pending).",
+      "port_notes": "/odd_agents (T3) is a concept port of the gentle-shell Gentle Agents TaskRecord model (extensions/gentle-agents.ts, lib/agents-protocol.ts, lib/agents-view.ts, docs/gentle-agents-activity.md): no upstream code or text is copied, so it carries no derived-from marker. The Pi card, widget and RPC activity transport are not ported.",
       "local_files": [
-        "hermes_odd/commands/meta.py"
+        "hermes_odd/commands/meta.py",
+        "hermes_odd/agents.py",
+        "hermes_odd/commands/agents.py"
       ],
       "sources": [
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-agents.ts",
           "sha256": "e75acd8c8fa46f55904d214ca6d3374cf553522d16ccce70593579353947fd4e"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/agents-protocol.ts",
+          "sha256": "1ea31b7baa19c1a871fed80c4622106cd0f93b449b74b0ef265e9d90340f7c6c"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/agents-view.ts",
+          "sha256": "071bcbb792cf3a160d640b9c06f9916ca388c3d629dd40285def1afef874c018"
         },
         {
           "upstream": "gentle-shell",

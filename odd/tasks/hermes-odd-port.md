@@ -92,7 +92,7 @@ gateway.
       `upstream/SUPPORTED.md` (human matrix + porting triage log per upstream release:
       ported / not portable + reason / pending). Tests that every `derived-from` marker
       is indexed in the lock.
-- [ ] T3 Subagent tracking + `/odd_agents` viewer.
+- [x] T3 Subagent tracking + `/odd_agents` viewer.
 - [ ] T4 `/odd_tasks` feature-task viewer.
 - [ ] T5 `/odd_changes` viewer.
 - [ ] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
@@ -129,6 +129,14 @@ gateway.
 
 ## Progress
 
+- 2026-09-24: **v0.1.0 released** (tag on 8f67746 `chore(release): 0.1.0`, CI + Release
+  workflows green; assets zip, wheel, sdist, SHA256SUMS; wheel verified to ship skills,
+  upstream lock and notices). Commits: T1 ce942ab, T2 333cd5e, T2c 8bc4966,
+  T1b 54591ff, T2b e6f8211. Upstream moved past pins (gentle-shell a923264 removes SDD
+  surfaces and touches indexed odd/viewers sources) -> triage pending next sync.
+- 2026-09-24: official channel to present the project upstream: gentle-ai GitHub
+  Discussions (CONTRIBUTING: ideas/general conversation), then community Discord and
+  Twitch stream chat with the Discussion link; post only after the repo is public.
 - 2026-09-24: T2 done: section `hermes-odd-odd` 3354 chars; skills odd-workflow,
   odd-delegation (split for size), odd-feature-tracking; canonical
   `RenderRouting(model.AgentHermes)` vendored from gentle-ai f182ea2. Hermes facts:

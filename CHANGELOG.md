@@ -6,6 +6,17 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `/odd_agents [id|all]` (`/odd-agents` in the CLI): plain-text view of `delegate_task`
+  subagents, a concept port of gentle-shell's Gentle Agents. Observer hooks
+  (`on_session_start`, `subagent_start`, `post_tool_call`, `subagent_stop`; never
+  `pre_tool_call`) keep one record per child in `ctx.state` (schema
+  `hermes-odd.agents/v1`, in-memory fallback): role, goal, status, timings, parent
+  session and platform, tool count, last tool and a 15-entry tool timeline, and the
+  child's own summary. Tool arguments and results are never stored. At most 50 records;
+  finished runs are dropped after 24 h and runs with no stop event after 6 h are marked
+  `stale`. Output stays under 3,500 characters for Telegram.
+
 ## [0.1.0] - 2026-09-24
 
 First release: the ODD foundation. Viewer commands (`/odd_agents`, `/odd_tasks`,

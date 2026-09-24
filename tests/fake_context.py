@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections.abc import Callable, Mapping
@@ -17,10 +18,31 @@ def ensure_repo_on_path() -> None:
         sys.path.insert(0, root)
 
 
+class FakeState:
+    """Dict-backed stand-in for ``PluginState`` (``get``/``set``, JSON only)."""
+
+    def __init__(self) -> None:
+        self.data: dict[str, str] = {}
+        self.sets = 0
+
+    def get(self, key: str, default: Any = None) -> Any:
+        raw = self.data.get(key)
+        return default if raw is None else json.loads(raw)
+
+    def set(self, key: str, value: Any) -> None:
+        # Round-trip through JSON like the real state file.
+        self.data[key] = json.dumps(value, ensure_ascii=False)
+        self.sets += 1
+
+    def dump(self) -> str:
+        return json.dumps(self.data, ensure_ascii=False)
+
+
 class FakeContext:
     """Records every ``register_*`` call made by the plugin."""
 
     def __init__(self) -> None:
+        self.state = FakeState()
         self.commands: dict[str, dict[str, Any]] = {}
         self.hooks: list[tuple] = []
         self.prompt_sections: list[dict[str, Any]] = []
@@ -47,6 +69,12 @@ class FakeContext:
     def register_hook(self, hook_name: str, callback: Callable) -> None:
         self.calls.append("register_hook")
         self.hooks.append((hook_name, callback))
+
+    def fire(self, hook_name: str, **kwargs: Any) -> None:
+        """Invoke registered callbacks with kwargs, as ``invoke_hook`` does."""
+        for name, callback in self.hooks:
+            if name == hook_name:
+                callback(**kwargs)
 
     def register_system_prompt_section(self, id: str, content: Any, **kwargs: Any) -> None:
         self.calls.append("register_system_prompt_section")

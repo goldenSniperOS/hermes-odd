@@ -85,14 +85,38 @@ Verified against the hermes-agent source; later tasks depend on them.
 - **Engram** tools are exposed as `mcp__engram__*`.
 - **`clarify`** exists: at most 4 choices plus "Other"; rendered as buttons on
   Telegram.
-- **Hooks** (for the viewers): `subagent_start` (child_session_id,
-  child_subagent_id `sa-*`, child_goal, child_role); `subagent_stop`
-  (child_session_id, child_status, child_summary, tool_call_history,
-  duration_ms; no subagent id); `post_tool_call` also fires for child tools,
-  with `task_id == child_subagent_id`.
+- **Hooks** (for the viewers) are called with keyword arguments
+  (`invoke_hook(name, **kwargs)`, plus `telemetry_schema_version`):
+  `subagent_start` (parent_session_id, parent_turn_id, parent_subagent_id,
+  child_session_id, child_subagent_id `sa-<index>-<hex8>`, child_role,
+  child_goal); `subagent_stop` (parent_session_id, parent_turn_id,
+  child_session_id, child_role, child_summary, child_status `completed` |
+  `failed` | `interrupted` | `timeout` | `error`, tool_call_history,
+  duration_ms; no subagent id, always run on the parent thread);
+  `post_tool_call` (tool_name, args, result, task_id, session_id,
+  tool_call_id, turn_id, duration_ms, status `ok` | `error`, error_type,
+  error_message) also fires for child tools, with
+  `task_id == child_subagent_id`, on a timeout-bounded worker;
+  `on_session_start` (session_id, model, platform) fires only for brand-new
+  sessions. `pre_tool_call` fails closed on timeout, so hermes-odd never
+  registers it.
 - **State**: `ctx.state` is JSON under `<HERMES_HOME>/plugin-data/...`,
   cross-process locked, persistent across restarts, and shared by the CLI and
-  the gateway of the same profile.
+  the gateway of the same profile. Its API is `get(key, default)` and
+  `set(key, value)`; each call re-reads the file under the lock and `set`
+  enforces a 10 MB quota. There is no atomic update across a `get` and a
+  `set`.
+- **Subagent control**: `ctx.subagent_lifecycle` only cancels children it
+  launched itself (its handles are HMAC-bound to its own `launch` and to the
+  active parent in the calling context); `delegate_task` children are not in
+  its registry. `delegate_task` `action=stop` is a model-facing tool scoped to
+  the calling conversation's own spawn tree, and
+  `tools.delegate_tool.interrupt_subagent` is an internal, unscoped,
+  in-process function. Command handlers receive only `raw_args`, so a plugin
+  command cannot stop a child safely; `/odd_agents` does not offer stop.
+- **Gateway replies**: plugin command text is returned as the reply; the
+  Telegram adapter splits messages over 4,096 characters, but hermes-odd keeps
+  command output under 3,500 characters so it never needs splitting.
 
 ## Command naming
 
@@ -116,6 +140,64 @@ locked across processes and persistent, a subagent started from Telegram is
 visible to `/odd-agents` in the CLI of the same profile, and survives a
 gateway restart. Feature tasks are not duplicated in state: `/odd_tasks` reads
 the project's `odd/tasks/*.md` feature documents directly.
+
+### Subagent records (`/odd_agents`)
+
+`hermes_odd/agents.py` keeps one JSON document, schema
+`hermes-odd.agents/v1`, under the state key `agents.v1`: a list of records,
+one per `delegate_task` child. It is a concept port of gentle-shell's Gentle
+Agents `TaskRecord` (id, agent, label, status, timestamps, last step, last
+activity, tool calls, result or error); no upstream code or text is copied.
+
+| Field | Source |
+|---|---|
+| `subagent_id`, `child_session_id`, `parent_session_id`, `parent_subagent_id`, `role`, `goal` (200 chars) | `subagent_start` |
+| `platform` | `on_session_start` of the parent session (kept in memory), or the parent child's record for nested children; empty for resumed sessions |
+| `status` | `running` on start; `subagent_stop` `child_status` maps `completed`, `failed`/`error` -> `failed`, `interrupted`, `timeout` -> `timed_out`, anything else -> `failed`; `stale` from pruning |
+| `started_at`, `ended_at`, `duration_ms`, `last_activity_at` | hook arrival times; `duration_ms` from `subagent_stop` |
+| `tool_calls`, `last_tool` (name + ok/error), `timeline` (last 15: name, ok/error, duration, time) | `post_tool_call` whose `task_id` is a child this process started |
+| `summary` (1,500 chars), `error` | `subagent_stop` (`error` is only `child status: <raw>`) |
+
+- **Correlation.** `subagent_stop` has no subagent id, so it matches the
+  record by `child_session_id`. A stop with no known start creates a record
+  with a synthetic `sx-<hash>` id and backfills the tool count and timeline
+  from the metadata-only `tool_call_history` (names and ok/error only).
+- **Hot path.** `post_tool_call` fires for every tool call. The store keeps
+  the ids of the children it saw start in memory (a child always runs in its
+  parent's process), so a parent or unrelated tool call returns without
+  touching state.
+- **Retention.** At most 50 records (oldest finished dropped first). Records
+  not `running` are dropped 24 h after they ended (or their last activity).
+  A record still `running` 6 h after it started is marked `stale` (kept, then
+  dropped by the 24 h rule).
+- **Failure.** Hook handlers never raise and log at debug level. When
+  `ctx.state` is missing or a `get`/`set` fails (corrupt file, quota), the
+  store switches to an in-memory backend for the rest of the process with one
+  warning.
+- **Concurrency.** A read-modify-write is a `get` plus a `set`, serialized by
+  a process-local lock. Two processes of one profile writing at the same
+  moment can drop one update; this is rare because the hooks for a child all
+  fire in its parent's process.
+
+### Privacy
+
+Records never contain tool arguments, tool results, tool error messages or
+anything derived from them: per tool call only the name, ok/error, duration
+and time. `tool_call_history`'s `tool_input` summary is ignored. The goal is
+the parent's own delegation text, truncated to 200 characters; the summary is
+the child's own final summary, truncated to 1,500. Tests feed a fake secret
+through `args`, `result`, `error_message` and `tool_input` and assert it is
+absent from the stored state and from every `/odd_agents` output.
+
+### Output
+
+`/odd_agents` answers in plain text (no Markdown tables) under 3,500
+characters: a count line, then up to 10 blocks (running first, newest
+first) of `<glyph> <short id> <role> · <elapsed>`, the goal on one line, and
+`last: <tool> <ok|error> · <n> tools`. Glyphs: `●` running, `✓` completed,
+`✗` failed, `⊘` interrupted, `⏱` timed out, `○` stale. `/odd_agents <id
+prefix>` matches the full id or its 8-hex tail; `all` lists up to 50 one-line
+entries. Anything cut ends with `… N more`.
 
 ## Install layouts and skill discovery
 

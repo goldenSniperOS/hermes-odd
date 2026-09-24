@@ -7,7 +7,12 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
 * ``odd-commands`` is registered and its handler lists itself as plain text;
 * the ``hermes-odd-workflow`` prompt section is registered, renders, and fits
   in 4000 characters;
-* the three ``hermes-odd:*`` ODD skills are registered.
+* the three ``hermes-odd:*`` ODD skills are registered;
+* the subagent observer hooks are registered, and a synthetic
+  ``subagent_start`` / ``post_tool_call`` / ``subagent_stop`` lifecycle
+  dispatched through Hermes' own ``PluginManager.invoke_hook`` shows up in
+  ``/odd-agents`` (list and detail), persisted in the throwaway home's
+  ``plugin-data`` state, with the fake secret in the tool args never stored.
 
 Isolation: the temporary home holds only a ``config.yaml`` that enables
 ``hermes-odd`` and a ``plugins/hermes-odd`` symlink to this checkout. Nothing
@@ -38,6 +43,8 @@ COMMAND_KEY = "odd-commands"
 SECTION_ID = "hermes-odd-workflow"
 SECTION_LIMIT = 4000
 EXPECTED_SKILLS = ["odd-delegation", "odd-feature-tracking", "odd-workflow"]
+AGENT_HOOKS = ["on_session_start", "subagent_start", "post_tool_call", "subagent_stop"]
+FAKE_SECRET = "sk-smoke-FAKE-SECRET-not-real"
 
 
 class SmokeFailure(AssertionError):
@@ -94,6 +101,78 @@ def run(temp_home: Path) -> None:
     for name in EXPECTED_SKILLS:
         path = manager.find_plugin_skill(f"{PLUGIN}:{name}")
         check(path is not None and Path(path).is_file(), f"{PLUGIN}:{name} resolves to a file")
+
+    run_agents_lifecycle(manager, temp_home)
+
+
+def run_agents_lifecycle(manager, temp_home: Path) -> None:
+    for hook in AGENT_HOOKS:
+        check(bool(manager._hooks.get(hook)), f"hook {hook!r} is registered")
+    check(not manager._hooks.get("pre_tool_call"), "pre_tool_call is not registered")
+
+    parent = "smoke-parent-session"
+    child = "smoke-child-session"
+    subagent_id = "sa-0-5e0e5e0e"
+    # Same kwargs shape as run_agent / delegate_tool / model_tools.
+    manager.invoke_hook("on_session_start", session_id=parent, model="smoke", platform="telegram")
+    manager.invoke_hook(
+        "subagent_start",
+        parent_session_id=parent,
+        parent_turn_id="turn-1",
+        parent_subagent_id=None,
+        child_session_id=child,
+        child_subagent_id=subagent_id,
+        child_role="leaf",
+        child_goal="Smoke: read the README and summarize the install steps",
+    )
+    for name, status in (("read_file", "ok"), ("search_files", "ok"), ("terminal", "error")):
+        manager.invoke_hook(
+            "post_tool_call",
+            tool_name=name,
+            args={"path": "README.md", "token": FAKE_SECRET},
+            result=f'{{"content": "{FAKE_SECRET}"}}',
+            task_id=subagent_id,
+            session_id=child,
+            tool_call_id=f"call-{name}",
+            turn_id="turn-1",
+            api_request_id="",
+            duration_ms=42,
+            status=status,
+            error_type="tool_error" if status == "error" else None,
+            error_message=FAKE_SECRET if status == "error" else None,
+            middleware_trace=[],
+        )
+    manager.invoke_hook(
+        "subagent_stop",
+        parent_session_id=parent,
+        parent_turn_id="turn-1",
+        child_session_id=child,
+        child_role="leaf",
+        child_summary="Install with hermes plugins install; enable in config.yaml.",
+        child_status="completed",
+        tool_call_history=[{"tool_name": "read_file", "tool_input": FAKE_SECRET, "status": "ok"}],
+        duration_ms=61_000,
+    )
+
+    command = manager._plugin_commands.get("odd-agents")
+    check(command is not None, "/odd-agents is registered")
+    listing = command["handler"]("")
+    check("✓ 5e0e5e0e leaf" in listing, "/odd-agents lists the completed subagent")
+    check("last: terminal error · 3 tools" in listing, "/odd-agents shows the last tool and count")
+    detail = command["handler"]("5e0e")
+    check("platform: telegram" in detail, "detail resolves the parent platform")
+    check("summary:" in detail and "hermes plugins install" in detail, "detail shows the summary")
+    print("---- /odd-agents output ----")
+    print(listing)
+    print("---- /odd-agents 5e0e output ----")
+    print(detail)
+    print("----------------------------")
+
+    state_files = list((temp_home / "plugin-data").rglob("state.json"))
+    check(len(state_files) == 1, f"agent state persisted under {temp_home / 'plugin-data'}")
+    raw = state_files[0].read_text(encoding="utf-8")
+    check("hermes-odd.agents/v1" in raw, "state document uses schema hermes-odd.agents/v1")
+    check(FAKE_SECRET not in raw + listing + detail, "tool args and results never stored or shown")
 
 
 def main() -> int:

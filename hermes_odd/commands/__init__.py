@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..agents import AgentStore
+from .agents import make_odd_agents
 from .meta import make_odd_commands
 from .registry import (
     COMMAND_NAME_RE,
@@ -12,10 +14,15 @@ from .registry import (
 )
 
 
-def build_registry() -> CommandRegistry:
-    """Return the registry holding every odd command."""
+def build_registry(agent_store: AgentStore | None = None) -> CommandRegistry:
+    """Return the registry holding every odd command.
+
+    ``agent_store`` feeds ``/odd_agents``; without one an empty in-memory store
+    is used (the command then answers that no subagents are recorded).
+    """
     registry = CommandRegistry()
     registry.add(make_odd_commands(registry))
+    registry.add(make_odd_agents(agent_store if agent_store is not None else AgentStore()))
     return registry
 
 

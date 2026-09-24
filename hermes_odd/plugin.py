@@ -10,6 +10,7 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
+from .agents import AgentStore, register_agent_hooks, resolve_backend
 from .commands import CommandRegistry, CommandSpec, build_registry
 from .prompt import SECTION_ID, SECTION_MAX_CHARS, build_odd_section
 from .skills import register_skills
@@ -78,8 +79,14 @@ def register(ctx: Any) -> None:
         register_skills(ctx)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: skill registration failed: %s", exc)
+    agent_store: AgentStore | None = None
     try:
-        registry = build_registry()
+        agent_store = AgentStore(resolve_backend(ctx))
+        register_agent_hooks(ctx, agent_store)
+    except Exception as exc:  # noqa: BLE001 - never break Hermes startup
+        logger.warning("hermes-odd: subagent tracking failed to start: %s", exc)
+    try:
+        registry = build_registry(agent_store)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: command registry failed to build: %s", exc)
         return
