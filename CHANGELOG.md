@@ -6,6 +6,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-24
+
+First release: the ODD foundation. Viewer commands (`/odd_agents`, `/odd_tasks`,
+`/odd_changes`, `/odd_status`, `/odd_doctor`) arrive in 0.2.0 and RDD in 0.3.0.
+
 ### Added
 - Hermes plugin scaffold: `plugin.yaml` manifest, root `__init__.py` entry point for
   `hermes plugins install`, `hermes_odd` package with a guarded `register(ctx)` that
@@ -36,7 +41,5 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `docs/design.md` and an
   isolated end-to-end smoke (`scripts/smoke_e2e.py`).
 
-### Changed
-- Renamed the project to hermes-odd: plugin `hermes-odd`, package `hermes_odd`, skill
-  namespace `hermes-odd:*`, command prefix `/odd_*`, repository
-  `goldenSniperOS/hermes-odd`.
+[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/goldenSniperOS/hermes-odd/releases/tag/v0.1.0
