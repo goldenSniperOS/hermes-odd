@@ -21,6 +21,13 @@ and the project uses [Semantic Versioning](https://semver.org/).
   (`upstream/odd-routing-hermes.canonical.md`, from
   `RenderRouting(model.AgentHermes)`) with a SHA-256 provenance test, for drift
   tracking.
+- Upstream support matrix: `upstream/upstream.lock.json` (schema
+  `hermes-odd.upstream-lock/v1`) pins gentle-ai v3.7.0 (`f182ea2`, binary >= 3.7.0) and
+  gentle-shell v3.7.0+16 (`4d702a4`, npm `gentle-pi` 3.7.0) and indexes every upstream
+  source per component with its SHA-256; `upstream/SUPPORTED.md` holds the human matrix,
+  the sync procedure and the triage log; `hermes_odd.upstream` reads the lock
+  (`load_lock()`, `min_gentle_ai_version()`), and tests cross-check it against the
+  `derived-from` markers, `THIRD_PARTY_NOTICES.md` and the canonical render.
 - Credits, non-affiliation notice and `THIRD_PARTY_NOTICES.md` with the upstream MIT
   notices of gentle-ai and gentle-shell and the list of derived files.
 - Project packaging: `pyproject.toml` (entry point `hermes_agent.plugins`, skills

@@ -70,10 +70,20 @@ text you derive from an upstream project must:
    pinned 40-character commit and the upstream source path, in the form
    `<!-- derived-from: <upstream>@<commit> <path> -->` (inside a docstring
    or comment for Python files);
-2. be listed under that upstream in `THIRD_PARTY_NOTICES.md`.
+2. be listed under that upstream in `THIRD_PARTY_NOTICES.md`;
+3. have its upstream source path indexed, with the SHA-256 at the pinned
+   commit, under its component in `upstream/upstream.lock.json`.
+
+Upstream versions are supported by pinned commit. Syncing to a newer
+upstream follows the procedure in
+[`upstream/SUPPORTED.md`](upstream/SUPPORTED.md): triage every upstream
+change into its triage log (ported, not portable and why, or pending), then
+update the derived files, markers, notices, canonical render and lock
+together. `tests/test_upstream_lock.py` cross-checks them.
 
 `tests/test_naming_and_attribution.py` fails when a marked file is missing
-from the notices. Never use upstream marks (Gentle AI, gentle-shell,
+from the notices, and `tests/test_upstream_lock.py` when a marker is not
+indexed in the lock. Never use upstream marks (Gentle AI, gentle-shell,
 gentle-pi, Engram) as a product name; use them only to describe what
 hermes-odd is based on or compatible with.
 

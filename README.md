@@ -44,6 +44,16 @@ Viewers and RDD integration are planned (see
 The canonical gentle-ai routing render for Hermes is vendored in
 `upstream/odd-routing-hermes.canonical.md` for drift tracking.
 
+## Upstream compatibility
+
+hermes-odd supports **gentle-ai v3.7.0** (binary >= 3.7.0) and **gentle-shell
+v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits in
+[`upstream/upstream.lock.json`](upstream/upstream.lock.json).
+[`upstream/SUPPORTED.md`](upstream/SUPPORTED.md) has the support matrix per
+component (ODD, RDD, review contract, viewers), the upstream sync procedure and
+the triage log that records, for every upstream change, whether it was ported,
+is not portable (and why) or is pending.
+
 ## Install
 
 ```bash
@@ -163,9 +173,11 @@ Layout:
 - `hermes_odd/plugin.py` — `register(ctx)` wiring.
 - `hermes_odd/prompt.py` — compact always-on ODD section.
 - `hermes_odd/skills.py` — discovery and registration of `skills/*/SKILL.md`.
+- `hermes_odd/upstream.py` — reads the upstream support lock.
 - `hermes_odd/commands/` — declarative command registry and commands.
 - `skills/` — lazy plugin skills.
-- `upstream/` — vendored canonical sources for drift tracking.
+- `upstream/` — upstream support lock and matrix (`upstream.lock.json`,
+  `SUPPORTED.md`) and vendored canonical sources for drift tracking.
 - `tests/` — `unittest` suite with a fake plugin context.
 - `scripts/smoke_e2e.py` — isolated load through Hermes' own plugin manager.
 - `docs/design.md` — architecture, prompt budget and Hermes API facts.

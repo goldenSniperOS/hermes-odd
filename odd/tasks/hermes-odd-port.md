@@ -86,7 +86,7 @@ gateway.
       Alan Buscaglia / Gentleman Programming; Hermes Agent by Nous Research),
       `THIRD_PARTY_NOTICES.md` with both upstream MIT notices (Gentleman Programming;
       Mario Zechner) and which files derive from each. No upstream marks as product name.
-- [ ] T2b Upstream support matrix: `upstream/upstream.lock.json` (last supported
+- [x] T2b Upstream support matrix: `upstream/upstream.lock.json` (last supported
       gentle-ai binary version/commit, gentle-shell/gentle-pi version/commit, and per
       component ODD/RDD/gentle-review: upstream source paths + sha256) and
       `upstream/SUPPORTED.md` (human matrix + porting triage log per upstream release:

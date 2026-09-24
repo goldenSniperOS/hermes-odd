@@ -1,0 +1,287 @@
+{
+  "schema": "hermes-odd.upstream-lock/v1",
+  "updated": "2026-09-24",
+  "notes": "Authoritative record of the upstream versions hermes-odd supports. sha256 values hash the file content at pinned_commit (git show <commit>:<path> | shasum -a 256). Human triage of upstream changes lives in upstream/SUPPORTED.md.",
+  "upstreams": {
+    "gentle-ai": {
+      "repo": "https://github.com/Gentleman-Programming/gentle-ai",
+      "supported_release": "v3.7.0",
+      "pinned_commit": "f182ea2018a6399f5d1b6557cf36d71a3df0f723",
+      "commit_date": "2026-09-23T17:09:40+02:00",
+      "release_tag_commit": "6dee8f833aec9e46015759c5065a9035795d9af1",
+      "release_note": "The v3.7.0 tag object points at 6dee8f8, which is not on the rewritten main history. f182ea2 is on main: its parent 204ccbd is the main-history equivalent of the tag (identical tree except the removed .engram/ directory) and f182ea2 only adds a README badge. Every source below hashes identically at the tag and at the pin.",
+      "binary": {
+        "name": "gentle-ai",
+        "min_version": "3.7.0",
+        "tested_version": "3.7.0",
+        "used_for": "RDD through the `gentle-ai review` CLI and `gentle-ai review mode`; never `gentle-ai install` or `gentle-ai sync` for Hermes"
+      }
+    },
+    "gentle-shell": {
+      "repo": "https://github.com/Gentleman-Programming/gentle-shell",
+      "supported_release": "v3.7.0",
+      "pinned_commit": "4d702a47a31eade9ea197d9280ba1d0afe8b93f4",
+      "commit_date": "2026-09-24T01:23:24-03:00",
+      "release_tag_commit": "59257bff7023b44837cd4ff3edc3807f777be458",
+      "describe": "v3.7.0-16-g4d702a4",
+      "release_note": "Pinned 16 commits after the v3.7.0 tag; those commits are triaged in upstream/SUPPORTED.md. gentle-pi 3.7.0 pins the gentle-ai 3.7.0 binary (scripts/gentle-ai-installer.mjs INSTALLER_VERSION).",
+      "npm": {
+        "package": "gentle-pi",
+        "version": "3.7.0"
+      }
+    }
+  },
+  "components": {
+    "odd": {
+      "status": "ported",
+      "description": "Compact always-on ODD prompt section and the lazy odd-* skills; canonical gentle-ai routing render for Hermes vendored for drift comparison.",
+      "local_files": [
+        "hermes_odd/prompt.py",
+        "skills/odd-workflow/SKILL.md",
+        "skills/odd-delegation/SKILL.md",
+        "skills/odd-feature-tracking/SKILL.md",
+        "upstream/odd-routing-hermes.canonical.md"
+      ],
+      "sources": [
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/components/agentguidance/routing.go",
+          "sha256": "d00d1942ee623660707e7296dd6f66a37b87aa56e940c325a2f111efad864ea6"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/agents/capabilitymanifest/manifest.go",
+          "sha256": "b67e9f20a021caeb8556a15076a48a83aa56ee9132f5f8c39d794e51c95e3eef"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-ai.ts",
+          "sha256": "0fef2ef2786b88922cb37fb89862a025d1b7138c45d2365e2f5f80fd1e75b981"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/orchestrator.md",
+          "sha256": "1c12b59f846617a99da902442ea24353a9b35a6fb9a6332cbff90368260b447f"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/orchestrator-delegation.md",
+          "sha256": "c4e1f93fce87192b746abb3cfccbb4aa03103c7918462292afbcb66d60f14759"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/orchestrator-skills.md",
+          "sha256": "be2441010e0f46efcdfdec3368d4184b4f410401bf8ac71218aa13273ccc465c"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/orchestrator-memory.md",
+          "sha256": "2c05443b95682d5e1e22c0363bc8eaac62a8ad4e30be9a2b63aaf5b7628485c4"
+        }
+      ]
+    },
+    "rdd": {
+      "status": "pending",
+      "tasks": ["T7", "T8"],
+      "description": "Receipt-driven development for Hermes: rdd-review skill (orchestration contract) and the odd_review tool facade over the gentle-ai review CLI (opaque bindings, consent relay).",
+      "local_files": [],
+      "planned_files": [
+        "skills/rdd-review/SKILL.md",
+        "hermes_odd/review.py"
+      ],
+      "sources": [
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/skills/rdd-defect-workflow/SKILL.md",
+          "sha256": "7dcabfdf0aee1ddc9e509107b8b58b96ec6e0b9428732f7fe621001847e2a405"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "skills/rdd-defect-workflow/SKILL.md",
+          "sha256": "effba22db780a83362dc4c878de3e3c7ddd33b8935ea082f47758d90ae39df56"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "docs/review-integration.md",
+          "sha256": "9b60fa2775129c468f7eb3510905014553cee5f3cbcb78a608f08baf8bbd7336"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-ai.ts",
+          "sha256": "0fef2ef2786b88922cb37fb89862a025d1b7138c45d2365e2f5f80fd1e75b981"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/review-integration-v2.ts",
+          "sha256": "b35b216a992f2fea993c29f3f9ad1cb96195c6fde832c99ee5e939530f00b235"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/native-review-cli.ts",
+          "sha256": "f25aa1e680c13a5b495d65f3bebe0ce4c1851f5cc6e30d5f55d38be85f8b54d4"
+        }
+      ]
+    },
+    "review-contract": {
+      "status": "pending",
+      "tasks": ["T7", "T8"],
+      "description": "Versions of the gentle-ai review CLI contract and of the provider contract mirror that the odd_review facade will speak.",
+      "review_cli_contract": "gentle-ai.review-integration/v2",
+      "capabilities_schema": "gentle-ai.review-integration.capabilities/v2.6",
+      "provider_contract_mirror": {
+        "lock_schema": "gentle-pi.review-provider-contract-mirror-lock/v1",
+        "contract_semver": "1.2.0",
+        "tree_sha256": "832f62d461249576f9b7e864c2d5adbb6e38a36f8a7103a28a9f2ca81f41de41",
+        "runtimes": ["claude-code", "codex", "opencode", "pi"]
+      },
+      "capability_note": "In gentle-ai v3.7.0 capabilitymanifest the hermes adapter's reviewTransportV1 and immutableReviewExecutorV1 exposures are dormant (advertised only for claude-code, opencode, codex, pi). T7/T8 must confirm which agent identity the review CLI accepts from Hermes.",
+      "local_files": [],
+      "sources": [
+        {
+          "upstream": "gentle-ai",
+          "path": "contracts/review-provider-contract/CONTRACT_SEMVER",
+          "sha256": "1e5b51cde515396a9fa762909cf8ca6584ccc564b325d2eebeea76175fe95c4d"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "contracts/review-integration/v2/schemas/capabilities-v2.6.schema.json",
+          "sha256": "fb8673dca2e3bb59ad3277322b9af3491505617b872e0c2791a89bd8d5140a45"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "contracts/review-integration/v2/schemas/start-v4.schema.json",
+          "sha256": "770c6a7e40a62a945d1134cba933cfd811f4c5e6ab407a36a26ba56508bc00e4"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "contracts/review-integration/v2/schemas/status-v9.schema.json",
+          "sha256": "2774c04937ef7efe1657c4ee6436e7b5ef2bbe49ee599945c75daf6ab54b44ab"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "contracts/review-integration/v2/schemas/consent-v3.schema.json",
+          "sha256": "f56b1809c1bff21713795ef37a095c6ecfdbbb3cf928bcf604b8d5f33be3dea5"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "contracts/review-integration/v2/schemas/transition-binding.schema.json",
+          "sha256": "d6cb80c2e82cae1b9a5259eaf19ec5f3bef9ee63a28f10f188c282e968af872a"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "contracts/review-provider-contract-mirror/provider-contract.lock.json",
+          "sha256": "f232369bba33e28898a5a073367a8a032ee3d7eef33490490cad03e05095205f"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "contracts/review-provider-contract-mirror/v1.2.0/bundle/orchestration/pi.md",
+          "sha256": "679133e54b7fe8661050cdde51aed44ddf8e66e478c7a1b5176fe3278714a2f6"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "scripts/gentle-ai-installer.mjs",
+          "sha256": "0d57ec9926847b7363362e5a07d999b464b9cf93a6cffd62b0acc093259df7fb"
+        }
+      ]
+    },
+    "viewers": {
+      "status": "pending",
+      "tasks": ["T3", "T4", "T5", "T6"],
+      "description": "Plain-text viewer commands: /odd_agents, /odd_tasks, /odd_changes, /odd_status, /odd_doctor, /odd_commands (only /odd_commands ships today).",
+      "local_files": [
+        "hermes_odd/commands/meta.py"
+      ],
+      "sources": [
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-agents.ts",
+          "sha256": "e75acd8c8fa46f55904d214ca6d3374cf553522d16ccce70593579353947fd4e"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "docs/gentle-agents-activity.md",
+          "sha256": "84e11467c4458b64a1995960d91a5f2d82a100cdd7932f281f7d9b79ffa26e9b"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-shell.ts",
+          "sha256": "4c90d9d7516887f6d85436704442f5bd18b81edcfe17a413e1794ea23080b976"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-todo.ts",
+          "sha256": "69ced27868f477dcfaa4a24a2f2fd6c2e3b9c569740c6880e95b14bf63b4d795"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "docs/gentle-shell.md",
+          "sha256": "2ce3aec97719726acd8440fb0b2f9ec5d71438f8131b7d1e86f89206f90d4b14"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/shell-changes.ts",
+          "sha256": "0bcb196bf68306165787ae1aa155cfe9dfd67a9c5093a616f79bab4ea334430c"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/shell-todo.ts",
+          "sha256": "8d63626c564cdad7af151b60f17cf24242eecc10a6048df420af0b9e0dea6c36"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/review-sidebar-state.ts",
+          "sha256": "992a6cf467d5b00765cbe9ca71cca1ec7e3692de273a89136a3e54f997076091"
+        }
+      ]
+    }
+  },
+  "excluded": [
+    {
+      "area": "SDD",
+      "upstreams": ["gentle-ai", "gentle-shell"],
+      "paths": [
+        "gentle-shell: assets/sdd-orchestrator-workflow.md, assets/agents/sdd-*.md, assets/chains/sdd-*.chain.md, extensions/sdd-init.ts, lib/sdd-*.ts, lib/openspec-deltas.ts, openspec/",
+        "gentle-ai: SDD skills, agents, commands and preflight assets"
+      ],
+      "reason": "hermes-odd ships no SDD in any form (agents, chains, skills, preflight, prompts, gentle-sdd-* commands)."
+    },
+    {
+      "area": "Pi aesthetics and TUI widgets",
+      "upstreams": ["gentle-shell"],
+      "paths": [
+        "themes/", "extensions/startup-banner.ts", "extensions/pi-pretty.ts",
+        "lib/animation-policy.ts", "lib/shell-sidebar*.ts", "lib/shell-bar.ts",
+        "lib/shell-card.ts", "lib/shell-gauge.ts", "lib/shell-hover.ts",
+        "lib/terminal-theme.ts", "lib/command-palette*.ts", "lib/native-*.ts",
+        "lib/double-esc-cancel-policy.ts", "lib/agents-widget.ts", "lib/agents-view-layout.ts"
+      ],
+      "reason": "Themes, banners, animations, TUI widgets, keyboard shortcuts and double-esc cancel are Pi terminal UI; Hermes commands answer as plain text on every gateway."
+    },
+    {
+      "area": "Pi runtime plumbing",
+      "upstreams": ["gentle-shell"],
+      "paths": [
+        "bin/", "runtime/", "lib/gentle-shell-launcher.ts", "lib/gentle-ai-binary.ts",
+        "scripts/gentle-ai-installer.mjs (binary download)", "lib/runtime-metrics*.ts",
+        "extensions/runtime-metrics.ts", "lib/telemetry-trigger.ts",
+        "lib/agent-profile*.ts", "lib/model-routing-authority.ts", "lib/profiles-orchestrator.ts",
+        "lib/inprocess-reviewer.ts", "lib/review-host-relay.ts"
+      ],
+      "reason": "Dev binary, bundled gentle-ai download, telemetry, Pi model profiles and routing, Pi package installers and the Pi in-process reviewer host are Pi-specific; hermes-odd uses the user's installed gentle-ai binary and Hermes' own delegate_task."
+    },
+    {
+      "area": "gentle-ai agent writers for Hermes",
+      "upstreams": ["gentle-ai"],
+      "paths": [
+        "internal/agents/hermes/", "gentle-ai install (Hermes selection)", "gentle-ai sync --agent hermes"
+      ],
+      "reason": "They write SDD-heavy content into ~/.hermes/SOUL.md, which Hermes truncates; hermes-odd replaces them with a compact prompt section and lazy skills."
+    },
+    {
+      "area": "Upstream development tooling",
+      "upstreams": ["gentle-ai", "gentle-shell"],
+      "paths": ["tests/", "scripts/run-test-suite.mjs", "bench/", "odd/tasks/", ".github/"],
+      "reason": "Upstream's own test runners, benchmarks, feature documents and CI do not ship to users."
+    }
+  ]
+}

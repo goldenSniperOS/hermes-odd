@@ -145,11 +145,16 @@ hermes-odd tracks upstream by pinned commits, not by following branches:
   tests enforce both;
 - `upstream/odd-routing-hermes.canonical.md` is a verbatim render of gentle-ai's
   `RenderRouting(model.AgentHermes)` with its SHA-256, for drift comparison;
-- **pending (T2b):** `upstream/upstream.lock.json` pins the last supported
-  gentle-ai binary and gentle-shell versions and commits, with per-component
-  source paths and hashes, and `upstream/SUPPORTED.md` keeps the human support
-  matrix and a triage log per upstream release (ported / not portable and why /
-  pending);
+- `upstream/upstream.lock.json` (schema `hermes-odd.upstream-lock/v1`) pins
+  the supported gentle-ai release, commit and minimum binary version and the
+  gentle-shell release, commit and `gentle-pi` version, and indexes every
+  upstream source per component (`odd`, `rdd`, `review-contract`, `viewers`)
+  with its SHA-256 at the pin; `hermes_odd.upstream.load_lock()` reads it from
+  `hermes_odd/_upstream` (wheel) or `upstream/` (git clone), the same order as
+  the skills. `upstream/SUPPORTED.md` keeps the human support matrix, the sync
+  procedure and a triage log per upstream release (ported / not portable and
+  why / pending); tests cross-check lock, markers, notices and canonical
+  render;
 - **pending (T10):** a drift script over the lockfile reports changed upstream
   sources and new upstream commands or skills to triage, run by scheduled CI.
 
