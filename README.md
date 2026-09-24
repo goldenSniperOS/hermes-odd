@@ -11,9 +11,32 @@ preflight, or `gentle-sdd-*` commands.
 
 ## Status
 
-Early (0.1.0). The plugin scaffold loads and registers one command,
-`/gentle_commands`. The ODD prompt section, viewers, and RDD integration are
-planned (see [Planned commands](#planned-commands)).
+Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
+ships lazy ODD skills, and registers one command, `/gentle_commands`.
+Viewers and RDD integration are planned (see
+[Planned commands](#planned-commands)).
+
+## What gets injected
+
+- **Always on:** one system prompt section, `gentle-hermes-odd` (about
+  3.4k characters; a test caps it at 3,800 of the 4,000 Hermes allows per
+  section and 8,000 across all plugins). It carries the ODD protocol, the
+  mandatory `delegate_task` triggers, the feature-tracking and resume
+  rules, blocking-question and language rules, and pointers to the skills
+  below.
+- **Lazy skills** (loaded only on demand with `skill_view`; plugin skills
+  never enter the always-on skills index):
+  - `gentle-hermes:odd-workflow` — full ODD protocol, routing ladder and
+    triggers, research depth, lossless blocking prompts over chat, checks
+    and TDD, commits and delivery strategy.
+  - `gentle-hermes:odd-delegation` — `delegate_task` mechanics, mission
+    template, allowed edit surfaces for writers.
+  - `gentle-hermes:odd-feature-tracking` — feature document template,
+    Engram mirror (`mcp__engram__*` tools), resume protocol, `todo`
+    projection.
+
+The canonical gentle-ai routing render for Hermes is vendored in
+`upstream/odd-routing-hermes.canonical.md` for drift tracking.
 
 ## Install
 
@@ -101,7 +124,11 @@ Layout:
 - `plugin.yaml` — Hermes manifest.
 - `__init__.py` — entry point Hermes imports; delegates to `gentle_hermes`.
 - `gentle_hermes/plugin.py` — `register(ctx)` wiring.
+- `gentle_hermes/prompt.py` — compact always-on ODD section.
+- `gentle_hermes/skills.py` — discovery and registration of `skills/*/SKILL.md`.
 - `gentle_hermes/commands/` — declarative command registry and commands.
+- `skills/` — lazy plugin skills.
+- `upstream/` — vendored canonical sources for drift tracking.
 - `tests/` — `unittest` suite with a fake plugin context.
 
 ## License

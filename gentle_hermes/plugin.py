@@ -10,6 +10,8 @@ import logging
 from typing import Any, Callable
 
 from .commands import CommandRegistry, CommandSpec, build_registry
+from .prompt import SECTION_ID, SECTION_MAX_CHARS, build_odd_section
+from .skills import register_skills
 
 logger = logging.getLogger("gentle_hermes")
 
@@ -52,8 +54,29 @@ def register_commands(ctx: Any, registry: CommandRegistry) -> int:
     return registered
 
 
+def register_prompt_section(ctx: Any) -> bool:
+    """Register the compact always-on ODD section; return whether it succeeded."""
+    register_section = getattr(ctx, "register_system_prompt_section", None)
+    if not callable(register_section):
+        logger.warning(
+            "gentle-hermes: ctx.register_system_prompt_section is unavailable; ODD section skipped"
+        )
+        return False
+    try:
+        register_section(SECTION_ID, build_odd_section(), max_chars=SECTION_MAX_CHARS)
+    except Exception as exc:  # noqa: BLE001 - never break Hermes startup
+        logger.warning("gentle-hermes: could not register the ODD section: %s", exc)
+        return False
+    return True
+
+
 def register(ctx: Any) -> None:
     """Hermes plugin entry point."""
+    register_prompt_section(ctx)
+    try:
+        register_skills(ctx)
+    except Exception as exc:  # noqa: BLE001 - never break Hermes startup
+        logger.warning("gentle-hermes: skill registration failed: %s", exc)
     try:
         registry = build_registry()
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup

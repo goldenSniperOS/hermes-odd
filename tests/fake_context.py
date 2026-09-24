@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Mapping, Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -23,6 +24,7 @@ class FakeContext:
         self.hooks: List[tuple] = []
         self.prompt_sections: List[Dict[str, Any]] = []
         self.tools: List[Dict[str, Any]] = []
+        self.skills: Dict[str, Dict[str, Any]] = {}
         self.calls: List[str] = []
 
     def register_command(
@@ -48,6 +50,25 @@ class FakeContext:
     def register_system_prompt_section(self, id: str, content: Any, **kwargs: Any) -> None:
         self.calls.append("register_system_prompt_section")
         self.prompt_sections.append({"id": id, "content": content, **kwargs})
+
+    def register_skill(
+        self,
+        name: str,
+        path: Path,
+        description: str = "",
+        frontmatter: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        # Mirrors PluginContext.register_skill validation (hermes_cli/plugins.py).
+        self.calls.append("register_skill")
+        if ":" in name or not re.fullmatch(r"[a-zA-Z0-9_-]+", name or ""):
+            raise ValueError(f"invalid skill name {name!r}")
+        if not Path(path).exists():
+            raise FileNotFoundError(path)
+        self.skills[name] = {
+            "path": Path(path),
+            "description": description,
+            "frontmatter": dict(frontmatter or {}),
+        }
 
     def register_tool(self, **kwargs: Any) -> None:
         self.calls.append("register_tool")

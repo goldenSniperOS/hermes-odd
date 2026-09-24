@@ -54,9 +54,8 @@ class RegisterTests(unittest.TestCase):
             self.assertRegex(telegram_name, TELEGRAM_SAFE)
             self.assertEqual(telegram_name.replace("_", "-"), key)
 
-    def test_no_other_surfaces_registered_yet(self) -> None:
+    def test_no_hooks_or_tools_registered_yet(self) -> None:
         self.assertEqual(self.ctx.hooks, [])
-        self.assertEqual(self.ctx.prompt_sections, [])
         self.assertEqual(self.ctx.tools, [])
 
 
