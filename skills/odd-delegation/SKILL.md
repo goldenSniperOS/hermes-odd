@@ -6,7 +6,7 @@ author: goldenSniperOS
 license: MIT
 metadata:
   hermes:
-    tags: [workflow, odd, delegation, delegate_task, gentle-ai]
+    tags: [workflow, odd, delegation, delegate_task, gentle-ai-compatible]
     category: workflow
     related_skills: [odd-workflow, odd-feature-tracking]
 ---
@@ -15,7 +15,7 @@ metadata:
 
 # ODD delegation for Hermes
 
-How the parent turns a fired delegation trigger (see `gentle-hermes:odd-workflow`)
+How the parent turns a fired delegation trigger (see `hermes-odd:odd-workflow`)
 into a `delegate_task` call. The parent orchestrates; children execute one
 bounded unit and never orchestrate.
 
@@ -92,5 +92,5 @@ change must touch plus directories where new files are authorized.
 - If the surface cannot be derived, do not launch the writer and never ask
   the human to author paths. Present the derived candidate list as an
   approve/decline choice using the lossless blocking prompt rules in
-  `gentle-hermes:odd-workflow`. Relay a writer's `interaction_required`
+  `hermes-odd:odd-workflow`. Relay a writer's `interaction_required`
   about surfaces the same way.

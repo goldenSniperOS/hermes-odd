@@ -1,8 +1,8 @@
-"""Gentle slash commands. Later tasks add specs in :func:`build_registry`."""
+"""ODD slash commands. Later tasks add specs in :func:`build_registry`."""
 
 from __future__ import annotations
 
-from .meta import make_gentle_commands
+from .meta import make_odd_commands
 from .registry import (
     COMMAND_NAME_RE,
     CommandRegistry,
@@ -13,9 +13,9 @@ from .registry import (
 
 
 def build_registry() -> CommandRegistry:
-    """Return the registry holding every gentle command."""
+    """Return the registry holding every odd command."""
     registry = CommandRegistry()
-    registry.add(make_gentle_commands(registry))
+    registry.add(make_odd_commands(registry))
     return registry
 
 

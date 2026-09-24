@@ -18,17 +18,17 @@ from __future__ import annotations
 
 from typing import Any, Mapping, Optional
 
-SECTION_ID = "gentle-hermes-odd"
+SECTION_ID = "hermes-odd-workflow"
 SECTION_MAX_CHARS = 4000
 # Hard budget enforced by tests; leaves headroom under SECTION_MAX_CHARS.
 SECTION_BUDGET_CHARS = 3800
 
 # Skills referenced by the section, namespaced the way Hermes exposes plugin
 # skills (``<plugin>:<name>``) to ``skill_view``.
-SKILL_NAMESPACE = "gentle-hermes"
+SKILL_NAMESPACE = "hermes-odd"
 
 ODD_SECTION = """\
-# Gentle ODD workflow (gentle-hermes)
+# ODD workflow (hermes-odd)
 
 Organic Driven Development (ODD) is the default workflow. Every request enters it without the user asking. Run it; never only describe it:
 1. Authorize. Investigation, explanation, review, comparison and proposal-only requests stay read-only: no edits, no writer delegation. Ambiguous or conditional change intent: ask one clarification, then stop and wait.
@@ -54,11 +54,11 @@ Blocking questions: use `clarify` (one decision, closed choices, recommended fir
 
 Language: reply in the user's language; code, comments, commits, docs and task files in English.
 
-Review: native review runs only under the user-owned RDD switch; load gentle-hermes:rdd-review.
+Review: native review runs only under the user-owned RDD switch; load hermes-odd:rdd-review.
 
 Formal SDD is not provided by this plugin.
 
-Before substantial work load with `skill_view`: gentle-hermes:odd-workflow (routing, checks, delivery), gentle-hermes:odd-feature-tracking (feature document, Engram mirror, resume, todo); before delegating: gentle-hermes:odd-delegation (missions, edit surfaces).
+Before substantial work load with `skill_view`: hermes-odd:odd-workflow (routing, checks, delivery), hermes-odd:odd-feature-tracking (feature document, Engram mirror, resume, todo); before delegating: hermes-odd:odd-delegation (missions, edit surfaces).
 """
 
 

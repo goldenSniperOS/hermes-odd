@@ -1,14 +1,14 @@
-"""``/gentle_commands``: list every gentle command (Pi ``gentle:commands``)."""
+"""``/odd_commands``: list every hermes-odd command (Pi ``gentle:commands``)."""
 
 from __future__ import annotations
 
 from .registry import CommandRegistry, CommandSpec
 
 
-def make_gentle_commands(registry: CommandRegistry) -> CommandSpec:
+def make_odd_commands(registry: CommandRegistry) -> CommandSpec:
     def handler(raw_args: str) -> str:
         specs = registry.all()
-        lines = ["gentle-hermes commands:"]
+        lines = ["hermes-odd commands:"]
         for spec in specs:
             usage = f"/{spec.name}"
             if spec.args_hint:
@@ -17,12 +17,12 @@ def make_gentle_commands(registry: CommandRegistry) -> CommandSpec:
         lines.append("")
         lines.append(
             "Gateways accept /name or its hyphen form; the CLI uses the hyphen "
-            "form (for example /gentle-commands)."
+            "form (for example /odd-commands)."
         )
         return "\n".join(lines)
 
     return CommandSpec(
-        name="gentle_commands",
-        description="List gentle-hermes commands",
+        name="odd_commands",
+        description="List hermes-odd commands",
         handler=handler,
     )

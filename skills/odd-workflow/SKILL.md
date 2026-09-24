@@ -6,7 +6,7 @@ author: goldenSniperOS
 license: MIT
 metadata:
   hermes:
-    tags: [workflow, odd, delegation, orchestration, gentle-ai]
+    tags: [workflow, odd, delegation, orchestration, gentle-ai-compatible]
     category: workflow
     related_skills: [odd-feature-tracking]
 ---
@@ -16,7 +16,7 @@ metadata:
 
 # ODD workflow for Hermes
 
-Reference detail for the always-on "Gentle ODD workflow" section. The parent
+Reference detail for the always-on "ODD workflow (hermes-odd)" section. The parent
 session orchestrates; `delegate_task` children execute bounded units.
 Formal SDD is not provided by this plugin.
 
@@ -31,7 +31,7 @@ Formal SDD is not provided by this plugin.
 3. **Resolve uncertainty** (section 4).
 4. **Classify.** Substantial = two or more meaningful implementation steps,
    or progress worth recovering after an interruption. Not a line count.
-5. **Track before the first write** — load `gentle-hermes:odd-feature-tracking`.
+5. **Track before the first write** — load `hermes-odd:odd-feature-tracking`.
 6. **Implement task by task** through the routing ladder (section 2).
 7. **Close** with the verified outcome, every failed, skipped or pending
    check, and the next step.
@@ -84,7 +84,7 @@ silently continue inline.
 
 ## 3. Delegation mechanics
 
-Load `gentle-hermes:odd-delegation` before the first `delegate_task` call:
+Load `hermes-odd:odd-delegation` before the first `delegate_task` call:
 verified `delegate_task` behavior, the mission template, and the allowed
 edit surface rules for writers.
 
@@ -165,13 +165,13 @@ When you or a tool must block on the human (including a child's
   `chained-pr` skills by name with `skills_list`; report if missing.
 - The review candidate is a work-unit commit or a PR slice, never a TODO
   checkbox or the accumulated branch. Native review runs only under the
-  user-owned RDD switch; load `gentle-hermes:rdd-review` for it.
+  user-owned RDD switch; load `hermes-odd:rdd-review` for it.
 
 ## 8. Skills for children
 
 Hermes keeps its own skill index; there is no registry to refresh. Before
 the first delegation, pick the skills that match the task (`skills_list`,
-plugin skills as `gentle-hermes:<name>`) and pass their exact `skill_view`
+plugin skills as `hermes-odd:<name>`) and pass their exact `skill_view`
 names under `Skills to load before work`. Children must load them before
 working and must not rediscover skills on their own. Prefer the most specific
 project skill; if an expected skill is missing, continue with the smallest

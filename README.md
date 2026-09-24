@@ -1,38 +1,44 @@
-# gentle-hermes
+# hermes-odd
 
-Gentle workflow for [Hermes](https://github.com/NousResearch/hermes-agent):
-a port of the **Organic Driven Development (ODD)** and **receipt-driven
-review (RDD)** experience from
-[gentle-shell](https://www.npmjs.com/package/gentle-pi) and
-[gentle-ai](https://github.com/Gentleman-Programming/gentle-ai) to Hermes.
+Based on the ODD and RDD workflows of
+[Gentle AI™](https://github.com/Gentleman-Programming/gentle-ai) and
+[gentle-shell](https://github.com/Gentleman-Programming/gentle-shell)
+(npm `gentle-pi`) by Alan Buscaglia / Gentleman Programming, running on
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research.
+Independent community project; see [Not affiliated](#not-affiliated).
 
-gentle-hermes is **not** SDD. It ships no SDD agents, chains, skills,
+hermes-odd is an **Organic Driven Development (ODD)** and **receipt-driven
+development (RDD)** workflow harness for Hermes Agent. It adapts the Gentle AI
+workflows to Hermes-native surfaces: a compact system prompt section, lazy
+plugin skills, and plain-text slash commands.
+
+hermes-odd is **not** SDD. It ships no SDD agents, chains, skills,
 preflight, or `gentle-sdd-*` commands.
 
 ## Status
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
-ships lazy ODD skills, and registers one command, `/gentle_commands`.
+ships lazy ODD skills, and registers one command, `/odd_commands`.
 Viewers and RDD integration are planned (see
 [Planned commands](#planned-commands)).
 
 ## What gets injected
 
-- **Always on:** one system prompt section, `gentle-hermes-odd` (about
-  3.4k characters; a test caps it at 3,800 of the 4,000 Hermes allows per
+- **Always on:** one system prompt section, `hermes-odd-workflow` (about
+  3.3k characters; a test caps it at 3,800 of the 4,000 Hermes allows per
   section and 8,000 across all plugins). It carries the ODD protocol, the
   mandatory `delegate_task` triggers, the feature-tracking and resume
   rules, blocking-question and language rules, and pointers to the skills
   below.
 - **Lazy skills** (loaded only on demand with `skill_view`; plugin skills
   never enter the always-on skills index):
-  - `gentle-hermes:odd-workflow` — full ODD protocol, routing ladder and
+  - `hermes-odd:odd-workflow` — full ODD protocol, routing ladder and
     triggers, research depth, lossless blocking prompts over chat, checks
     and TDD, commits and delivery strategy.
-  - `gentle-hermes:odd-delegation` — `delegate_task` mechanics, mission
+  - `hermes-odd:odd-delegation` — `delegate_task` mechanics, mission
     template, allowed edit surfaces for writers.
-  - `gentle-hermes:odd-feature-tracking` — feature document template,
-    Engram mirror (`mcp__engram__*` tools), resume protocol, `todo`
+  - `hermes-odd:odd-feature-tracking` — feature document template,
+    Engram™ mirror (`mcp__engram__*` tools), resume protocol, `todo`
     projection.
 
 The canonical gentle-ai routing render for Hermes is vendored in
@@ -41,18 +47,18 @@ The canonical gentle-ai routing render for Hermes is vendored in
 ## Install
 
 ```bash
-hermes plugins install goldenSniperOS/gentle-hermes
+hermes plugins install goldenSniperOS/hermes-odd
 ```
 
 Hermes installs user plugins **disabled**. Answer `y` to the
-`Enable 'gentle-hermes' now?` prompt, pass `--enable` to the install command,
+`Enable 'hermes-odd' now?` prompt, pass `--enable` to the install command,
 or enable it later:
 
 ```bash
-hermes plugins enable gentle-hermes
+hermes plugins enable hermes-odd
 ```
 
-Enabling adds `gentle-hermes` to `plugins.enabled` in `~/.hermes/config.yaml`.
+Enabling adds `hermes-odd` to `plugins.enabled` in `~/.hermes/config.yaml`.
 Restart the Hermes CLI or gateway so the plugin loads, then check it:
 
 ```bash
@@ -72,7 +78,7 @@ hermes plugins list
 >
 > **Never** run `gentle-ai install` selecting Hermes, and **never** run
 > `gentle-ai sync --agent hermes`. Both rewrite `~/.hermes/SOUL.md` with SDD
-> content that gentle-hermes replaces with a compact prompt section.
+> content that hermes-odd replaces with a compact prompt section.
 >
 > If you sync gentle-ai for other agents, scope it and preview first:
 >
@@ -87,27 +93,27 @@ Commands answer with plain text and never call the model, so the output is
 the same in the CLI, the TUI, and every gateway.
 
 In gateways (Telegram, Discord, Slack, ...) type the underscore form, for
-example `/gentle_commands`; the hyphen form works too. In the Hermes CLI type
-the hyphen form, for example `/gentle-commands`, because the CLI matches the
+example `/odd_commands`; the hyphen form works too. In the Hermes CLI type
+the hyphen form, for example `/odd-commands`, because the CLI matches the
 registered name exactly.
 
 | Command | What it does |
 |---|---|
-| `/gentle_commands` | Lists gentle-hermes commands |
+| `/odd_commands` | Lists hermes-odd commands |
 
 ## Planned commands
 
-| Pi (gentle-pi) | Hermes (gentle-hermes) | Notes |
+| Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:agents` + agents card | `/gentle_agents [id]` | hooks `subagent_start/stop` + `ctx.state` |
-| `gentle:changes` | `/gentle_changes` | `post_tool_call` on write/patch tools |
-| `todo` card + ODD feature doc | `/gentle_odd [feature]` | reads `odd/tasks/*.md` |
-| `gentle:status` | `/gentle_status` | plugin, binary, review mode, prompt budget |
-| `gentle:doctor` | `/gentle_doctor` | binary version pin, SOUL size/truncation, markers |
-| `gentle:commands` | `/gentle_commands` | lists gentle commands |
-| `gentle:review-mode` | `/gentle_review_mode [status\|enable\|disable]` | wraps `gentle-ai review mode` |
-| `gentle:persona` | `/gentle_persona [gentleman\|neutral]` | swaps compact persona section |
-| `gentle_review*` tools | `gentle_review` tool (+ RDD skill) | CLI facade, opaque bindings only |
+| `gentle:agents` + agents card | `/odd_agents [id]` | hooks `subagent_start/stop` + `ctx.state` |
+| `gentle:changes` | `/odd_changes` | `post_tool_call` on write/patch tools |
+| `todo` card + ODD feature doc | `/odd_tasks [feature]` | reads `odd/tasks/*.md` |
+| `gentle:status` | `/odd_status` | plugin, binary, review mode, prompt budget |
+| `gentle:doctor` | `/odd_doctor` | binary version pin, SOUL size/truncation, markers |
+| `gentle:commands` | `/odd_commands` | lists hermes-odd commands |
+| `gentle:review-mode` | `/odd_review_mode [status\|enable\|disable]` | wraps `gentle-ai review mode` |
+| `gentle:persona` | `/odd_persona [gentleman\|neutral]` | swaps compact persona section |
+| `gentle_review*` tools | review tool facade (+ RDD skill) | CLI facade over `gentle-ai review`, opaque bindings only |
 | `skill-registry:refresh` | Hermes native skill index | not needed |
 
 ## Development
@@ -122,15 +128,48 @@ not import Hermes. Run them from the repository root with the Hermes venv:
 Layout:
 
 - `plugin.yaml` — Hermes manifest.
-- `__init__.py` — entry point Hermes imports; delegates to `gentle_hermes`.
-- `gentle_hermes/plugin.py` — `register(ctx)` wiring.
-- `gentle_hermes/prompt.py` — compact always-on ODD section.
-- `gentle_hermes/skills.py` — discovery and registration of `skills/*/SKILL.md`.
-- `gentle_hermes/commands/` — declarative command registry and commands.
+- `__init__.py` — entry point Hermes imports; delegates to `hermes_odd`.
+- `hermes_odd/plugin.py` — `register(ctx)` wiring.
+- `hermes_odd/prompt.py` — compact always-on ODD section.
+- `hermes_odd/skills.py` — discovery and registration of `skills/*/SKILL.md`.
+- `hermes_odd/commands/` — declarative command registry and commands.
 - `skills/` — lazy plugin skills.
 - `upstream/` — vendored canonical sources for drift tracking.
 - `tests/` — `unittest` suite with a fake plugin context.
 
+## Credits and acknowledgements
+
+This project exists because of the work of Alan Buscaglia and the
+Gentleman Programming community. The ideas that make it useful come from
+them: Organic Driven Development (ODD), receipt-driven development (RDD), the
+mandatory delegation triggers, feature documents and their resume protocol,
+the Engram memory protocol, and native review. hermes-odd only adapts those
+workflows to Hermes surfaces (prompt sections, plugin skills,
+`delegate_task`, gateway-safe commands). Thank you for building them in the
+open and under the MIT license.
+
+Thanks as well to Nous Research for Hermes Agent, the daily driver this
+plugin runs on. The author is a Hermes user and admirer; hermes-odd uses its
+public plugin API and copies none of its code.
+
+Derived files, pinned upstream commits and the full upstream license texts
+are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Not affiliated
+
+hermes-odd is an independent community project. It is **not** an official
+Gentle AI, gentle-shell, gentle-pi, or Hermes Agent project, and it is not
+sponsored, endorsed, certified, or partnered with Gentleman Programming,
+Alan Buscaglia, or Nous Research. Their names are used nominatively, only to
+describe what this project is based on and compatible with.
+
+Gentle AI, Gentle-AI, gentle-ai, and Engram are trademarks of Alan
+Buscaglia; gentle-shell and gentle-pi are trademarks of Alan Buscaglia.
+Hermes Agent is a project of Nous Research. All other names and trademarks
+belong to their respective owners.
+
 ## License
 
-MIT
+MIT for this project's own code; see [LICENSE](LICENSE). Portions derived
+from gentle-ai and gentle-shell keep their MIT notices in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

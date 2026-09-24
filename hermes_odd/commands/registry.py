@@ -1,6 +1,6 @@
-"""Declarative slash-command registry for gentle-hermes.
+"""Declarative slash-command registry for hermes-odd.
 
-Every gentle command is a :class:`CommandSpec` whose handler takes the raw
+Every hermes-odd command is a :class:`CommandSpec` whose handler takes the raw
 argument string and returns plain text. Handlers never call the model, so the
 same text is returned in the CLI, the TUI and every gateway.
 
@@ -20,9 +20,9 @@ Naming (verified against hermes-agent source):
   menu (``_requires_argument``), so optional arguments use ``[...]``.
 
 So a spec name is the Telegram-safe form users type in gateways
-(``gentle_commands``) and :func:`hermes_command_key` gives the hyphenated key
-registered with Hermes (``gentle-commands``). Gateways accept both
-``/gentle_commands`` and ``/gentle-commands``; the CLI accepts the hyphen form.
+(``odd_commands``) and :func:`hermes_command_key` gives the hyphenated key
+registered with Hermes (``odd-commands``). Gateways accept both
+``/odd_commands`` and ``/odd-commands``; the CLI accepts the hyphen form.
 """
 
 from __future__ import annotations
@@ -39,7 +39,7 @@ Handler = Callable[[str], str]
 
 @dataclass(frozen=True)
 class CommandSpec:
-    """One gentle slash command."""
+    """One hermes-odd slash command."""
 
     name: str
     description: str
@@ -58,15 +58,15 @@ def hermes_command_key(name: str) -> str:
 
 def validate_command_name(name: str) -> None:
     if not isinstance(name, str) or not COMMAND_NAME_RE.fullmatch(name):
-        raise ValueError(f"gentle command name {name!r} must match [a-z0-9_]+")
+        raise ValueError(f"odd command name {name!r} must match [a-z0-9_]+")
     if len(name) > COMMAND_NAME_MAX_CHARS:
         raise ValueError(
-            f"gentle command name {name!r} exceeds {COMMAND_NAME_MAX_CHARS} characters"
+            f"odd command name {name!r} exceeds {COMMAND_NAME_MAX_CHARS} characters"
         )
     if name.startswith("_") or name.endswith("_") or "__" in name:
         # Telegram sanitization collapses and strips these, which would break
         # the round-trip back to the registered key.
-        raise ValueError(f"gentle command name {name!r} has leading, trailing or doubled '_'")
+        raise ValueError(f"odd command name {name!r} has leading, trailing or doubled '_'")
 
 
 class CommandRegistry:
@@ -78,9 +78,9 @@ class CommandRegistry:
     def add(self, spec: CommandSpec) -> CommandSpec:
         validate_command_name(spec.name)
         if spec.name in self._specs:
-            raise ValueError(f"gentle command {spec.name!r} is already registered")
+            raise ValueError(f"odd command {spec.name!r} is already registered")
         if not callable(spec.handler):
-            raise TypeError(f"gentle command {spec.name!r} handler is not callable")
+            raise TypeError(f"odd command {spec.name!r} handler is not callable")
         self._specs[spec.name] = spec
         return spec
 

@@ -1,4 +1,4 @@
-<!-- gentle-hermes:managed-odd-routing-canonical
+<!-- hermes-odd:managed-odd-routing-canonical
 source_repo: https://github.com/Gentleman-Programming/gentle-ai
 source_path: internal/components/agentguidance/routing.go
 source_commit: f182ea2018a6399f5d1b6557cf36d71a3df0f723
@@ -6,7 +6,7 @@ render: agentguidance.RenderRouting(model.AgentHermes)
 agent_id: hermes
 generated_at: 2026-09-24T19:23:03Z
 block_sha256: 277f4bdb2cd2eaf773f111eab2048b7696f48ca84f20854b5dbc6d2f10fb6c2b
-note: vendored verbatim for drift tracking; gentle-hermes ports the ODD parts and strips SDD.
+note: vendored verbatim for drift tracking; hermes-odd ports the ODD parts and strips SDD.
 -->
 ## Implementation Routing
 

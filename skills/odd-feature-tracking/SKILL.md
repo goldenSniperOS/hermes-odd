@@ -6,7 +6,7 @@ author: goldenSniperOS
 license: MIT
 metadata:
   hermes:
-    tags: [workflow, odd, engram, memory, todo, gentle-ai]
+    tags: [workflow, odd, engram, memory, todo, gentle-ai-compatible]
     category: workflow
     related_skills: [odd-workflow]
 ---

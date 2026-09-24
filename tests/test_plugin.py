@@ -10,8 +10,8 @@ from fake_context import REPO_ROOT, BareContext, ExplodingContext, FakeContext, 
 
 ensure_repo_on_path()
 
-from gentle_hermes import register  # noqa: E402
-from gentle_hermes.commands import (  # noqa: E402
+from hermes_odd import register  # noqa: E402
+from hermes_odd.commands import (  # noqa: E402
     CommandRegistry,
     CommandSpec,
     build_registry,
@@ -26,20 +26,20 @@ class RegisterTests(unittest.TestCase):
         self.ctx = FakeContext()
         register(self.ctx)
 
-    def test_registers_gentle_commands_under_hermes_key(self) -> None:
-        self.assertIn("gentle-commands", self.ctx.commands)
-        self.assertTrue(self.ctx.commands["gentle-commands"]["description"])
+    def test_registers_odd_commands_under_hermes_key(self) -> None:
+        self.assertIn("odd-commands", self.ctx.commands)
+        self.assertTrue(self.ctx.commands["odd-commands"]["description"])
 
-    def test_gentle_commands_lists_itself_as_plain_text(self) -> None:
-        output = self.ctx.commands["gentle-commands"]["handler"]("")
+    def test_odd_commands_lists_itself_as_plain_text(self) -> None:
+        output = self.ctx.commands["odd-commands"]["handler"]("")
         self.assertIsInstance(output, str)
         self.assertTrue(output.strip())
-        self.assertIn("/gentle_commands", output)
-        self.assertIn("List gentle-hermes commands", output)
+        self.assertIn("/odd_commands", output)
+        self.assertIn("List hermes-odd commands", output)
         self.assertNotIn("<", output)  # no markup
 
     def test_output_is_identical_across_calls_and_args(self) -> None:
-        handler = self.ctx.commands["gentle-commands"]["handler"]
+        handler = self.ctx.commands["odd-commands"]["handler"]
         self.assertEqual(handler(""), handler("  "))
 
     def test_every_spec_name_is_telegram_safe(self) -> None:
@@ -61,48 +61,48 @@ class RegisterTests(unittest.TestCase):
 
 class DefensiveRegistrationTests(unittest.TestCase):
     def test_missing_register_command_does_not_raise(self) -> None:
-        with self.assertLogs("gentle_hermes", level="WARNING"):
+        with self.assertLogs("hermes_odd", level="WARNING"):
             register(BareContext())
 
     def test_raising_register_command_does_not_raise(self) -> None:
-        with self.assertLogs("gentle_hermes", level="WARNING"):
+        with self.assertLogs("hermes_odd", level="WARNING"):
             register(ExplodingContext())
 
     def test_failing_handler_returns_text(self) -> None:
-        from gentle_hermes.plugin import register_commands
+        from hermes_odd.plugin import register_commands
 
         def broken(raw_args: str) -> str:
             raise ValueError("bad input")
 
         registry = CommandRegistry()
-        registry.add(CommandSpec(name="gentle_broken", description="x", handler=broken))
+        registry.add(CommandSpec(name="odd_broken", description="x", handler=broken))
         ctx = FakeContext()
         register_commands(ctx, registry)
-        with self.assertLogs("gentle_hermes", level="WARNING"):
-            output = ctx.commands["gentle-broken"]["handler"]("")
+        with self.assertLogs("hermes_odd", level="WARNING"):
+            output = ctx.commands["odd-broken"]["handler"]("")
         self.assertIn("failed", output)
 
 
 class RegistryValidationTests(unittest.TestCase):
     def test_rejects_unsafe_names(self) -> None:
-        for bad in ["gentle-x", "Gentle", "gentle x", "_gentle", "gentle__x", "a" * 33, ""]:
+        for bad in ["odd-x", "Odd", "odd x", "_odd", "odd__x", "a" * 33, ""]:
             with self.subTest(name=bad), self.assertRaises(ValueError):
                 CommandRegistry().add(CommandSpec(name=bad, description="d", handler=str))
 
     def test_rejects_duplicates(self) -> None:
         registry = CommandRegistry()
-        registry.add(CommandSpec(name="gentle_x", description="d", handler=str))
+        registry.add(CommandSpec(name="odd_x", description="d", handler=str))
         with self.assertRaises(ValueError):
-            registry.add(CommandSpec(name="gentle_x", description="d", handler=str))
+            registry.add(CommandSpec(name="odd_x", description="d", handler=str))
 
     def test_hermes_key(self) -> None:
-        self.assertEqual(hermes_command_key("gentle_review_mode"), "gentle-review-mode")
+        self.assertEqual(hermes_command_key("odd_review_mode"), "odd-review-mode")
 
 
 class DirectoryLoaderTests(unittest.TestCase):
     """Import the root __init__.py the way PluginManager._load_directory_module does."""
 
-    NS = "gentle_test_hermes_plugins"
+    NS = "hermes_odd_test_plugins"
 
     def tearDown(self) -> None:
         for name in [n for n in sys.modules if n == self.NS or n.startswith(self.NS + ".")]:
@@ -112,7 +112,7 @@ class DirectoryLoaderTests(unittest.TestCase):
         ns_pkg = types.ModuleType(self.NS)
         ns_pkg.__path__ = []  # type: ignore[attr-defined]
         sys.modules[self.NS] = ns_pkg
-        module_name = f"{self.NS}.gentle_hermes"
+        module_name = f"{self.NS}.hermes_odd"
         spec = importlib.util.spec_from_file_location(
             module_name,
             REPO_ROOT / "__init__.py",
@@ -127,7 +127,7 @@ class DirectoryLoaderTests(unittest.TestCase):
         self.assertTrue(module.register.__module__.startswith(module_name + "."))
         ctx = FakeContext()
         module.register(ctx)
-        self.assertIn("gentle-commands", ctx.commands)
+        self.assertIn("odd-commands", ctx.commands)
 
 
 if __name__ == "__main__":

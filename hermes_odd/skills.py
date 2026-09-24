@@ -2,7 +2,7 @@
 
 Each ``skills/<name>/SKILL.md`` in the plugin root is registered with
 ``PluginContext.register_skill(name, path, description="", frontmatter=None)``
-(``hermes_cli/plugins.py``). Hermes exposes it as ``gentle-hermes:<name>``;
+(``hermes_cli/plugins.py``). Hermes exposes it as ``hermes-odd:<name>``;
 plugin skills stay out of the always-on skills index and load on demand via
 ``skill_view``.
 
@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
-logger = logging.getLogger("gentle_hermes")
+logger = logging.getLogger("hermes_odd")
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = PLUGIN_ROOT / "skills"
@@ -125,7 +125,7 @@ def discover_skills(skills_dir: Path = SKILLS_DIR) -> List[SkillSpec]:
         try:
             specs.append(load_skill(skill_dir))
         except (OSError, FrontmatterError) as exc:
-            logger.warning("gentle-hermes: skipping skill %s: %s", skill_dir.name, exc)
+            logger.warning("hermes-odd: skipping skill %s: %s", skill_dir.name, exc)
     return specs
 
 
@@ -133,7 +133,7 @@ def register_skills(ctx: Any, skills_dir: Path = SKILLS_DIR) -> int:
     """Register every shipped skill with Hermes; return how many succeeded."""
     register_skill = getattr(ctx, "register_skill", None)
     if not callable(register_skill):
-        logger.warning("gentle-hermes: ctx.register_skill is unavailable; skills skipped")
+        logger.warning("hermes-odd: ctx.register_skill is unavailable; skills skipped")
         return 0
     registered = 0
     for spec in discover_skills(skills_dir):
@@ -146,5 +146,5 @@ def register_skills(ctx: Any, skills_dir: Path = SKILLS_DIR) -> int:
             )
             registered += 1
         except Exception as exc:  # noqa: BLE001 - never break Hermes startup
-            logger.warning("gentle-hermes: could not register skill %s: %s", spec.name, exc)
+            logger.warning("hermes-odd: could not register skill %s: %s", spec.name, exc)
     return registered

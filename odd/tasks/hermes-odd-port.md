@@ -1,8 +1,8 @@
-# Feature: gentle-hermes port (ODD + RDD for Hermes)
+# Feature: hermes-odd port (ODD + RDD for Hermes)
 
 ## Objective
 
-Ship `gentle-hermes`: a Hermes plugin plus a set of lazy-loaded skills that brings the
+Ship `hermes-odd`: a Hermes plugin plus a set of lazy-loaded skills that brings the
 gentle-shell (npm `gentle-pi`) and gentle-ai ODD and RDD experience to Hermes, with the
 same behavior and management model as Pi, adapted to Hermes-native surfaces.
 
@@ -24,14 +24,14 @@ gateway.
 ## Scope
 
 - Hermes plugin (`plugin.yaml` + `register(ctx)`), installable with
-  `hermes plugins install goldenSniperOS/gentle-hermes`.
+  `hermes plugins install goldenSniperOS/hermes-odd`.
 - Compact always-on ODD section via `ctx.register_system_prompt_section` (<= 4000 chars).
 - Lazy skills: ODD detail (delegation, memory/feature continuity, skills protocol), RDD
   orchestration for Hermes, plus portable gentle-shell skills.
 - Slash commands answered as plain messages (no LLM call), compatible with CLI/TUI and
-  every gateway: `/gentle_agents`, `/gentle_changes`, `/gentle_odd` (feature tasks),
-  `/gentle_status`, `/gentle_doctor`, `/gentle_commands`, `/gentle_review_mode`,
-  `/gentle_persona`.
+  every gateway: `/odd_agents`, `/odd_changes`, `/odd_tasks` (feature tasks),
+  `/odd_status`, `/odd_doctor`, `/odd_commands`, `/odd_review_mode`,
+  `/odd_persona`.
 - RDD driven through the `gentle-ai review` CLI (binary only).
 - SOUL migration (strip gentle-ai managed blocks, with backup and dry-run).
 - Upstream tracking: pinned lockfile of gentle-ai/gentle-shell commits + drift script.
@@ -54,17 +54,17 @@ gateway.
 
 ## Pi -> Hermes command map
 
-| Pi (gentle-pi) | Hermes (gentle-hermes) | Notes |
+| Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:agents` + agents card | `/gentle_agents [id]` | hooks `subagent_start/stop` + `ctx.state` |
-| `gentle:changes` | `/gentle_changes` | `post_tool_call` on write/patch tools |
-| `todo` card + ODD feature doc | `/gentle_odd [feature]` | reads `odd/tasks/*.md` |
-| `gentle:status` | `/gentle_status` | plugin, binary, review mode, prompt budget |
-| `gentle:doctor` | `/gentle_doctor` | binary version pin, SOUL size/truncation, markers |
-| `gentle:commands` | `/gentle_commands` | lists gentle commands |
-| `gentle:review-mode` | `/gentle_review_mode [status\|enable\|disable]` | wraps `gentle-ai review mode` |
-| `gentle:persona` | `/gentle_persona [gentleman\|neutral]` | swaps compact persona section |
-| `gentle_review*` tools | `gentle_review` tool (+ RDD skill) | CLI facade, opaque bindings only |
+| `gentle:agents` + agents card | `/odd_agents [id]` | hooks `subagent_start/stop` + `ctx.state` |
+| `gentle:changes` | `/odd_changes` | `post_tool_call` on write/patch tools |
+| `todo` card + ODD feature doc | `/odd_tasks [feature]` | reads `odd/tasks/*.md` |
+| `gentle:status` | `/odd_status` | plugin, binary, review mode, prompt budget |
+| `gentle:doctor` | `/odd_doctor` | binary version pin, SOUL size/truncation, markers |
+| `gentle:commands` | `/odd_commands` | lists gentle commands |
+| `gentle:review-mode` | `/odd_review_mode [status\|enable\|disable]` | wraps `gentle-ai review mode` |
+| `gentle:persona` | `/odd_persona [gentleman\|neutral]` | swaps compact persona section |
+| `gentle_review*` tools | `odd_review` tool (+ RDD skill) | CLI facade, opaque bindings only |
 | `skill-registry:refresh` | Hermes native skill index | not needed |
 
 ## Tasks
@@ -80,7 +80,7 @@ gateway.
       HERMES_HOME load).
 - [x] T2 Compact ODD prompt section (<= 4000 chars, budget test) + `odd-workflow` skill
       (SDD-free delegation/memory/feature-continuity detail bound to `delegate_task`).
-- [ ] T2c Rename to `hermes-odd` (plugin, package `hermes_odd`, skills namespace
+- [x] T2c Rename to `hermes-odd` (plugin, package `hermes_odd`, skills namespace
       `hermes-odd:*`, command prefix `/odd_*`, GitHub repo) and full attribution:
       README credits + non-affiliation notice (Gentle AI™ / gentle-shell / gentle-pi by
       Alan Buscaglia / Gentleman Programming; Hermes Agent by Nous Research),
@@ -92,13 +92,13 @@ gateway.
       `upstream/SUPPORTED.md` (human matrix + porting triage log per upstream release:
       ported / not portable + reason / pending). Tests that every `derived-from` marker
       is indexed in the lock.
-- [ ] T3 Subagent tracking + `/gentle_agents` viewer.
-- [ ] T4 `/gentle_odd` feature-task viewer.
-- [ ] T5 `/gentle_changes` viewer.
-- [ ] T6 `/gentle_status`, `/gentle_doctor`, `/gentle_commands`.
-- [ ] T7 `/gentle_review_mode` + `rdd-review` skill (Hermes orchestration contract).
-- [ ] T8 `gentle_review` tool facade over `gentle-ai review` (lifecycle, consent relay).
-- [ ] T9 `/gentle_persona` + SOUL migration command (backup, dry-run).
+- [ ] T3 Subagent tracking + `/odd_agents` viewer.
+- [ ] T4 `/odd_tasks` feature-task viewer.
+- [ ] T5 `/odd_changes` viewer.
+- [ ] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
+- [ ] T7 `/odd_review_mode` + `rdd-review` skill (Hermes orchestration contract).
+- [ ] T8 `odd_review` tool facade over `gentle-ai review` (lifecycle, consent relay).
+- [ ] T9 `/odd_persona` + SOUL migration command (backup, dry-run).
 - [ ] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
       upstream sources per component and new upstream commands/skills to triage) +
       scheduled CI.
@@ -129,7 +129,7 @@ gateway.
 
 ## Progress
 
-- 2026-09-24: T2 done: section `gentle-hermes-odd` 3354 chars; skills odd-workflow,
+- 2026-09-24: T2 done: section `hermes-odd-odd` 3354 chars; skills odd-workflow,
   odd-delegation (split for size), odd-feature-tracking; canonical
   `RenderRouting(model.AgentHermes)` vendored from gentle-ai f182ea2. Hermes facts:
   `delegate_task` has no toolsets arg (children inherit parent toolsets incl. MCP; cannot
@@ -146,9 +146,9 @@ gateway.
   `feat/hermes-port` created.
 - 2026-09-24: T1 done. 13 unittest tests green. Hermes API findings for later tasks:
   - Commands register hyphenated (`gentle-commands`); gateways map `_`->`-`
-    (gateway/run.py:19433), Telegram menu shows `/gentle_commands`, CLI needs the hyphen
+    (gateway/run.py:19433), Telegram menu shows `/odd_commands`, CLI needs the hyphen
     form. Optional args hints must use `[...]` (`<...>` hides the command in Telegram).
-  - Plugin skills: `ctx.register_skill(name, path)` -> namespaced `gentle-hermes:<name>`,
+  - Plugin skills: `ctx.register_skill(name, path)` -> namespaced `hermes-odd:<name>`,
     not in the always-on skills index; found via `skills_list`, loaded via `skill_view`.
   - Hooks: `subagent_start` (child_session_id, child_subagent_id `sa-*`, child_goal,
     child_role), `subagent_stop` (child_session_id, child_status, child_summary,

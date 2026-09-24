@@ -9,16 +9,16 @@ from fake_context import REPO_ROOT, BareContext, FakeContext, ensure_repo_on_pat
 
 ensure_repo_on_path()
 
-from gentle_hermes import register  # noqa: E402
-from gentle_hermes.plugin import register_prompt_section  # noqa: E402
-from gentle_hermes.prompt import (  # noqa: E402
+from hermes_odd import register  # noqa: E402
+from hermes_odd.plugin import register_prompt_section  # noqa: E402
+from hermes_odd.prompt import (  # noqa: E402
     SECTION_BUDGET_CHARS,
     SECTION_ID,
     SECTION_MAX_CHARS,
     SKILL_NAMESPACE,
     build_odd_section,
 )
-from gentle_hermes.skills import (  # noqa: E402
+from hermes_odd.skills import (  # noqa: E402
     SKILLS_DIR,
     FrontmatterError,
     discover_skills,
@@ -142,7 +142,7 @@ class FrontmatterParserTests(unittest.TestCase):
             bad = Path(tmp) / "bad-skill"
             bad.mkdir()
             (bad / "SKILL.md").write_text("---\nname: other\n---\n", encoding="utf-8")
-            with self.assertLogs("gentle_hermes", level="WARNING"):
+            with self.assertLogs("hermes_odd", level="WARNING"):
                 self.assertEqual(discover_skills(Path(tmp)), [])
 
 
@@ -160,13 +160,13 @@ class RegistrationTests(unittest.TestCase):
             self.assertEqual(entry["path"], SKILLS_DIR / name / "SKILL.md")
             self.assertTrue(entry["description"])
             self.assertEqual(entry["frontmatter"]["name"], name)
-        self.assertIn("gentle-commands", ctx.commands)
+        self.assertIn("odd-commands", ctx.commands)
 
     def test_section_id_is_hermes_valid(self) -> None:
         self.assertRegex(SECTION_ID, r"^[a-z0-9][a-z0-9._-]{0,127}$")
 
     def test_missing_methods_are_skipped_without_raising(self) -> None:
-        with self.assertLogs("gentle_hermes", level="WARNING") as logs:
+        with self.assertLogs("hermes_odd", level="WARNING") as logs:
             register(BareContext())
         joined = "\n".join(logs.output)
         self.assertIn("register_system_prompt_section is unavailable", joined)
@@ -181,9 +181,9 @@ class RegistrationTests(unittest.TestCase):
                 raise ValueError("bad")
 
         ctx = Raising()
-        with self.assertLogs("gentle_hermes", level="WARNING"):
+        with self.assertLogs("hermes_odd", level="WARNING"):
             register(ctx)
-        self.assertIn("gentle-commands", ctx.commands)
+        self.assertIn("odd-commands", ctx.commands)
         self.assertFalse(register_prompt_section(Raising()))
         self.assertEqual(register_skills(Raising()), 0)
 
