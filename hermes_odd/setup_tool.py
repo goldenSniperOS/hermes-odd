@@ -35,7 +35,7 @@ INPUT_VALUES: dict[str, tuple[str, ...]] = {
     "verbosity": PREF_VALUES["verbosity"],
     "tdd_mode": ("off", "strict", "project"),
     "engram_protocol": PREF_VALUES["engram_protocol"],
-    "soul_cleanup": ("later", "no"),
+    "soul_cleanup": ("yes", "later", "no"),
 }
 ALLOWED_KEYS = (*INPUT_VALUES, "persona_custom_text", "apply_persona_to_soul")
 
@@ -88,7 +88,8 @@ SCHEMA: dict[str, Any] = {
                 "type": "string",
                 "enum": list(INPUT_VALUES["soul_cleanup"]),
                 "description": (
-                    "later = clean the gentle-ai SOUL.md blocks later, with a preview; no = keep."
+                    "yes = next, show the odd_soul_apply dry run and apply it only after the "
+                    "user's explicit yes; later = the user runs /odd_soul later; no = keep."
                 ),
             },
             "apply_persona_to_soul": {
@@ -176,6 +177,12 @@ def make_handler(setup: Setup):
                 "backup": soul.backup.name if soul and soul.backup else None,
                 "config": outcome.config.state if outcome.config else None,
                 "warnings": outcome.warnings,
+                "next": (
+                    "Call odd_soul_apply with confirm=false, show its plan verbatim and ask "
+                    "for an explicit yes before confirm=true."
+                    if answers.get("soul_cleanup") == "yes"
+                    else None
+                ),
                 "note": NEXT_SESSION_NOTE,
             },
             ensure_ascii=False,

@@ -14,7 +14,8 @@ homepage: https://github.com/goldenSniperOS/hermes-odd
 tags: [workflow, odd, rdd, review, gentle-ai-compatible]
 # Settings live under plugins.entries.hermes-odd.settings. The first-run setup
 # (/odd_setup, tool odd_setup_apply) writes them; a valid value here wins over
-# the setup answers kept in plugin state.
+# the setup answers kept in plugin state. Tool odd_soul_apply is the model's
+# dry-run-then-confirm path for the SOUL.md cleanup (/odd_soul).
 config_schema:
   persona:
     type: str
@@ -31,10 +32,14 @@ config_schema:
   engram_protocol:
     type: str
     default: auto
-    description: "Engram memory protocol: auto (when mcp__engram__* tools exist) or off. Stored now; it activates with T9b."
+    description: "Engram memory protocol: auto (a prompt-section line points to the lazy skill hermes-odd:engram-protocol when mcp__engram__* tools exist) or off (no line)."
   soul_cleanup:
     type: str
     default: unset
-    description: "Cleanup of gentle-ai blocks in SOUL.md: unset, later (with a preview) or no. Stored now; the cleanup arrives with T9b."
-provides_tools: [odd_setup_apply]
+    description: "Cleanup of gentle-ai blocks in SOUL.md: unset, yes (the setup shows the dry-run plan and applies it only after your yes), later or no. /odd_soul plan works any time."
+  codegraph_guidance:
+    type: str
+    default: auto
+    description: "CodeGraph guidance: auto (a prompt-section line points to the lazy skill hermes-odd:codegraph when a codegraph binary is on PATH or mcp_servers.codegraph is configured) or off."
+provides_tools: [odd_setup_apply, odd_soul_apply]
 provides_hooks: [on_session_start, subagent_start, post_tool_call, subagent_stop]

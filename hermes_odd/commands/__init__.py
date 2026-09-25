@@ -21,6 +21,7 @@ from .registry import (
 )
 from .review_mode import ReviewModeCommand, make_odd_review_mode
 from .setup import SetupCommand, make_odd_setup
+from .soul import SoulCommand, make_odd_soul
 from .status import Status, make_odd_status
 from .tasks import make_odd_tasks
 
@@ -44,6 +45,7 @@ def build_registry(
     ``/odd_doctor``; ``prober`` is the cached gentle-ai prober they share with
     ``/odd_review_mode`` (which resolves projects like ``/odd_tasks``).
     ``setup`` feeds ``/odd_setup``; without one an in-memory setup is used.
+    ``/odd_soul`` works on the Hermes home's ``SOUL.md``.
     """
     agents = agent_store if agent_store is not None else AgentStore()
     changes = change_store if change_store is not None else ChangeStore(agent_store=agent_store)
@@ -56,6 +58,7 @@ def build_registry(
     registry.add(
         make_odd_setup(SetupCommand(setup if setup is not None else Setup(backend=MemoryBackend())))
     )
+    registry.add(make_odd_soul(SoulCommand()))
     registry.add(make_odd_status(Status(runtime, shared_prober, agents, changes, project_store)))
     registry.add(make_odd_doctor(Doctor(runtime, shared_prober, project_store=project_store)))
     registry.add(make_odd_commands(registry))

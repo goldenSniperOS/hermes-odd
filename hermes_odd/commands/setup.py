@@ -12,7 +12,9 @@ Deterministic plain text; never calls the model. Subcommands:
   form writes (backup first). ``custom`` reuses the own text given to the
   agent during setup;
 * ``tdd <off|strict|project>``, ``engram <on|off>``,
-  ``verbosity <short|detailed>``: store one answer.
+  ``codegraph <auto|off>``, ``verbosity <short|detailed>``: store one answer.
+
+The gentle-ai block cleanup of ``SOUL.md`` is ``/odd_soul``.
 
 A setter or a confirmed persona completes the setup.
 """
@@ -28,10 +30,11 @@ from .registry import CommandSpec
 OUTPUT_MAX_CHARS = 3500
 USAGE = (
     "/odd_setup [status|skip|reset|persona <rioplatense|neutral|custom|none> [confirm]|"
-    "tdd <off|strict|project>|engram <on|off>|verbosity <short|detailed>]"
+    "tdd <off|strict|project>|engram <on|off>|codegraph <auto|off>|verbosity <short|detailed>]"
 )
 TDD_VALUES = ("off", "strict", "project")
 ENGRAM_VALUES = {"on": "auto", "auto": "auto", "off": "off"}
+CODEGRAPH_VALUES = ("auto", "off")
 
 
 def _k(chars: int) -> str:
@@ -49,6 +52,8 @@ def _value_label(key: str, value: str) -> str:
         return personas.LABELS.get(value, value)
     if key == "engram_protocol" and value == "auto":
         return "auto (when mcp__engram__* tools exist)"
+    if key == "codegraph_guidance" and value == "auto":
+        return "auto (when CodeGraph is on PATH or configured)"
     if key == "tdd_mode" and value == "project":
         return "per project"
     return value
@@ -99,7 +104,8 @@ class SetupCommand:
         lines.append(
             "Set up: ask the agent (it loads hermes-odd:setup), or directly: "
             "/odd_setup persona <rioplatense|neutral|custom|none> · tdd <off|strict|project> · "
-            "engram <on|off> · verbosity <short|detailed> · skip · reset"
+            "engram <on|off> · codegraph <auto|off> · verbosity <short|detailed> · skip · "
+            "reset. SOUL cleanup of gentle-ai blocks: /odd_soul"
         )
         lines.append(NEXT_SESSION_NOTE)
         return _fit("\n".join(lines))
@@ -175,7 +181,7 @@ class SetupCommand:
         if plan.gentle_persona and persona != personas.NONE:
             lines.append(
                 "Warning: SOUL.md also has a gentle-ai persona block; both personas would "
-                "coexist (the T9b cleanup can remove the old one)."
+                "coexist (/odd_soul plan persona previews removing the old one)."
             )
         if block:
             lines.extend(["", "---- block ----", block, "---------------"])
@@ -204,6 +210,8 @@ class SetupCommand:
             return self.set_one("tdd_mode", rest[0])
         if head == "engram" and len(rest) == 1 and rest[0] in ENGRAM_VALUES:
             return self.set_one("engram_protocol", ENGRAM_VALUES[rest[0]])
+        if head == "codegraph" and len(rest) == 1 and rest[0] in CODEGRAPH_VALUES:
+            return self.set_one("codegraph_guidance", rest[0])
         if head == "verbosity" and len(rest) == 1 and rest[0] in personas.VERBOSITY_CHOICES:
             return self.set_one("verbosity", rest[0])
         return f"Usage: {USAGE}"
@@ -216,7 +224,7 @@ def make_odd_setup(command: SetupCommand) -> CommandSpec:
         handler=command.handle,
         args_hint=(
             "[status|skip|reset|persona ID [confirm]|tdd off/strict/project|"
-            "engram on/off|verbosity short/detailed]"
+            "engram on/off|codegraph auto/off|verbosity short/detailed]"
         ),
         group="Setup",
     )

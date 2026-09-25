@@ -12,7 +12,8 @@ key                       values                                      default
 ``verbosity``             short, detailed                             short
 ``tdd_mode``              unset, off, strict, project                 unset
 ``engram_protocol``       auto, off                                   auto
-``soul_cleanup``          unset, later, no                            unset
+``soul_cleanup``          unset, yes, later, no                       unset
+``codegraph_guidance``    auto, off                                   auto
 ========================  ==========================================  ============
 
 Storage:
@@ -34,16 +35,22 @@ Storage:
 Where each answer is applied: ``persona`` and ``verbosity`` as the single
 hermes-odd block at the top of ``SOUL.md`` (:mod:`hermes_odd.soul_persona`);
 ``tdd_mode`` as one ``TDD mode:`` line in the prompt section;
-``engram_protocol`` and ``soul_cleanup`` are stored only (their behavior
-arrives with T9b). Everything takes effect in the next new session, because
-Hermes builds ``SOUL.md`` and plugin sections into the prompt once per
-session.
+``engram_protocol`` (``auto``) as one prompt-section line pointing to the
+lazy skill ``hermes-odd:engram-protocol``; ``codegraph_guidance`` (``auto``)
+as one line pointing to ``hermes-odd:codegraph`` while CodeGraph is present
+(a ``codegraph`` binary on ``PATH`` or an ``mcp_servers.codegraph`` entry in
+Hermes' ``config.yaml``); ``soul_cleanup`` ``yes`` makes the setup skill
+show the ``odd_soul_apply`` dry run and apply it only after the user's
+explicit yes (``later``/``no`` change nothing; ``/odd_soul plan`` any time).
+Everything takes effect in the next new session, because Hermes builds
+``SOUL.md`` and plugin sections into the prompt once per session.
 """
 
 from __future__ import annotations
 
 import datetime as _dt
 import logging
+import shutil
 import time
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -51,6 +58,7 @@ from pathlib import Path
 from typing import Any
 
 from . import personas
+from . import soul as soul_mod
 from . import soul_persona as sp
 from .agents import MemoryBackend, resolve_backend
 
@@ -65,7 +73,8 @@ PREF_VALUES: dict[str, tuple[str, ...]] = {
     "verbosity": personas.VERBOSITY_CHOICES,
     "tdd_mode": ("unset", "off", "strict", "project"),
     "engram_protocol": ("auto", "off"),
-    "soul_cleanup": ("unset", "later", "no"),
+    "soul_cleanup": ("unset", "yes", "later", "no"),
+    "codegraph_guidance": ("auto", "off"),
 }
 DEFAULTS: dict[str, str] = {
     "persona": personas.UNSET,
@@ -73,6 +82,7 @@ DEFAULTS: dict[str, str] = {
     "tdd_mode": "unset",
     "engram_protocol": "auto",
     "soul_cleanup": "unset",
+    "codegraph_guidance": "auto",
 }
 PREF_KEYS = tuple(PREF_VALUES)
 
@@ -80,8 +90,11 @@ APPLIED_WHERE = {
     "persona": "SOUL.md: one hermes-odd block at the top",
     "verbosity": "inside the SOUL.md persona block",
     "tdd_mode": "prompt section line 'TDD mode: <mode>'",
-    "engram_protocol": "stored only; the Engram protocol skill activates it with T9b",
-    "soul_cleanup": "stored only; the gentle-ai block cleanup arrives with T9b",
+    "engram_protocol": "prompt section line pointing to hermes-odd:engram-protocol",
+    "soul_cleanup": "/odd_soul: dry-run plan first, written only after an explicit yes",
+    "codegraph_guidance": (
+        "prompt section line pointing to hermes-odd:codegraph while CodeGraph is present"
+    ),
 }
 
 NEXT_SESSION_NOTE = (
@@ -250,14 +263,26 @@ class Setup:
 
     # -- section -------------------------------------------------------------
 
-    def section_inputs(self) -> tuple[bool, str | None]:
-        """``(pending, TDD mode line or None)`` for the prompt section. Never raises."""
+    def section_inputs(self) -> tuple[bool, str | None, list[str]]:
+        """``(pending, TDD mode line or None, skill pointer lines)`` for the prompt
+        section. Never raises."""
         try:
             pending = self.pending()
-            tdd, _source = self.effective()["tdd_mode"]
-            return pending, TDD_LINES.get(tdd)
+            effective = self.effective()
+            tdd, _source = effective["tdd_mode"]
         except Exception:  # noqa: BLE001
-            return False, None
+            return False, None, []
+        pointers: list[str] = []
+        try:
+            from .prompt import CODEGRAPH_POINTER, MEMORY_POINTER
+
+            if effective["engram_protocol"][0] != "off":
+                pointers.append(MEMORY_POINTER)
+            if effective["codegraph_guidance"][0] != "off" and codegraph_available(self.home()):
+                pointers.append(CODEGRAPH_POINTER)
+        except Exception:  # noqa: BLE001
+            logger.debug("hermes-odd: skill pointers failed", exc_info=True)
+        return pending, TDD_LINES.get(tdd), pointers
 
     # -- transitions ---------------------------------------------------------
 
@@ -415,6 +440,8 @@ class Setup:
                     "The SOUL.md block still has the previous answer style: re-apply the "
                     "persona (/odd_setup persona <id> confirm) to rewrite it."
                 )
+        if answers.get("soul_cleanup") == "yes":
+            lines.append(SOUL_CLEANUP_NEXT)
         lines.append(config.text())
         lines.extend(f"Warning: {w}" for w in warnings if w == COEXIST_WARNING)
         lines.append("Setup: complete.")
@@ -435,11 +462,17 @@ LABEL = {
     "tdd_mode": "TDD mode",
     "engram_protocol": "Engram protocol",
     "soul_cleanup": "SOUL cleanup of gentle-ai blocks",
+    "codegraph_guidance": "CodeGraph guidance",
 }
 
 COEXIST_WARNING = (
     "SOUL.md also has a gentle-ai persona block, so two personas now coexist. "
-    "It was left untouched; the T9b cleanup can remove it (with preview and backup)."
+    "It was left untouched; /odd_soul plan persona previews removing it (with backup)."
+)
+
+SOUL_CLEANUP_NEXT = (
+    "SOUL cleanup: next, show the odd_soul_apply dry run (confirm=false) and apply it "
+    "only after the user's explicit yes; or type /odd_soul plan."
 )
 
 
@@ -459,6 +492,35 @@ def persona_summary(persona: str, plan: sp.Plan, result: sp.Result) -> str:
     return text + "."
 
 
+def _mcp_server_configured(lines: list[str], name: str) -> bool:
+    """Whether Hermes' ``config.yaml`` has ``mcp_servers.<name>`` (key names only)."""
+    in_servers = False
+    for line in lines:
+        if not line.strip() or line.lstrip().startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        key = line.strip().partition(":")[0].strip().strip("\"'")
+        if indent == 0:
+            in_servers = key == "mcp_servers"
+        elif in_servers and indent == 2 and key == name:
+            return True
+    return False
+
+
+def codegraph_available(home: Path | None = None) -> bool:
+    """A ``codegraph`` binary on ``PATH`` or an ``mcp_servers.codegraph`` entry in
+    ``<Hermes home>/config.yaml``. Never raises; reads only key names."""
+    try:
+        if shutil.which("codegraph"):
+            return True
+        where = home if home is not None else soul_mod.hermes_home()
+        return _mcp_server_configured(
+            soul_mod._read_small(Path(where) / "config.yaml"), "codegraph"
+        )
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _short(text: str, limit: int = 160) -> str:
     value = " ".join(str(text).split())
     return value if len(value) <= limit else value[: limit - 1] + "…"
@@ -473,7 +535,9 @@ __all__ = [
     "PREF_VALUES",
     "SCHEMA",
     "STATE_KEY",
+    "SOUL_CLEANUP_NEXT",
     "Setup",
     "TDD_LINES",
+    "codegraph_available",
     "valid",
 ]

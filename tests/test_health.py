@@ -385,8 +385,8 @@ class SoulCheckTests(unittest.TestCase):
             "Cap 30,720 (m 128k (cache)): truncated, loses big (partly), routing", check.finding
         )
         self.assertIn("4 gentle-ai blocks", check.finding)
-        self.assertIn("T9", check.hint)
-        self.assertIn("/odd_soul", check.hint)
+        # Only unknown blocks: /odd_soul keeps them, so the hint says so.
+        self.assertIn("/odd_soul keeps", check.hint)
         self.assertNotIn(FAKE_SECRET, check.render())
         self.assertNotIn("xxxx", check.render())
 
@@ -439,7 +439,7 @@ class PluginCheckTests(unittest.TestCase):
         self.assertEqual(check.level, OK, check.finding)
         self.assertIn("section hermes-odd-workflow", check.finding)
         self.assertIn("(all plugins share 8000)", check.finding)
-        self.assertIn("skills 6 (clone)", check.finding)
+        self.assertIn("skills 8 (clone)", check.finding)
         self.assertIn("hooks 5/5", check.finding)
         self.assertIn("state ok", check.finding)
 
@@ -692,6 +692,7 @@ class CommandsListingTests(unittest.TestCase):
                 "odd_changes",
                 "odd_review_mode",
                 "odd_setup",
+                "odd_soul",
                 "odd_status",
                 "odd_doctor",
                 "odd_commands",
@@ -703,7 +704,14 @@ class CommandsListingTests(unittest.TestCase):
         register(ctx)
         with tempfile.TemporaryDirectory() as tmp:
             env = {"HERMES_HOME": tmp, "PATH": tmp}
-            for key in ("odd-status", "odd-doctor", "odd-commands", "odd-review-mode", "odd-setup"):
+            for key in (
+                "odd-status",
+                "odd-doctor",
+                "odd-commands",
+                "odd-review-mode",
+                "odd-setup",
+                "odd-soul",
+            ):
                 with (
                     mock.patch.dict(os.environ, env),
                     mock.patch.dict("sys.modules", {"hermes_constants": None}),

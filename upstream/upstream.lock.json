@@ -325,7 +325,7 @@
       "status": "ported",
       "tasks": ["T9a"],
       "description": "First-run setup over chat (the gentle-ai installer's persona step, rebuilt for Hermes): skill hermes-odd:setup (one clarify call), /odd_setup, tool odd_setup_apply, plugin config_schema, and one hermes-odd persona block at the top of SOUL.md with backup and explicit confirmation.",
-      "port_notes": "T9a: persona texts are hermes-odd's own wording of the upstream behavior rules (no AI attribution in commits, short answers by default, one question at a time, no option menus without a real fork, verify before agreeing, explain why with evidence, alternatives with tradeoffs, persona scope limited to chat with artifacts in English, reply in the user's language, caring and direct mentor tone, concepts before code; Rioplatense voseo or neutral Spanish). Excluded: the '## Identity' product identity, branding, author biography, tool preferences (editor and terminal multiplexers), the Hermes skill-loading and Engram memory sections (Hermes and the T9b Engram skill cover them). Installer presets, component selection and model pickers are not portable (see upstream/SUPPORTED.md). T9b pending: SOUL cleanup of gentle-ai blocks and the lazy Engram protocol skill.",
+      "port_notes": "T9a: persona texts are hermes-odd's own wording of the upstream behavior rules (no AI attribution in commits, short answers by default, one question at a time, no option menus without a real fork, verify before agreeing, explain why with evidence, alternatives with tradeoffs, persona scope limited to chat with artifacts in English, reply in the user's language, caring and direct mentor tone, concepts before code; Rioplatense voseo or neutral Spanish). Excluded: the '## Identity' product identity, branding, author biography, tool preferences (editor and terminal multiplexers), the Hermes skill-loading and Engram memory sections (Hermes and the T9b Engram skill cover them). Installer presets, component selection and model pickers are not portable (see upstream/SUPPORTED.md). The SOUL cleanup of gentle-ai blocks and the lazy Engram protocol skill shipped with T9b (component soul-cleanup).",
       "local_files": [
         "hermes_odd/personas.py",
         "hermes_odd/setup.py",
@@ -349,6 +349,46 @@
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
           "sha256": "0fef2ef2786b88922cb37fb89862a025d1b7138c45d2365e2f5f80fd1e75b981"
+        }
+      ]
+    },
+    "soul-cleanup": {
+      "status": "ported",
+      "tasks": ["T9b"],
+      "description": "Explicit, dry-run-first cleanup of the gentle-ai managed blocks in SOUL.md (/odd_soul, tool odd_soul_apply) and the lazy skills that replace the moved blocks (hermes-odd:engram-protocol, hermes-odd:codegraph), pointed to by one prompt-section line each.",
+      "port_notes": "T9b: the Engram protocol (full variant of internal/assets/engram/protocol.md) and the CodeGraph guidance (CodeGraphGuidanceMarkdown in codegraph_guidance.go) are condensed in hermes-odd's own words and bound to Hermes tool names (mcp__engram__*, mcp__codegraph__*, terminal); `gentle-ai codegraph init --cwd <root>` becomes the upstream CLI `codegraph init <root>` (verified with codegraph 1.2.0 --help). Not ported: the slim, passive-capture and compact variants of protocol.md (Hermes has no compaction hook for them) and the workflow-artifact prompt-capture examples. The cleanup itself is a concept port with no upstream text: sdd-orchestrator (with its nested sdd-session-preflight) and agent-routing are removed, engram-protocol and codegraph-guidance move to the skills, persona and unknown blocks stay; the remote-authorization block that InjectRoutingWithOptions (inject.go) nests inside agent-routing through InjectRemoteAuthorization (remote_authorization.go, contract generic/remote-authorization-contract.md) is lifted byte-identical, with its gentle-ai markers, into agent-routing's place.",
+      "local_files": [
+        "hermes_odd/soul_cleanup.py",
+        "hermes_odd/soul_tool.py",
+        "hermes_odd/commands/soul.py",
+        "skills/engram-protocol/SKILL.md",
+        "skills/codegraph/SKILL.md"
+      ],
+      "sources": [
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/engram/protocol.md",
+          "sha256": "7a55860a7f5b6dbd11b72bd033f7f108b015f3ecaf7dc5e1f9c94b8007954f2e"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/components/communitytool/codegraph_guidance.go",
+          "sha256": "597de9faab5aaebb3189438b980d758fa0f15e5410ed1bc4c8a41f80f774d48a"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/components/agentguidance/inject.go",
+          "sha256": "324c5d09691ff635c5802fe4bb56c5d001d95d74b8462f9d09bd97f3835cb788"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/components/agentguidance/remote_authorization.go",
+          "sha256": "4dbf8e640d4919579d1d24b12e29c0ce9021fc0ba994aa7a7d2948d58893e596"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/generic/remote-authorization-contract.md",
+          "sha256": "9c2fde4551cb25e5dddd39188553be3ed545714997796e453281f8a3290e9b81"
         }
       ]
     }

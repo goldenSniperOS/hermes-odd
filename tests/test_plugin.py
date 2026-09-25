@@ -69,8 +69,8 @@ class RegisterTests(unittest.TestCase):
             ],
         )
         self.assertNotIn("pre_tool_call", names)  # fails closed on timeout in Hermes
-        # The only tool is the first-run setup's write path.
-        self.assertEqual([t["name"] for t in self.ctx.tools], ["odd_setup_apply"])
+        # The only tools are the first-run setup's and the SOUL cleanup's write paths.
+        self.assertEqual([t["name"] for t in self.ctx.tools], ["odd_setup_apply", "odd_soul_apply"])
 
     def test_manifest_lists_the_registered_hooks(self) -> None:
         manifest = (REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8")
@@ -81,7 +81,7 @@ class RegisterTests(unittest.TestCase):
     def test_manifest_lists_the_registered_tools(self) -> None:
         manifest = (REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8")
         line = next(ln for ln in manifest.splitlines() if ln.startswith("provides_tools:"))
-        self.assertEqual(line, "provides_tools: [odd_setup_apply]")
+        self.assertEqual(line, "provides_tools: [odd_setup_apply, odd_soul_apply]")
         for tool in self.ctx.tools:
             self.assertIn(tool["name"], line)
 

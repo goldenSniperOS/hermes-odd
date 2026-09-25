@@ -13,8 +13,10 @@ from fake_context import (
     REPO_ROOT,
     FakeContext,
     FakeState,
+    default_section,
     ensure_repo_on_path,
     mark_setup_complete,
+    no_codegraph,
 )
 
 ensure_repo_on_path()
@@ -302,6 +304,9 @@ class SectionRecordingTests(unittest.TestCase):
         self.assertEqual(make_section_callable(boom)({"cwd": "/"}), ODD_SECTION.strip())
 
     def test_register_records_known_project_from_section(self) -> None:
+        patch = no_codegraph()
+        patch.start()
+        self.addCleanup(patch.stop)
         ctx = FakeContext()
         register(ctx)
         mark_setup_complete(ctx.state)  # no pending-setup line
@@ -309,7 +314,7 @@ class SectionRecordingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project(Path(tmp).resolve(), {"demo": doc_text("Demo", 1, 3)})
             info = types.MappingProxyType({"platform": "telegram", "cwd": str(root / "odd")})
-            self.assertEqual(section["content"](info), ODD_SECTION.strip())
+            self.assertEqual(section["content"](info), default_section())
             stored = ctx.state.get(STATE_KEY)
             self.assertEqual(stored["projects"][0]["root"], str(root))
             self.assertEqual(stored["projects"][0]["platform"], "telegram")

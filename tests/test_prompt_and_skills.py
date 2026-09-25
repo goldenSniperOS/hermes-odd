@@ -9,8 +9,10 @@ from fake_context import (
     REPO_ROOT,
     BareContext,
     FakeContext,
+    default_section,
     ensure_repo_on_path,
     mark_setup_complete,
+    no_codegraph,
 )
 
 ensure_repo_on_path()
@@ -170,13 +172,15 @@ class RegistrationTests(unittest.TestCase):
         self.assertEqual(section["id"], SECTION_ID)
         self.assertEqual(section["max_chars"], SECTION_MAX_CHARS)
         self.assertTrue(callable(section["content"]))
-        # A fresh install is pending setup; once complete the text is exactly ODD_SECTION.
-        self.assertEqual(
-            section["content"]({"platform": "cli", "cwd": ""}),
-            build_odd_section(setup_pending=True),
-        )
-        mark_setup_complete(ctx.state)
-        self.assertEqual(section["content"]({"platform": "cli", "cwd": ""}), build_odd_section())
+        # A fresh install is pending setup; once complete the text is the base
+        # section plus the default Engram pointer (no CodeGraph here).
+        with no_codegraph():
+            self.assertEqual(
+                section["content"]({"platform": "cli", "cwd": ""}), default_section(pending=True)
+            )
+            mark_setup_complete(ctx.state)
+            self.assertEqual(section["content"]({"platform": "cli", "cwd": ""}), default_section())
+        self.assertTrue(default_section().startswith(build_odd_section()))
         self.assertEqual(set(ctx.skills), shipped_skill_names())
         for name, entry in ctx.skills.items():
             self.assertEqual(entry["path"], SKILLS_DIR / name / "SKILL.md")

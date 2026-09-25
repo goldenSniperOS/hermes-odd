@@ -13,7 +13,14 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fake_context import REPO_ROOT, FakeContext, ensure_repo_on_path, mark_setup_complete
+from fake_context import (
+    REPO_ROOT,
+    FakeContext,
+    default_section,
+    ensure_repo_on_path,
+    mark_setup_complete,
+    no_codegraph,
+)
 
 ensure_repo_on_path()
 
@@ -25,7 +32,11 @@ from hermes_odd.commands.doctor import OK, WARN, check_soul  # noqa: E402
 from hermes_odd.commands.setup import SetupCommand  # noqa: E402
 from hermes_odd.plugin import register  # noqa: E402
 from hermes_odd.prompt import (  # noqa: E402
+    CODEGRAPH_POINTER,
+    MEMORY_POINTER,
     ODD_SECTION,
+    POINTER_LINE_MAX_CHARS,
+    POINTER_LINES,
     SECTION_BUDGET_CHARS,
     SECTION_ID,
     SETUP_PENDING_LINE,
@@ -125,6 +136,7 @@ class TempHermesHome(unittest.TestCase):
         patches = [
             mock.patch.dict(os.environ, {"HERMES_HOME": str(self.temp_home)}),
             mock.patch.dict("sys.modules", {"hermes_constants": None}),
+            no_codegraph(),
         ]
         for patch in patches:
             patch.start()
@@ -152,15 +164,49 @@ class SectionTests(TempHermesHome):
 
     def test_every_combination_fits_the_budget(self) -> None:
         lines = [None, *TDD_LINES.values()]
+        pointer_sets = [(), (MEMORY_POINTER,), (CODEGRAPH_POINTER,), POINTER_LINES]
         sizes = []
-        for pending, tdd in itertools.product((False, True), lines):
-            text = build_odd_section(setup_pending=pending, tdd_line=tdd)
+        for pending, tdd, pointers in itertools.product((False, True), lines, pointer_sets):
+            text = build_odd_section(setup_pending=pending, tdd_line=tdd, pointers=pointers)
             sizes.append(len(text))
-            self.assertLessEqual(len(text), SECTION_BUDGET_CHARS, (pending, tdd))
+            self.assertLessEqual(len(text), SECTION_BUDGET_CHARS, (pending, tdd, pointers))
             self.assertEqual(text, text.strip())
             if tdd:
                 self.assertEqual(text.count("TDD mode:"), 1)
-        self.assertLessEqual(max(sizes), SECTION_BUDGET_CHARS)
+            for pointer in pointers:
+                self.assertEqual(text.count(pointer), 1)
+        # The largest combination: every pointer, the longest TDD line, pending.
+        longest = max(TDD_LINES.values(), key=len)
+        biggest = build_odd_section(setup_pending=True, tdd_line=longest, pointers=POINTER_LINES)
+        self.assertEqual(max(sizes), len(biggest))
+        self.assertLessEqual(len(biggest), SECTION_BUDGET_CHARS)
+
+    def test_pointer_lines_are_short_and_name_shipped_skills(self) -> None:
+        shipped = {p.parent.name for p in (REPO_ROOT / "skills").glob("*/SKILL.md")}
+        expected = {MEMORY_POINTER: "engram-protocol", CODEGRAPH_POINTER: "codegraph"}
+        for line, skill in expected.items():
+            self.assertNotIn("\n", line)
+            self.assertLessEqual(len(line), POINTER_LINE_MAX_CHARS)
+            self.assertIn(f"hermes-odd:{skill}", line)
+            self.assertIn(skill, shipped)
+
+    def test_pointers_follow_the_preferences(self) -> None:
+        ctx = ConfigContext()
+        register(ctx)
+        mark_setup_complete(ctx.state)
+        section = ctx.prompt_sections[0]["content"]
+        self.assertEqual(section({}), default_section())
+        ctx.settings["engram_protocol"] = "off"
+        self.assertEqual(section({}), ODD_SECTION.strip())
+        with mock.patch("hermes_odd.setup.codegraph_available", return_value=True):
+            self.assertTrue(section({}).endswith(CODEGRAPH_POINTER))
+            ctx.settings["engram_protocol"] = "auto"
+            self.assertTrue(section({}).endswith(MEMORY_POINTER + "\n" + CODEGRAPH_POINTER))
+            ctx.settings["codegraph_guidance"] = "off"
+            self.assertEqual(section({}), default_section())
+        # A bogus pointer from a broken input is dropped; the section still renders.
+        rendered = make_section_callable(None, lambda: (False, None, ["Injected line"]))({})
+        self.assertEqual(rendered, ODD_SECTION.strip())
 
     def test_tdd_line_only_when_set(self) -> None:
         for mode in ("off", "strict", "project"):
@@ -180,7 +226,7 @@ class SectionTests(TempHermesHome):
         self.assertTrue(section({}).endswith(SETUP_PENDING_LINE))
         command = ctx.commands["odd-setup"]["handler"]
         command("skip")
-        self.assertEqual(section({}), ODD_SECTION.strip())
+        self.assertEqual(section({}), default_section())
         command("reset")
         self.assertTrue(section({}).endswith(SETUP_PENDING_LINE))
         command("tdd strict")
@@ -197,7 +243,29 @@ class SectionTests(TempHermesHome):
         section = ctx.prompt_sections[0]["content"]
         self.assertTrue(section({}).endswith(TDD_LINES["off"]))
         ctx.settings["tdd_mode"] = "bogus"  # invalid config is ignored
-        self.assertEqual(section({}), ODD_SECTION.strip())
+        self.assertEqual(section({}), default_section())
+
+
+class CodegraphDetectionTests(unittest.TestCase):
+    def test_codegraph_detection_reads_path_and_mcp_server_keys(self) -> None:
+        from hermes_odd import setup as setup_mod
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        home = Path(tmp.name)
+        with mock.patch("hermes_odd.setup.shutil.which", return_value=None):
+            self.assertFalse(setup_mod.codegraph_available(home))
+            (home / "config.yaml").write_text(
+                "model:\n  default: m\nmcp_servers:\n  engram:\n    command: engram\n",
+                encoding="utf-8",
+            )
+            self.assertFalse(setup_mod.codegraph_available(home))
+            (home / "config.yaml").write_text(
+                "mcp_servers:\n  codegraph:\n    command: codegraph\n", encoding="utf-8"
+            )
+            self.assertTrue(setup_mod.codegraph_available(home))
+        with mock.patch("hermes_odd.setup.shutil.which", return_value="/usr/bin/codegraph"):
+            self.assertTrue(setup_mod.codegraph_available(Path("/nonexistent")))
 
 
 # -- personas -------------------------------------------------------------
@@ -307,8 +375,8 @@ class ToolSchemaTests(unittest.TestCase):
     def test_register_adds_the_tool(self) -> None:
         ctx = FakeContext()
         register(ctx)
-        self.assertEqual(len(ctx.tools), 1)
-        tool = ctx.tools[0]
+        self.assertEqual(len(ctx.tools), 2)
+        tool = next(t for t in ctx.tools if t["name"] == TOOL_NAME)
         self.assertEqual(tool["name"], TOOL_NAME)
         self.assertEqual(tool["toolset"], TOOLSET)
         self.assertIs(tool["schema"], TOOL_SCHEMA)
@@ -532,8 +600,9 @@ class CommandTests(HomeCase):
             "Persona: not chosen · default · SOUL.md",
             "Answer style: short · default · inside the SOUL.md persona block",
             "TDD mode: unset · default · prompt section line",
-            "Engram protocol: auto (when mcp__engram__* tools exist) · default · stored only",
-            "T9b",
+            "Engram protocol: auto (when mcp__engram__* tools exist) · default · prompt section",
+            "CodeGraph guidance: auto (when CodeGraph is on PATH or configured) · default",
+            "/odd_soul",
             "a gentle-ai persona block coexists",
             "next new session",
         ):
@@ -938,7 +1007,10 @@ class SkillTests(unittest.TestCase):
             "backup",
             "stop and wait",
             "mark_recommended",
-            "T9b",
+            "odd_soul_apply",
+            "confirm: false",
+            "plan_id",
+            "remove_gentle_persona",
             "/odd_setup skip",
         ):
             self.assertIn(token, self.text)

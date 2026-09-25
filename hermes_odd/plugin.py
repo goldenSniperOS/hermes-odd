@@ -26,6 +26,7 @@ from .prompt import (
 from .runtime import RuntimeInfo
 from .setup import Setup
 from .setup_tool import register_setup_tool
+from .soul_tool import register_soul_tool
 
 logger = logging.getLogger("hermes_odd")
 
@@ -139,6 +140,7 @@ def register(ctx: Any) -> None:
         logger.warning("hermes-odd: change tracking failed to start: %s", exc)
     if setup is not None:
         runtime.tools_registered += int(register_setup_tool(ctx, setup))
+    runtime.tools_registered += int(register_soul_tool(ctx))
     try:
         registry = build_registry(
             agent_store, project_store, change_store, runtime=runtime, setup=setup

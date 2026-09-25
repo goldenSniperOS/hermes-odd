@@ -17,7 +17,7 @@ into the prompt to save budget):
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 logger = logging.getLogger("hermes_odd")
@@ -74,30 +74,48 @@ SETUP_PENDING_LINE = (
 )
 SETUP_PENDING_LINE_MAX_CHARS = 200
 
+# Pointers to lazy skills, one line each, added by the setup preferences
+# (``engram_protocol``, ``codegraph_guidance``); both default to ``auto``.
+MEMORY_POINTER = (
+    "Memory: with mcp__engram__* tools, load hermes-odd:engram-protocol "
+    "(what to save, search first, session summary)."
+)
+CODEGRAPH_POINTER = (
+    "Code structure: CodeGraph is present; load hermes-odd:codegraph before broad searches."
+)
+POINTER_LINES = (MEMORY_POINTER, CODEGRAPH_POINTER)
+POINTER_LINE_MAX_CHARS = 160
+
 
 def build_odd_section(
     session_info: Mapping[str, Any] | None = None,
     *,
     setup_pending: bool = False,
     tdd_line: str | None = None,
+    pointers: Sequence[str] = (),
 ) -> str:
     """Return the compact ODD section.
 
-    With no setup input the text is exactly ``ODD_SECTION.strip()``. A
-    ``tdd_line`` (the user's TDD mode from setup) and the setup-pending line
-    are appended, one line each, only when present. ``session_info`` is
-    accepted for the Hermes callable contract.
+    With no setup input the text is exactly ``ODD_SECTION.strip()``. Skill
+    ``pointers`` (memory, CodeGraph), a ``tdd_line`` (the user's TDD mode
+    from setup) and the setup-pending line are appended, one line each and
+    in that order, only when present. ``session_info`` is accepted for the
+    Hermes callable contract.
     """
     text = ODD_SECTION.strip()
-    extra = [line for line in (tdd_line, SETUP_PENDING_LINE if setup_pending else None) if line]
+    extra = [
+        line
+        for line in (*pointers, tdd_line, SETUP_PENDING_LINE if setup_pending else None)
+        if line
+    ]
     if extra:
         text += "\n\n" + "\n".join(extra)
     return text
 
 
 SectionObserver = Callable[[Mapping[str, Any]], None]
-# Returns ``(setup_pending, tdd_line or None)``.
-SetupInputs = Callable[[], tuple[bool, str | None]]
+# Returns ``(setup_pending, tdd_line or None[, pointer lines])``.
+SetupInputs = Callable[[], tuple]
 
 
 def make_section_callable(
@@ -112,7 +130,8 @@ def make_section_callable(
     uses it to learn project roots); its failures are swallowed so the
     section is never skipped, and the observer cannot change the prompt.
     ``setup_inputs`` (the first-run setup) decides the optional TDD mode and
-    setup-pending lines; when it fails the section renders without them.
+    setup-pending lines and the lazy-skill pointers; when it fails the
+    section renders without them.
     """
 
     def render(session_info: Mapping[str, Any] | None = None) -> str:
@@ -121,14 +140,19 @@ def make_section_callable(
                 observer(session_info if isinstance(session_info, Mapping) else {})
             except Exception:  # noqa: BLE001 - never skip the section
                 logger.debug("hermes-odd: section observer failed", exc_info=True)
-        pending, tdd_line = False, None
+        pending, tdd_line, pointers = False, None, ()
         if setup_inputs is not None:
             try:
-                pending, tdd_line = setup_inputs()
+                values = tuple(setup_inputs())
+                pending, tdd_line = values[0], values[1]
+                if len(values) > 2:
+                    pointers = tuple(p for p in values[2] if p in POINTER_LINES)
             except Exception:  # noqa: BLE001 - never skip the section
                 logger.debug("hermes-odd: setup inputs failed", exc_info=True)
-                pending, tdd_line = False, None
-        return build_odd_section(session_info, setup_pending=bool(pending), tdd_line=tdd_line)
+                pending, tdd_line, pointers = False, None, ()
+        return build_odd_section(
+            session_info, setup_pending=bool(pending), tdd_line=tdd_line, pointers=pointers
+        )
 
     render.__name__ = "hermes_odd_workflow_section"
     return render

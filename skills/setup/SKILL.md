@@ -1,6 +1,6 @@
 ---
 name: setup
-description: "First-run setup for hermes-odd over chat: ask persona, answer style, TDD mode, Engram protocol and SOUL cleanup in one clarify call, confirm, then apply with odd_setup_apply."
+description: "First-run setup for hermes-odd over chat: ask persona, answer style, TDD mode, Engram protocol and SOUL cleanup in one clarify call, confirm, then apply with odd_setup_apply (and odd_soul_apply for the cleanup)."
 version: 0.1.0
 author: goldenSniperOS
 license: MIT
@@ -41,8 +41,10 @@ text, the user answers with a number or with their own text, and nothing is
 marked. Never add "(Recommended)", "default" or "suggested" to any persona
 option, and never order them as a preference.
 
-The other four questions use `choices`; their first choice is the plugin's
-default, which is why clarify's marker on it is accurate.
+The other four questions use `choices`. For three of them the first choice is
+the plugin's default, so clarify's marker on it is accurate. For the SOUL
+cleanup the first choice is hermes-odd's recommendation: it only shows a
+dry-run plan, and nothing is written without a second, explicit yes.
 
 ```json
 {
@@ -63,8 +65,8 @@ default, which is why clarify's marker on it is accurate.
       "choices": ["Auto (when mcp__engram__* tools exist)", "Off"]
     },
     {
-      "question": "Clean the gentle-ai blocks out of SOUL.md later?",
-      "choices": ["Yes, later with a preview", "No"]
+      "question": "Clean the gentle-ai blocks out of SOUL.md (dry-run plan first, backup, your yes before writing)?",
+      "choices": ["Yes, show me the plan", "Later (/odd_soul)", "No"]
     }
   ]
 }
@@ -82,7 +84,7 @@ Mapping to `odd_setup_apply` arguments:
 | Short first / Detailed | `verbosity: "short"` / `"detailed"` |
 | Per project / Strict / Off | `tdd_mode: "project"` / `"strict"` / `"off"` |
 | Auto / Off | `engram_protocol: "auto"` / `"off"` |
-| Yes, later with a preview / No | `soul_cleanup: "later"` / `"no"` |
+| Yes, show me the plan / Later (/odd_soul) / No | `soul_cleanup: "yes"` / `"later"` / `"no"` |
 
 For a closed question, an "Other" answer that is not one of the choices is
 invalid: ask that question again. A blank answer means "not answered": omit
@@ -112,12 +114,34 @@ choose, default or infer an answer.
    (for example two personas coexisting). On an `error`, show it, fix only
    what it names (for example a too long or blocked own text) and ask again.
 
-## Answers that arrive later
+## SOUL cleanup (answer "Yes, show me the plan")
 
-- The Engram protocol answer is stored now; the protocol itself activates
-  with T9b. Say so if asked.
-- The SOUL cleanup answer is stored only; the cleanup (with preview and
-  backup) arrives with T9b. Never edit gentle-ai blocks yourself.
+Only after `odd_setup_apply` returned, and only in the parent session:
+
+1. Call `odd_soul_apply` with `confirm: false` (a dry run; nothing is
+   written). Show its `plan` to the user verbatim: every block with its
+   action (remove, move to skill, keep, lift), the characters saved, the new
+   size and truncation, and the warning that `gentle-ai install` for Hermes
+   or `gentle-ai sync --agent hermes` re-adds the blocks.
+2. Ask for explicit confirmation (yes/no), then stop and wait.
+3. Yes: call `odd_soul_apply` with `confirm: true` and the dry run's
+   `plan_id`, then relay its `summary` and `note`. A `plan_id` mismatch
+   means `SOUL.md` changed: run the dry run again and ask again.
+4. No, or `changes: false`: nothing is written; `/odd_soul plan` shows it
+   again any time.
+
+The old gentle-ai persona is kept unless the user explicitly asks to remove
+it and a hermes-odd persona block exists; then use
+`remove_gentle_persona: true` in both calls. Never edit gentle-ai blocks
+yourself with file tools.
+
+## Where the other answers apply
+
+- Engram protocol `auto`: the prompt section gets one line pointing to
+  `hermes-odd:engram-protocol`; `off` removes it.
+- CodeGraph guidance is not asked: it defaults to `auto` (a pointer to
+  `hermes-odd:codegraph` while CodeGraph is present); `/odd_setup codegraph
+  off` turns it off.
 - The TDD mode appears in the prompt section as a `TDD mode:` line from the
   next new session; `hermes-odd:odd-workflow` section 6 explains it.
 
@@ -126,5 +150,7 @@ choose, default or infer an answer.
 `/odd_setup` (status), `/odd_setup skip`, `/odd_setup reset`,
 `/odd_setup persona <rioplatense|neutral|custom|none>` (dry-run preview;
 add `confirm` to write), `/odd_setup tdd <off|strict|project>`,
-`/odd_setup engram <on|off>`, `/odd_setup verbosity <short|detailed>`.
-In the CLI the hyphen form: `/odd-setup`.
+`/odd_setup engram <on|off>`, `/odd_setup codegraph <auto|off>`,
+`/odd_setup verbosity <short|detailed>`, and for the cleanup
+`/odd_soul [status|plan|apply confirm|restore]`.
+In the CLI the hyphen form: `/odd-setup`, `/odd-soul`.

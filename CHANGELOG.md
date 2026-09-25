@@ -7,6 +7,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+
+- README install guide in three steps: the Gentle AI binaries and
+  `hermes mcp add` commands for Engram and Context7 (never gentle-ai's
+  Hermes install), then the plugin, then the first-run setup.
 - First-run setup over chat, the Hermes version of the gentle-ai installer's persona
   step. While it is pending, the prompt section carries one line asking the agent to
   offer it once, never mid-task. Skill `hermes-odd:setup` asks five questions in one
@@ -31,11 +35,40 @@ and the project uses [Semantic Versioning](https://semver.org/).
   and checked against Hermes' own SOUL.md threat scan when available. The built-in
   personas (`hermes_odd/personas.py`) are hermes-odd's own wording of the upstream
   behavior rules, without product identity or branding.
+- `/odd_soul [status|plan [persona]|apply [persona] confirm|restore [N|backup]]` (group
+  Setup): cleans gentle-ai's managed blocks out of `SOUL.md`. `sdd-orchestrator` (with its
+  nested `sdd-session-preflight`) and `agent-routing` are removed, keeping the nested
+  `remote-authorization` block byte-identical in agent-routing's place (with its
+  `gentle-ai:` markers); `engram-protocol` and `codegraph-guidance` move to lazy skills;
+  the gentle-ai `persona` is kept unless explicitly requested while a hermes-odd persona
+  exists; user text and unknown blocks stay byte-identical. `plan` is a dry run with the
+  characters saved and Hermes truncation before -> after (128k, 200k, 1M and the
+  configured model); `apply confirm` reuses the persona machinery (backup
+  `SOUL.md.hermes-odd-bak-<UTC>`, last 5 kept, atomic write with the file's
+  permissions) and verifies the written file; `restore` lists and restores backups
+  (backing up the current file first). Unclosed, stray or crossed markers refuse with
+  the line number and change nothing. Plan and apply warn that `gentle-ai install` for
+  Hermes or `gentle-ai sync --agent hermes` re-adds the blocks.
+- Tool `odd_soul_apply` (`confirm` required): `confirm=false` returns the dry-run plan and
+  a `plan_id`; `confirm=true` applies only with the `plan_id` of the current file. The
+  setup skill uses it when the `soul_cleanup` answer is the new `yes`.
+- Lazy skills `hermes-odd:engram-protocol` (Engram protocol bound to `mcp__engram__*`,
+  derived from gentle-ai `internal/assets/engram/protocol.md`) and `hermes-odd:codegraph`
+  (CodeGraph guidance with the upstream `codegraph init` CLI, derived from
+  `codegraph_guidance.go`). The prompt section adds one pointer line to each: Engram while
+  `engram_protocol` is `auto` (default), CodeGraph while the new `codegraph_guidance`
+  preference is `auto` and a `codegraph` binary is on `PATH` or `mcp_servers.codegraph` is
+  configured. The largest combination stays under the 3,800-character cap (tested).
 - Plugin `config_schema` for `persona` (default `unset`), `verbosity`, `tdd_mode`,
-  `engram_protocol` and `soul_cleanup`. A chosen TDD mode adds one `TDD mode:` line
+  `engram_protocol`, `soul_cleanup` (`unset`, `yes`, `later`, `no`) and
+  `codegraph_guidance` (`auto`, `off`); `/odd_setup codegraph <auto|off>`. A chosen TDD mode adds one `TDD mode:` line
   to the prompt section, which `hermes-odd:odd-workflow` reads.
 
 ### Changed
+- `/odd_doctor`'s SOUL.md check recommends `/odd_soul plan` (with the blocks to remove
+  and the characters saved) when the cleanup would help.
+- With the default preferences the prompt section now ends with the Engram skill pointer
+  line; `build_odd_section()` without inputs is still exactly `ODD_SECTION`.
 - `/odd_doctor` also reports the hermes-odd persona block (size, whether it is at the
   top), and SOUL.md truncation math covers `hermes-odd:` blocks too; only gentle-ai
   blocks trigger the "sent with every message" warning.
@@ -43,6 +76,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
   and gentle-shell `extensions/gentle-ai.ts`; `upstream/SUPPORTED.md` triages the
   installer steps (persona and strict TDD ported as setup; presets, component
   selection and model pickers not portable or not applicable).
+- Upstream lock: new component `soul-cleanup` indexing gentle-ai
+  `internal/assets/engram/protocol.md`, `codegraph_guidance.go`, `inject.go`,
+  `remote_authorization.go` and the remote-authorization contract; `SUPPORTED.md`
+  triages the SOUL blocks (engram protocol and codegraph guidance ported as lazy skills;
+  remote-authorization kept in SOUL).
 
 ## [0.3.0] - 2026-09-25
 

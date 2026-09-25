@@ -49,6 +49,7 @@ GENTLE_AI = "gentle-ai"
 HERMES_ODD = "hermes-odd"
 NAMESPACES = (GENTLE_AI, HERMES_ODD)
 _MARKER_RE = re.compile(r"<!--\s*(/?)(gentle-ai|hermes-odd):([a-z0-9][a-z0-9_-]{0,63})\s*-->")
+MARKER_RE = _MARKER_RE  # shared with the SOUL cleanup's strict marker scan
 _INT_RE = re.compile(r"^\d{1,9}$")
 
 

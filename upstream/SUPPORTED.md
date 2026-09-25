@@ -36,6 +36,7 @@ Notes:
 | `review-contract` | pending (T8, blocked upstream) | CLI contract `gentle-ai.review-integration/v2` (capabilities v2.6); provider contract mirror 1.2.0; verified: `--agent hermes` fails with `gentle-ai.review-integration.failure/v2` `immutable_review_transport_unsupported` | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
 | `viewers` | ported | Viewers `/odd_agents`, `/odd_tasks`, `/odd_changes`; Health `/odd_status`, `/odd_doctor`, `/odd_commands` (all concept ports, no copied text) | gentle-shell `extensions/gentle-ai.ts`, `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts`, `docs/gentle-agents-activity.md`, `extensions/gentle-shell.ts`, `extensions/gentle-todo.ts`, `docs/gentle-shell.md`, `lib/shell-changes.ts`, `lib/shell-todo.ts`, `lib/review-sidebar-state.ts`, `lib/session-changes.ts`, `lib/shell-changes-view.ts`, `README.md` |
 | `persona` | ported (T9a) | First-run setup: skill `skills/setup` (one `clarify` call), `/odd_setup` (`hermes_odd/commands/setup.py`), tool `odd_setup_apply` (`hermes_odd/setup_tool.py`), preferences and setup record (`hermes_odd/setup.py`), plugin `config_schema`, and one `<!-- hermes-odd:persona -->` block at the top of `SOUL.md` (`hermes_odd/soul_persona.py`, texts in `hermes_odd/personas.py`, own wording) | gentle-ai `internal/assets/hermes/persona-gentleman.md`, `internal/assets/hermes/persona-neutral.md`; gentle-shell `extensions/gentle-ai.ts` (`GENTLEMAN_PERSONA_PROMPT`, `NEUTRAL_PERSONA_PROMPT`) |
+| `soul-cleanup` | ported (T9b) | `/odd_soul` (`hermes_odd/commands/soul.py`), tool `odd_soul_apply` (`hermes_odd/soul_tool.py`), cleanup rules and verification (`hermes_odd/soul_cleanup.py`, concept port), lazy skills `skills/engram-protocol` and `skills/codegraph` (own wording), one pointer line each in the prompt section | gentle-ai `internal/assets/engram/protocol.md`, `internal/components/communitytool/codegraph_guidance.go`, `internal/components/agentguidance/inject.go`, `internal/components/agentguidance/remote_authorization.go`, `internal/assets/generic/remote-authorization-contract.md` |
 
 Deliberately not ported (see `excluded` in the lock): SDD in every form; Pi
 themes, banners, animations, TUI widgets and shortcuts; Pi runtime plumbing
@@ -74,6 +75,24 @@ tooling.
 
 ## Triage log
 
+### 2026-09-25: T9b SOUL cleanup and lazy guidance skills
+
+gentle-ai's Hermes writer puts these top-level blocks into `SOUL.md` (verified
+on a real install: 88,482 chars, cut by Hermes at 128k and 200k context):
+`codegraph-guidance`, `persona`, `engram-protocol`, `sdd-orchestrator` (with
+a nested `sdd-session-preflight`) and `agent-routing` (with a nested
+`remote-authorization`, injected by `InjectRoutingWithOptions` in
+`internal/components/agentguidance/inject.go`).
+
+| Area | Decision |
+|---|---|
+| Engram protocol block (`internal/assets/engram/protocol.md`, full variant) | ported as a lazy skill: `hermes-odd:engram-protocol`, own condensed wording bound to `mcp__engram__*` (when and what to save, topic keys, search before asking, session summary, after compaction); removed from `SOUL.md` by `/odd_soul`; a prompt-section line points to it while `engram_protocol` is `auto`. The slim, passive-capture and compact variants are not ported (they target runtimes with their own hooks) |
+| CodeGraph guidance block (`CodeGraphGuidanceMarkdown` in `internal/components/communitytool/codegraph_guidance.go`) | ported as a lazy skill: `hermes-odd:codegraph` (worktree placement, required order, read-only surface); `gentle-ai codegraph init --cwd <root>` becomes the upstream CLI `codegraph init <root>` (codegraph 1.2.0); a prompt-section line points to it while `codegraph_guidance` is `auto` and CodeGraph is on `PATH` or configured as an MCP server |
+| `remote-authorization` block (`remote_authorization.go`, `internal/assets/generic/remote-authorization-contract.md`) | kept in SOUL: lifted byte-identical, with its `gentle-ai:` markers, out of `agent-routing` into its place (a general safety rule the user keeps) |
+| `sdd-orchestrator`, `sdd-session-preflight`, `agent-routing` blocks | removed by `/odd_soul apply confirm` (backup, atomic write, verification); hermes-odd ships no SDD and supplies ODD routing through its own section |
+| gentle-ai `persona` block | kept; `/odd_soul plan persona` removes it only on request and only while a hermes-odd persona block exists |
+| Re-adding by gentle-ai | not portable: `gentle-ai install` selecting Hermes or `gentle-ai sync --agent hermes` writes the blocks again; `/odd_soul` warns about it (binary-only rule) |
+
 ### 2026-09-25: T9a first-run setup (gentle-ai installer persona step)
 
 The gentle-ai installer (`internal/tui/screens/*.go`) is a terminal wizard that
@@ -84,14 +103,14 @@ preference Hermes can apply are ported, over chat (CLI/TUI and Telegram).
 | Area | Decision |
 |---|---|
 | Installer persona step (`internal/tui/screens/persona.go`: gentleman / neutral / custom) and the gentle-pi persona view (`GENTLEMAN_PERSONA_PROMPT`, `NEUTRAL_PERSONA_PROMPT` in `extensions/gentle-ai.ts`) | ported as the first-run setup: `hermes-odd:setup` asks once over `clarify` (Mentor rioplatense (voseo), Mentor neutral, My own text, None; no default and no recommended option), `/odd_setup persona <id>` previews and `confirm` writes; the persona is one `hermes-odd:persona` block at the top of `SOUL.md`, with a backup |
-| Persona texts (`internal/assets/hermes/persona-gentleman.md`, `persona-neutral.md`) | ported in hermes-odd's own words (`hermes_odd/personas.py`): the behavior rules only. Not ported: the `## Identity` product identity, branding, author biography, tool preferences, and the Hermes skill-loading and Engram memory sections (Hermes loads plugin skills itself; the Engram protocol becomes a lazy skill in T9b) |
+| Persona texts (`internal/assets/hermes/persona-gentleman.md`, `persona-neutral.md`) | ported in hermes-odd's own words (`hermes_odd/personas.py`): the behavior rules only. Not ported: the `## Identity` product identity, branding, author biography, tool preferences, and the Hermes skill-loading and Engram memory sections (Hermes loads plugin skills itself; the Engram protocol became the lazy skill `hermes-odd:engram-protocol` in T9b) |
 | Installer strict TDD step (`internal/tui/screens/strict_tdd.go`) | ported as the setup's TDD question (off / strict / per project); it reaches ODD as one `TDD mode:` line in the prompt section, read by `hermes-odd:odd-workflow` |
-| Engram setup and SOUL cleanup of gentle-ai blocks | preferences stored now (`engram_protocol`, `soul_cleanup`); behavior pending: T9b |
+| Engram setup and SOUL cleanup of gentle-ai blocks | preferences stored in T9a (`engram_protocol`, `soul_cleanup`); behavior shipped in T9b (see the T9b entry) |
 | Installer presets (`internal/tui/screens/preset.go`: Memory Only, Dev Stack, Dev Stack + Polish, Custom) | not portable: they choose which gentle-ai components (SDD, skills, themes, logo, GGA) get installed into agent configurations; hermes-odd installs as one plugin and ships no SDD, themes or logo |
 | Component selection and dependency tree (`skill_picker.go`, `community_tools.go`, `dependency_tree.go`, `opencode_plugins.go`) | not applicable: the plugin surface is fixed; Engram and CodeGraph are separate MCP servers the user installs in Hermes |
 | Model pickers and model configuration (`model_picker.go`, `claude_model_picker.go`, `codex_model_picker.go`, `kiro_model_picker.go`, `model_config.go`, `profiles.go`) | not applicable: Hermes owns model selection (`hermes model`, `config.yaml`); hermes-odd never routes models |
 | Review mode step (`review_mode.go`, `install_review_mode.go`) | already ported: `/odd_review_mode` (T7) |
-| Backups screen (`backups.go`) | partly: every `SOUL.md` write keeps a `SOUL.md.hermes-odd-bak-<UTC timestamp>` copy (last 5); restore is a manual file copy |
+| Backups screen (`backups.go`) | partly: every `SOUL.md` write keeps a `SOUL.md.hermes-odd-bak-<UTC timestamp>` copy (last 5); `/odd_soul restore` lists and restores them (T9b) |
 | SDD mode, agent builder, upgrade/sync/uninstall screens | not portable: SDD, or gentle-ai's own lifecycle for agent writers hermes-odd replaces |
 
 ### 2026-09-25: T7 RDD on Hermes (gentle-ai 3.7.0 binary verified)

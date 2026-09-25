@@ -1,6 +1,8 @@
 """Write, replace or remove the single hermes-odd persona block in ``SOUL.md``.
 
-This is the only ``SOUL.md`` mutation hermes-odd makes today. The block is::
+Besides the gentle-ai block cleanup (:mod:`hermes_odd.soul_cleanup`, which
+reuses the reading, backup and atomic-write machinery here), this is the only
+``SOUL.md`` mutation hermes-odd makes. The block is::
 
     <!-- hermes-odd:persona -->
     ...
@@ -176,36 +178,63 @@ def _span_with_trailing_newlines(text: str, start: int, end: int) -> tuple[int, 
     return start, end
 
 
+@dataclass
+class SoulFile:
+    """``SOUL.md`` read for rewriting: text, permissions, or why it is refused."""
+
+    path: Path
+    exists: bool = False
+    text: str = ""
+    mode: int = NEW_FILE_MODE
+    error: str = ""
+
+
+def read_soul_file(path: Path) -> SoulFile:
+    """Read ``path`` for a rewrite with every refusal applied. Never raises.
+
+    Shared by the persona block and the gentle-ai block cleanup
+    (:mod:`hermes_odd.soul_cleanup`): a symlink, a non-regular file, a file
+    over 4 MB or one that is not UTF-8 is refused (``error``).
+    """
+    loaded = SoulFile(path=path)
+    try:
+        if path.is_symlink():
+            loaded.exists = True
+            loaded.error = "SOUL.md is a symlink; hermes-odd will not replace it"
+            return loaded
+        if path.exists() and not path.is_file():
+            loaded.exists = True
+            loaded.error = "SOUL.md is not a regular file"
+            return loaded
+        raw = b""
+        if path.is_file():
+            loaded.exists = True
+            loaded.mode = stat.S_IMODE(path.stat().st_mode)
+            with open(path, "rb") as handle:
+                raw = handle.read(MAX_SOUL_BYTES + 1)
+            if len(raw) > MAX_SOUL_BYTES:
+                loaded.error = "SOUL.md is larger than 4 MB; hermes-odd will not rewrite it"
+                return loaded
+        try:
+            loaded.text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            loaded.error = "SOUL.md is not valid UTF-8; hermes-odd will not rewrite it"
+            return loaded
+    except OSError as exc:
+        loaded.error = f"SOUL.md could not be read ({type(exc).__name__})"
+    return loaded
+
+
 def plan_block(block: str | None, home: Path | None = None) -> Plan:
     """Plan writing ``block`` (``None`` = remove). Reads only; never raises."""
     path = soul_path(home)
     plan = Plan(path=path)
-    try:
-        if path.is_symlink():
-            plan.exists = True
-            plan.error = "SOUL.md is a symlink; hermes-odd will not replace it"
-            return plan
-        if path.exists() and not path.is_file():
-            plan.exists = True
-            plan.error = "SOUL.md is not a regular file"
-            return plan
-        raw = b""
-        if path.is_file():
-            plan.exists = True
-            plan.mode = stat.S_IMODE(path.stat().st_mode)
-            with open(path, "rb") as handle:
-                raw = handle.read(MAX_SOUL_BYTES + 1)
-            if len(raw) > MAX_SOUL_BYTES:
-                plan.error = "SOUL.md is larger than 4 MB; hermes-odd will not rewrite it"
-                return plan
-        try:
-            original = raw.decode("utf-8")
-        except UnicodeDecodeError:
-            plan.error = "SOUL.md is not valid UTF-8; hermes-odd will not rewrite it"
-            return plan
-    except OSError as exc:
-        plan.error = f"SOUL.md could not be read ({type(exc).__name__})"
+    loaded = read_soul_file(path)
+    plan.exists, plan.mode = loaded.exists, loaded.mode
+    if loaded.error:
+        plan.error = loaded.error
         return plan
+    original = loaded.text
 
     newline = _newline(original)
     text = original
@@ -408,7 +437,9 @@ __all__ = [
     "BACKUP_KEEP",
     "Plan",
     "Result",
+    "SoulFile",
     "apply_plan",
+    "read_soul_file",
     "atomic_write",
     "backup_paths",
     "block_status",

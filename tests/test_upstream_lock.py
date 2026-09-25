@@ -25,7 +25,7 @@ NOTICES = REPO_ROOT / "THIRD_PARTY_NOTICES.md"
 MARKER_RE = re.compile(r"<!-- derived-from: (gentle-ai|gentle-shell)@([0-9a-f]{40}) (\S+) -->")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 UPSTREAMS = ("gentle-ai", "gentle-shell")
-COMPONENTS = ("odd", "rdd", "review-contract", "viewers", "persona")
+COMPONENTS = ("odd", "rdd", "review-contract", "viewers", "persona", "soul-cleanup")
 STATUSES = {"ported", "partial", "pending"}
 # Local read-only upstream checkouts (developer machines only; CI has none).
 # The directory name is built from parts so the old-name test never matches it.

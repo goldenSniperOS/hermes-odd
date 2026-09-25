@@ -56,11 +56,34 @@ BINARY_RULE = (
 )
 UPGRADE_HINT = "brew upgrade gentleman-programming/tap/gentle-ai"
 INSTALL_HINT = "brew install gentleman-programming/tap/gentle-ai"
-SOUL_HINT = (
-    "hermes-odd already supplies ODD through its prompt section; the SOUL.md "
-    "migration (strip gentle-ai blocks, with backup and dry-run) arrives in T9b "
-    "as /odd_soul. Until then trim SOUL.md by hand or pin context_file_max_chars."
+SOUL_KEPT_HINT = (
+    "the remaining gentle-ai blocks are ones /odd_soul keeps (persona or unknown); "
+    "trim SOUL.md by hand or pin context_file_max_chars"
 )
+
+
+def soul_hint(home: Path) -> str:
+    """Remedy for the SOUL.md check: point to ``/odd_soul plan`` when it would help."""
+    from .. import soul_cleanup as sc
+
+    plan = sc.plan_cleanup(home)
+    if plan.error:
+        return f"/odd_soul cannot clean it: {plan.error}"
+    if plan.writes:
+        saved = plan.before_chars - plan.after_chars
+        count = len(plan.removable)
+        return (
+            f"hermes-odd already supplies ODD through its prompt section: run /odd_soul plan "
+            f"(dry run; {count} gentle-ai block{'s' if count != 1 else ''} to remove or move to "
+            f"lazy skills, saves {saved:,} chars), then /odd_soul apply confirm (backup first). "
+            + BINARY_RULE
+        )
+    if plan.persona_optional:
+        return (
+            "only the old gentle-ai persona is left: /odd_soul plan persona previews removing "
+            "it (the hermes-odd persona is active)"
+        )
+    return SOUL_KEPT_HINT
 
 
 @dataclass(frozen=True)
@@ -337,13 +360,13 @@ def check_soul(home: Path, context: soul_mod.ModelContext | None = None) -> Chec
             truncated = True
             finding += f"; at {_ctx_label(smallest_cut[0])} {_lost_text(report, smallest_cut[1])}"
     if truncated:
-        return Check(WARN, "SOUL.md", finding, SOUL_HINT)
+        return Check(WARN, "SOUL.md", finding, soul_hint(home))
     if managed:
         return Check(
             WARN,
             "SOUL.md",
             finding + " (sent with every message)",
-            SOUL_HINT,
+            soul_hint(home),
         )
     return Check(OK, "SOUL.md", finding)
 

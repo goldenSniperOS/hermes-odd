@@ -45,6 +45,13 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
   never prints SOUL content or full home paths, and stays under 3,500
   characters. The doctor runs the real ``gentle-ai version`` and read-only
   ``gentle-ai review mode status`` from ``PATH``;
+* ``/odd-soul``: a synthetic ``SOUL.md`` mirroring the real gentle-ai layout
+  (user header, codegraph-guidance, persona, engram-protocol, sdd-orchestrator
+  with a nested preflight, agent-routing with a nested remote-authorization)
+  is planned (dry run, nothing written), dry-run through ``odd_soul_apply``
+  via Hermes' tool registry, applied with ``apply confirm`` (backup, exact
+  expected text, permissions kept), loaded whole by Hermes' own
+  ``load_soul_md``, applied again (no-op) and restored from the backup;
 * ``/odd-review-mode`` (status only, read-only) from inside a throwaway git
   repository: it reports the RDD mode and the native review availability line
   from the real ``gentle-ai`` on ``PATH`` (``gentle-ai review status ...
@@ -81,6 +88,8 @@ COMMAND_KEY = "odd-commands"
 SECTION_ID = "hermes-odd-workflow"
 SECTION_LIMIT = 4000
 EXPECTED_SKILLS = [
+    "codegraph",
+    "engram-protocol",
     "odd-delegation",
     "odd-feature-tracking",
     "odd-workflow",
@@ -177,6 +186,7 @@ def run(temp_home: Path) -> None:
     run_tasks_viewer(manager, temp_home, completed_section)
     run_changes_viewer(manager, temp_home)
     run_health(manager, temp_home)
+    run_soul_cleanup(manager, temp_home, loaded)
     run_review_mode(manager, temp_home)
 
 
@@ -265,7 +275,15 @@ def run_setup(manager, temp_home: Path, loaded) -> str:
 
     schema = loaded.manifest.config_schema
     check(
-        sorted(schema) == ["engram_protocol", "persona", "soul_cleanup", "tdd_mode", "verbosity"],
+        sorted(schema)
+        == [
+            "codegraph_guidance",
+            "engram_protocol",
+            "persona",
+            "soul_cleanup",
+            "tdd_mode",
+            "verbosity",
+        ],
         f"Hermes parsed config_schema keys {sorted(schema)}",
     )
     check(schema["persona"].get("default") == "unset", "persona default is 'unset'")
@@ -410,9 +428,16 @@ def run_tasks_viewer(manager, temp_home: Path, baseline_section: str) -> None:
         if name.endswith("hermes_odd.prompt") and hasattr(m, "ODD_SECTION")
     ]
     check(bool(prompt_modules), "the loaded plugin's prompt module is importable")
+    prompt = prompt_modules[0]
+    content = rendered[SECTION_ID].content
+    base = prompt.ODD_SECTION.strip()
+    extra = content[len(base) :].strip().splitlines() if content.startswith(base) else None
     check(
-        rendered[SECTION_ID].content == prompt_modules[0].ODD_SECTION.strip(),
-        "rendered section equals ODD_SECTION byte for byte",
+        extra is not None
+        and extra[:1] == [prompt.MEMORY_POINTER]
+        and all(line in prompt.POINTER_LINES for line in extra),
+        "rendered section = ODD_SECTION byte for byte + the default skill pointer lines "
+        f"({len(extra or [])})",
     )
 
     command = manager._plugin_commands.get("odd-tasks")
@@ -563,7 +588,7 @@ def run_health(manager, temp_home: Path) -> None:
     status = status_cmd["handler"]("")
     check(status.startswith("hermes-odd "), "/odd-status starts with the plugin version")
     check(f"Prompt: {SECTION_ID} " in status, "/odd-status shows the prompt section")
-    check("Skills: 6 (" in status, "/odd-status counts the skills")
+    check("Skills: 8 (" in status, "/odd-status counts the skills")
     check("Native review on Hermes: " in status, "/odd-status shows native review availability")
     check("Subagents: " in status and "Changes (24 h): 2 files" in status, "status reads stores")
     check("ODD features: " in status, "/odd-status counts feature documents")
@@ -596,6 +621,109 @@ def run_health(manager, temp_home: Path) -> None:
     print("---- /odd-doctor output ----")
     print(doctor)
     print("----------------------------")
+
+
+def _block(name: str, body: str) -> str:
+    return f"<!-- gentle-ai:{name} -->\n{body}<!-- /gentle-ai:{name} -->"
+
+
+SOUL_REMOTE = _block("remote-authorization", "Remote actions need explicit authorization.\n")
+SOUL_PERSONA = _block("persona", "Old gentle persona.\n")
+SOUL_HEADER = "# Smoke agent\n\nUser line one: be kind.\nUser line two.\n\n"
+# Mirrors the real layout gentle-ai writes: user header, codegraph-guidance,
+# persona, engram-protocol, sdd-orchestrator (nested preflight) and
+# agent-routing (nested remote-authorization) last, one blank line apart.
+CLEANUP_SOUL = (
+    SOUL_HEADER
+    + _block("codegraph-guidance", "## CodeGraph\n" + "c" * 3_000 + "\n")
+    + "\n\n"
+    + SOUL_PERSONA
+    + "\n\n"
+    + _block("engram-protocol", "## Engram\n" + "e" * 9_000 + "\n")
+    + "\n\n"
+    + _block(
+        "sdd-orchestrator",
+        "o" * 40_000 + "\n" + _block("sdd-session-preflight", "p" * 2_000 + "\n") + "\n",
+    )
+    + "\n\n"
+    + _block("agent-routing", "r" * 16_000 + "\n" + SOUL_REMOTE + "\nend\n")
+    + "\n"
+)
+CLEANUP_EXPECTED = SOUL_HEADER + SOUL_PERSONA + "\n\n" + SOUL_REMOTE + "\n"
+
+
+def run_soul_cleanup(manager, temp_home: Path, loaded) -> None:
+    """/odd-soul plan, apply confirm, Hermes' own load_soul_md, then restore."""
+    import json
+
+    from agent.prompt_builder import load_soul_md
+    from tools.registry import registry
+
+    soul = temp_home / "SOUL.md"
+    for old in temp_home.glob("SOUL.md.hermes-odd-bak-*"):
+        old.unlink()
+    soul.write_text(CLEANUP_SOUL, encoding="utf-8")
+    os.chmod(soul, 0o640)
+    command = manager._plugin_commands.get("odd-soul")
+    check(command is not None, "/odd-soul is registered")
+    listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
+    check("- /odd_soul" in listing, "/odd-commands lists /odd_soul")
+    check("odd_soul_apply" in loaded.manifest.provides_tools, "manifest lists odd_soul_apply")
+    check("odd_soul_apply" in manager._plugin_tool_names, "odd_soul_apply is a plugin tool")
+
+    loaded_before = load_soul_md(home_override=temp_home) or ""
+    check(len(loaded_before) < len(CLEANUP_SOUL.strip()), "Hermes truncates the big SOUL.md")
+
+    plan = command["handler"]("plan")
+    check("dry run, nothing written" in plan, "/odd-soul plan is a dry run")
+    check("move to skill hermes-odd:engram-protocol" in plan, "plan moves engram-protocol")
+    check("move to skill hermes-odd:codegraph" in plan, "plan moves codegraph-guidance")
+    check("lift remote-authorization" in plan, "plan lifts remote-authorization")
+    check("gentle-ai sync --agent hermes" in plan, "plan warns about gentle-ai re-adding")
+    check("128k (cap 30,720): truncated" in plan and "→ fits" in plan, "plan shows truncation")
+    check("oooo" not in plan and "be kind" not in plan, "plan never prints SOUL content")
+    check(soul.read_text(encoding="utf-8") == CLEANUP_SOUL, "plan did not write")
+
+    raw = registry.dispatch("odd_soul_apply", {"confirm": False}, scope=manager.scope_key)
+    dry = json.loads(raw)
+    check(dry.get("dry_run") and dry.get("changes"), "odd_soul_apply dry run through Hermes")
+    missing = json.loads(
+        registry.dispatch("odd_soul_apply", {"confirm": True}, scope=manager.scope_key)
+    )
+    check("error" in missing, "odd_soul_apply confirm=true without plan_id is refused")
+    check(soul.read_text(encoding="utf-8") == CLEANUP_SOUL, "tool dry run did not write")
+
+    applied = command["handler"]("apply confirm")
+    check("SOUL.md cleaned" in applied and "Verified on disk" in applied, "apply verified")
+    text = soul.read_text(encoding="utf-8")
+    check(text == CLEANUP_EXPECTED, "cleaned SOUL.md holds exactly user text, persona, remote-auth")
+    check((soul.stat().st_mode & 0o777) == 0o640, "SOUL.md permissions kept (0640)")
+    backups = sorted(temp_home.glob("SOUL.md.hermes-odd-bak-*"))
+    check(len(backups) == 1, "one backup")
+    check(backups[0].read_text(encoding="utf-8") == CLEANUP_SOUL, "backup holds the original")
+    loaded_after = load_soul_md(home_override=temp_home) or ""
+    check(
+        "BLOCKED" not in loaded_after
+        and "gentle-ai:remote-authorization" in loaded_after
+        and "sdd-orchestrator" not in loaded_after
+        and "User line two." in loaded_after,
+        "Hermes' load_soul_md loads the cleaned SOUL.md whole (no truncation, scan passes)",
+    )
+    again = command["handler"]("apply confirm")
+    check("nothing to do" in again, "second apply is a no-op")
+
+    listing = command["handler"]("restore")
+    check("1. SOUL.md.hermes-odd-bak-" in listing, "/odd-soul restore lists the backup")
+    restored = command["handler"]("restore 1")
+    check("SOUL.md restored from" in restored, "/odd-soul restore 1 restores")
+    check(soul.read_text(encoding="utf-8") == CLEANUP_SOUL, "restore round-trips the original")
+    check(len(list(temp_home.glob("SOUL.md.hermes-odd-bak-*"))) == 2, "restore backed up first")
+    check(str(Path.home()) + "/" not in plan + applied + restored, "no full home paths")
+    print("---- /odd-soul plan output ----")
+    print(plan)
+    print("---- /odd-soul apply confirm output ----")
+    print(applied)
+    print("--------------------------------")
 
 
 def run_review_mode(manager, temp_home: Path) -> None:

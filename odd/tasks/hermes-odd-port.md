@@ -109,7 +109,7 @@ gateway.
       Persona (no default; mentor rioplatense / mentor neutral / own text / none) is
       written ONLY as one `<!-- hermes-odd:persona -->` block at the top of SOUL.md, with
       backup and explicit confirmation; own wording, no Gentle AI identity or branding.
-- [ ] T9b SOUL cleanup (explicit consent, dry-run + backup): remove gentle-ai SDD blocks
+- [x] T9b SOUL cleanup (explicit consent, dry-run + backup): remove gentle-ai SDD blocks
       (sdd-orchestrator, sdd-session-preflight) and agent-routing; move engram-protocol and
       codegraph-guidance to lazy skills; keep remote-authorization.
 - [ ] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
@@ -142,6 +142,10 @@ gateway.
 
 ## Progress
 
+- 2026-09-25: T9b /odd_soul + odd_soul_apply (plan_id guard); remote-authorization lifted
+  with upstream markers. Real SOUL dry run: 88,482 -> 9,862 chars (not applied, awaiting
+  user). README install guide: gentle-ai binaries + `hermes mcp add` (verified in a temp
+  HERMES_HOME), never gentle-ai's Hermes install.
 - 2026-09-25: T9a setup: clarify always marks choices[0] "(Recommended)" (no opt-out),
   so the persona question is asked with no choices (options in the question text).
   Persona block written only at top of SOUL.md, backup + atomic write + confirmation.
@@ -211,4 +215,4 @@ gateway.
 
 ## Next step
 
-T9b SOUL cleanup + engram-protocol and codegraph lazy skills.
+T10 portable skills + drift script + scheduled CI; then v0.4.0.

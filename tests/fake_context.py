@@ -8,6 +8,7 @@ import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
+from unittest import mock
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -38,9 +39,22 @@ class FakeState:
         return json.dumps(self.data, ensure_ascii=False)
 
 
+def no_codegraph():
+    """Patch CodeGraph detection off (a dev machine may have it on PATH)."""
+    return mock.patch("hermes_odd.setup.codegraph_available", return_value=False)
+
+
+def default_section(pending: bool = False) -> str:
+    """The section with the default preferences and no CodeGraph: the base
+    text plus the Engram skill pointer (``engram_protocol`` defaults to auto)."""
+    from hermes_odd.prompt import MEMORY_POINTER, build_odd_section
+
+    return build_odd_section(setup_pending=pending, pointers=[MEMORY_POINTER])
+
+
 def mark_setup_complete(state: FakeState) -> None:
     """Store a completed first-run setup record (no answers): the section then
-    renders exactly ``ODD_SECTION`` (no pending or TDD line)."""
+    renders :func:`default_section` (no pending or TDD line)."""
     state.set(
         "setup",
         {

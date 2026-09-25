@@ -444,20 +444,28 @@ plugin (triage in `upstream/SUPPORTED.md`).
   (`unset` default, `rioplatense`, `neutral`, `custom`, `none`), `verbosity`
   (`short`, `detailed`), `tdd_mode` (`unset` default, `off`, `strict`,
   `project`), `engram_protocol` (`auto`, `off`), `soul_cleanup` (`unset`,
-  `later`, `no`). Answers are recorded in the setup record and mirrored with
+  `yes`, `later`, `no`), `codegraph_guidance` (`auto`, `off`; not asked). Answers are recorded in the setup record and mirrored with
   `ctx.set_config`; a refusal (managed install) or a Hermes without
   `set_config` is reported and the answers stay in state. The effective value
   is a valid `config.yaml` value first (hand edits and administrator values
   win), then the record, then the default.
 - **Surfaces.** The prompt section callable appends, one line each and only
-  when present, the TDD mode line and the setup-pending line; without them
-  the text is byte-identical to `ODD_SECTION`. The skill runs the
+  when present and in this order, the skill pointers (Engram while
+  `engram_protocol` is `auto`; CodeGraph while `codegraph_guidance` is `auto`
+  and `codegraph` is on `PATH` or `mcp_servers.codegraph` is in Hermes'
+  `config.yaml`, key names only), the TDD mode line and the setup-pending
+  line; without them the text is byte-identical to `ODD_SECTION`. With the
+  default preferences the Engram pointer is present. The largest combination
+  (both pointers, the longest TDD line, pending) is tested against the
+  3,800-character budget. The skill runs the
   conversation; the tool is the model's only write path; `/odd_setup` is the
   deterministic user path (status, skip, reset, setters, persona dry-run and
   `confirm`). Everything takes effect in the next new session because Hermes
   builds `SOUL.md` and plugin sections into the prompt once per session.
-- **Engram protocol and SOUL cleanup** answers are stored only; their
-  behavior is T9b.
+- **SOUL cleanup** answer `yes` makes the skill run the `odd_soul_apply` dry
+  run, show it and apply only after an explicit yes (see
+  [SOUL.md cleanup](#soulmd-cleanup-odd_soul)); `later` and `no` change
+  nothing.
 
 ### Clarify and the persona question
 
@@ -474,7 +482,7 @@ persona label carries a recommendation.
 
 ### Persona block placement and truncation
 
-The only SOUL.md mutation is one block,
+Besides the confirmed cleanup (`/odd_soul`), the only SOUL.md mutation is one block,
 `<!-- hermes-odd:persona -->` … `<!-- /hermes-odd:persona -->`, holding the
 persona text and the answer style line (`hermes_odd/soul_persona.py`).
 Hermes keeps the first 70% and the last 20% of its cap of a long SOUL.md and
@@ -507,7 +515,7 @@ and it reports ours with its size and whether it is at the top.
   is loaded, the block is scanned with Hermes' own context threat patterns
   and refused if it would get the whole SOUL.md blocked.
 - A gentle-ai persona block is left alone; the summary warns that two
-  personas coexist until the T9b cleanup removes the old one.
+  personas coexist and points to `/odd_soul plan persona`.
 - Undo: `/odd_setup persona none confirm` removes the block (the result is
   byte-identical to the file before an insert), or copy a backup back.
 
@@ -587,7 +595,57 @@ shows the cap for 128k / 200k / 1M. A top-level block is `dropped` when it
 lies entirely in the lost middle and `partly` when it overlaps it. SOUL
 content is never returned. The hermes-odd persona block written by the setup
 is parsed too (namespace `hermes-odd`, see [First-run setup](#first-run-setup)).
-The migration that strips the gentle-ai blocks is T9b.
+The cleanup that strips the gentle-ai blocks is `/odd_soul` (next section);
+the check's hint recommends `/odd_soul plan` whenever it would remove
+something.
+
+### SOUL.md cleanup (`/odd_soul`)
+
+`hermes_odd/soul_cleanup.py` (rules, strict scan, verification),
+`hermes_odd/commands/soul.py` (text) and `hermes_odd/soul_tool.py` (tool).
+
+- **Rules (user decisions).** Top-level `gentle-ai:sdd-orchestrator` (its
+  nested `sdd-session-preflight` goes with it) and `gentle-ai:agent-routing`
+  are removed; `engram-protocol` and `codegraph-guidance` are removed and now
+  live in the lazy skills `hermes-odd:engram-protocol` and
+  `hermes-odd:codegraph`; `persona` is kept unless the user asks
+  (`plan persona`) and a hermes-odd persona block exists; everything else,
+  including unknown blocks and `hermes-odd:` blocks, is kept.
+- **remote-authorization.** gentle-ai nests it inside agent-routing
+  (`InjectRoutingWithOptions` → `InjectRemoteAuthorization`). It is lifted
+  byte-identical into agent-routing's place with its **upstream markers**:
+  the text is gentle-ai's canonical contract, so relabelling it
+  `hermes-odd:` would claim ownership of text hermes-odd does not maintain;
+  keeping the bytes lets the post-write check prove it unchanged; and
+  gentle-ai's marker tooling still recognizes it. If the user syncs Hermes
+  again, agent-routing comes back with its own nested copy; the next cleanup
+  drops that copy instead of lifting a duplicate (byte-identical match).
+- **Strict scan.** Unlike the doctor's lenient parser, every closer must
+  close the innermost open block of the same namespace and name; an unclosed,
+  stray or crossed marker (or more than 128 markers) refuses the plan with the
+  line number and nothing changes.
+- **Text.** A removed block and up to two following newlines are cut; a
+  trailing removal keeps the file's final newline. User text outside blocks is
+  byte-identical; only the blank lines around removed blocks change.
+- **Verification** before writing and again on the re-read file: the
+  top-level blocks are exactly the kept and lifted ones, byte-identical and in
+  order; no removed block remains at the top level; every non-newline
+  character outside blocks is unchanged. A file that changed since the plan
+  is refused.
+- **I/O reuse.** Reading (`read_soul_file`: symlink, > 4 MB, non-UTF-8
+  refused), backup and rotation, and the atomic write are
+  `hermes_odd/soul_persona.py`'s (`apply_plan`); restore goes through the
+  same path, so restoring backs up the current file first.
+- **Tool surface.** A separate `odd_soul_apply` instead of another flag on
+  `odd_setup_apply`: the cleanup needs a dry run the model can show before
+  asking. `confirm` is required; `confirm=false` returns the plan and a
+  `plan_id` (digest of the current file and options); `confirm=true` needs
+  that `plan_id`, so a stale or unseen plan is refused.
+- **Output.** Block names, sizes, actions, sizes before and after and the
+  truncation for 128k / 200k / 1M and the configured model; never SOUL
+  content; under 3,500 characters. Plan and apply warn that
+  `gentle-ai install` for Hermes or `gentle-ai sync --agent hermes` re-adds
+  the blocks.
 
 ### Privacy and limits
 

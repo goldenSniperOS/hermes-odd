@@ -27,6 +27,13 @@ Files in this repository derived from gentle-ai:
   `internal/assets/hermes/persona-gentleman.md` and
   `internal/assets/hermes/persona-neutral.md`)
 - `hermes_odd/prompt.py`
+- `skills/codegraph/SKILL.md` (the CodeGraph guidance of
+  `CodeGraphGuidanceMarkdown` in
+  `internal/components/communitytool/codegraph_guidance.go`, condensed in
+  hermes-odd's own words for Hermes and the upstream `codegraph` CLI)
+- `skills/engram-protocol/SKILL.md` (the Engram™ memory protocol, full
+  variant of `internal/assets/engram/protocol.md`, condensed in hermes-odd's
+  own words and bound to Hermes' `mcp__engram__*` tool names)
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`
