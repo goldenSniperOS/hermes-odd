@@ -6,6 +6,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-25
+
+Honest RDD on Hermes: toggle and inspect gentle-ai's receipt-driven development switch,
+see live whether native review is available for Hermes (gentle-ai 3.7.0 does not yet
+advertise it), and run an optional, clearly labeled receipt-less 4R advisory review.
+
 ### Added
 - `/odd_review_mode [status|enable|disable] [global|clone] [project]` (`/odd-review-mode`
   in the CLI, group Review): the RDD switch over the real `gentle-ai review mode` CLI.
@@ -130,6 +136,7 @@ First release: the ODD foundation. Viewer commands (`/odd_agents`, `/odd_tasks`,
   `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `docs/design.md` and an
   isolated end-to-end smoke (`scripts/smoke_e2e.py`).
 
-[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/goldenSniperOS/hermes-odd/releases/tag/v0.1.0
