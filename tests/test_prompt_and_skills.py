@@ -162,7 +162,8 @@ class RegistrationTests(unittest.TestCase):
         section = ctx.prompt_sections[0]
         self.assertEqual(section["id"], SECTION_ID)
         self.assertEqual(section["max_chars"], SECTION_MAX_CHARS)
-        self.assertEqual(section["content"], build_odd_section())
+        self.assertTrue(callable(section["content"]))
+        self.assertEqual(section["content"]({"platform": "cli", "cwd": ""}), build_odd_section())
         self.assertEqual(set(ctx.skills), shipped_skill_names())
         for name, entry in ctx.skills.items():
             self.assertEqual(entry["path"], SKILLS_DIR / name / "SKILL.md")

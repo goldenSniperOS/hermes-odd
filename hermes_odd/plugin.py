@@ -12,7 +12,8 @@ from typing import Any
 
 from .agents import AgentStore, register_agent_hooks, resolve_backend
 from .commands import CommandRegistry, CommandSpec, build_registry
-from .prompt import SECTION_ID, SECTION_MAX_CHARS, build_odd_section
+from .projects import ProjectStore
+from .prompt import SECTION_ID, SECTION_MAX_CHARS, SectionObserver, make_section_callable
 from .skills import register_skills
 
 logger = logging.getLogger("hermes_odd")
@@ -56,8 +57,12 @@ def register_commands(ctx: Any, registry: CommandRegistry) -> int:
     return registered
 
 
-def register_prompt_section(ctx: Any) -> bool:
-    """Register the compact always-on ODD section; return whether it succeeded."""
+def register_prompt_section(ctx: Any, observer: SectionObserver | None = None) -> bool:
+    """Register the compact always-on ODD section; return whether it succeeded.
+
+    The content is a callable so ``observer`` (the ``/odd_tasks`` project
+    recorder) sees each session's ``cwd``; the rendered text is unchanged.
+    """
     register_section = getattr(ctx, "register_system_prompt_section", None)
     if not callable(register_section):
         logger.warning(
@@ -65,7 +70,7 @@ def register_prompt_section(ctx: Any) -> bool:
         )
         return False
     try:
-        register_section(SECTION_ID, build_odd_section(), max_chars=SECTION_MAX_CHARS)
+        register_section(SECTION_ID, make_section_callable(observer), max_chars=SECTION_MAX_CHARS)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: could not register the ODD section: %s", exc)
         return False
@@ -74,7 +79,14 @@ def register_prompt_section(ctx: Any) -> bool:
 
 def register(ctx: Any) -> None:
     """Hermes plugin entry point."""
-    register_prompt_section(ctx)
+    project_store: ProjectStore | None = None
+    try:
+        project_store = ProjectStore(resolve_backend(ctx))
+    except Exception as exc:  # noqa: BLE001 - never break Hermes startup
+        logger.warning("hermes-odd: project tracking failed to start: %s", exc)
+    register_prompt_section(
+        ctx, project_store.on_section_render if project_store is not None else None
+    )
     try:
         register_skills(ctx)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
@@ -86,7 +98,7 @@ def register(ctx: Any) -> None:
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: subagent tracking failed to start: %s", exc)
     try:
-        registry = build_registry(agent_store)
+        registry = build_registry(agent_store, project_store)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: command registry failed to build: %s", exc)
         return

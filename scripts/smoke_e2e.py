@@ -12,7 +12,13 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
   ``subagent_start`` / ``post_tool_call`` / ``subagent_stop`` lifecycle
   dispatched through Hermes' own ``PluginManager.invoke_hook`` shows up in
   ``/odd-agents`` (list and detail), persisted in the throwaway home's
-  ``plugin-data`` state, with the fake secret in the tool args never stored.
+  ``plugin-data`` state, with the fake secret in the tool args never stored;
+* ``/odd-tasks``: the section is rendered through Hermes' own path
+  (``agent.system_prompt._plugin_session_info`` with a pinned session cwd,
+  then ``PluginManager.render_system_prompt_sections``) for a throwaway git
+  repository holding ``odd/tasks/demo.md``; the rendered text stays
+  byte-identical, the repository is recorded as a known project, and
+  ``/odd-tasks`` lists and details the demo feature.
 
 Isolation: the temporary home holds only a ``config.yaml`` that enables
 ``hermes-odd`` and a ``plugins/hermes-odd`` symlink to this checkout. Nothing
@@ -34,6 +40,7 @@ sys.dont_write_bytecode = True
 
 import os  # noqa: E402
 import shutil  # noqa: E402
+import subprocess  # noqa: E402
 import tempfile  # noqa: E402
 from pathlib import Path  # noqa: E402
 
@@ -103,6 +110,7 @@ def run(temp_home: Path) -> None:
         check(path is not None and Path(path).is_file(), f"{PLUGIN}:{name} resolves to a file")
 
     run_agents_lifecycle(manager, temp_home)
+    run_tasks_viewer(manager, temp_home, rendered[SECTION_ID].content)
 
 
 def run_agents_lifecycle(manager, temp_home: Path) -> None:
@@ -173,6 +181,80 @@ def run_agents_lifecycle(manager, temp_home: Path) -> None:
     raw = state_files[0].read_text(encoding="utf-8")
     check("hermes-odd.agents/v1" in raw, "state document uses schema hermes-odd.agents/v1")
     check(FAKE_SECRET not in raw + listing + detail, "tool args and results never stored or shown")
+
+
+DEMO_DOC = """\
+# Feature: smoke demo
+
+## Tasks
+
+- [x] T1 Create the demo repository
+- [ ] T2 Show it in /odd_tasks
+      (continuation line)
+
+## Next step
+
+T2 show it.
+"""
+
+
+def run_tasks_viewer(manager, temp_home: Path, baseline_section: str) -> None:
+    import types
+
+    from agent.runtime_cwd import clear_session_cwd, set_session_cwd
+    from agent.system_prompt import _plugin_session_info
+
+    repo = temp_home / "work" / "demo-project"
+    (repo / "odd" / "tasks").mkdir(parents=True)
+    try:
+        subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
+    except (OSError, subprocess.CalledProcessError):
+        (repo / ".git").mkdir(exist_ok=True)
+    (repo / "odd" / "tasks" / "demo.md").write_text(DEMO_DOC, encoding="utf-8")
+
+    agent = types.SimpleNamespace(
+        session_id="smoke-tasks-session", model="smoke", provider="", platform="telegram"
+    )
+    set_session_cwd(str(repo / "odd"))
+    try:
+        info = _plugin_session_info(agent)
+    finally:
+        clear_session_cwd()
+    check(info.get("cwd") == str(repo / "odd"), f"Hermes session info carries cwd {info['cwd']}")
+    rendered = {s.id: s for s in manager.render_system_prompt_sections(info)}
+    check(SECTION_ID in rendered, "section still renders with a session cwd")
+    check(
+        rendered[SECTION_ID].content.encode("utf-8") == baseline_section.encode("utf-8"),
+        "section text is byte-identical with and without a session cwd",
+    )
+    prompt_modules = [
+        m
+        for name, m in sys.modules.items()
+        if name.endswith("hermes_odd.prompt") and hasattr(m, "ODD_SECTION")
+    ]
+    check(bool(prompt_modules), "the loaded plugin's prompt module is importable")
+    check(
+        rendered[SECTION_ID].content == prompt_modules[0].ODD_SECTION.strip(),
+        "rendered section equals ODD_SECTION byte for byte",
+    )
+
+    command = manager._plugin_commands.get("odd-tasks")
+    check(command is not None, "/odd-tasks is registered")
+    listing = command["handler"]("")
+    check("demo-project (" in listing, "/odd-tasks lists the recorded project")
+    check("1/2 demo" in listing, "/odd-tasks shows the demo feature progress")
+    check("next: T2 Show it in /odd_tasks" in listing, "/odd-tasks shows the next task")
+    detail = command["handler"]("demo")
+    check("✓ T1 Create the demo repository" in detail, "detail marks the done task")
+    check("○ T2 Show it in /odd_tasks  ← next" in detail, "detail marks the next task")
+    check("Next step: T2 show it." in detail, "detail shows the next step")
+    print("---- /odd-tasks output ----")
+    print(listing)
+    print("---- /odd-tasks demo output ----")
+    print(detail)
+    print("---------------------------")
+    raw = next((temp_home / "plugin-data").rglob("state.json")).read_text(encoding="utf-8")
+    check("hermes-odd.projects/v1" in raw, "known projects persisted in plugin state")
 
 
 def main() -> int:

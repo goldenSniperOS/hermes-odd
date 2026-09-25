@@ -16,8 +16,11 @@ into the prompt to save budget):
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+import logging
+from collections.abc import Callable, Mapping
 from typing import Any
+
+logger = logging.getLogger("hermes_odd")
 
 SECTION_ID = "hermes-odd-workflow"
 SECTION_MAX_CHARS = 4000
@@ -67,3 +70,31 @@ def build_odd_section(session_info: Mapping[str, Any] | None = None) -> str:
     """Return the compact ODD section. ``session_info`` is accepted for the
     Hermes callable contract; the text is static today."""
     return ODD_SECTION.strip()
+
+
+SectionObserver = Callable[[Mapping[str, Any]], None]
+
+
+def make_section_callable(
+    observer: SectionObserver | None = None,
+) -> Callable[[Mapping[str, Any]], str]:
+    """Return the callable registered as the section content.
+
+    Hermes calls it once per new session with a read-only ``session_info``
+    mapping (``session_id``, ``model``, ``provider``, ``platform``,
+    ``profile_name``, ``cwd``). ``observer`` sees that mapping (``/odd_tasks``
+    uses it to learn project roots); its failures are swallowed so the
+    section is never skipped. The returned text is always exactly
+    :func:`build_odd_section`: the observer cannot change the prompt.
+    """
+
+    def render(session_info: Mapping[str, Any] | None = None) -> str:
+        if observer is not None:
+            try:
+                observer(session_info if isinstance(session_info, Mapping) else {})
+            except Exception:  # noqa: BLE001 - never skip the section
+                logger.debug("hermes-odd: section observer failed", exc_info=True)
+        return build_odd_section(session_info)
+
+    render.__name__ = "hermes_odd_workflow_section"
+    return render

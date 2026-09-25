@@ -18,8 +18,8 @@ preflight, or `gentle-sdd-*` commands.
 ## Status
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
-ships lazy ODD skills, and registers `/odd_commands` and `/odd_agents`
-(unreleased). The other viewers and RDD integration are planned (see
+ships lazy ODD skills, and registers `/odd_commands`, `/odd_agents` and
+`/odd_tasks` (unreleased). The other viewers and RDD integration are planned (see
 [Planned commands](#planned-commands)).
 
 ## What gets injected
@@ -131,6 +131,7 @@ registered name exactly.
 |---|---|
 | `/odd_commands` | Lists hermes-odd commands |
 | `/odd_agents [id\|all]` | Shows your `delegate_task` subagents: running first, then the last 24 h (up to 10; `all` lists up to 50, one line each). An id prefix shows one run: goal, role, status, timings, parent session and platform, a tool timeline and the child's summary |
+| `/odd_tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
 
 `/odd_agents` records only metadata, from Hermes' `subagent_start`,
 `post_tool_call` and `subagent_stop` hooks: per tool call the name,
@@ -139,12 +140,20 @@ live in the profile's plugin state, so a run started from Telegram is visible
 in the CLI of the same profile. Stopping a subagent from the command is not
 supported (Hermes has no safe plugin API for it); ask the agent to stop it.
 
+`/odd_tasks` reads the feature documents straight from disk; nothing is
+copied into state. Because a command does not know which chat or directory
+it was typed in, it looks in the projects where a Hermes session of this
+profile recently ran (the last 10 git roots of the session working
+directory, recorded when the ODD prompt section is rendered) and in the
+directory Hermes itself runs from (`terminal.cwd` / the CLI launch
+directory). Only directories with an `odd/tasks/` folder are shown. The
+Engram mirror of each feature is not read (see `docs/design.md`).
+
 ## Planned commands
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
 | `gentle:changes` | `/odd_changes` | `post_tool_call` on write/patch tools |
-| `todo` card + ODD feature doc | `/odd_tasks [feature]` | reads `odd/tasks/*.md` |
 | `gentle:status` | `/odd_status` | plugin, binary, review mode, prompt budget |
 | `gentle:doctor` | `/odd_doctor` | binary version pin, SOUL size/truncation, markers |
 | `gentle:commands` | `/odd_commands` | lists hermes-odd commands |

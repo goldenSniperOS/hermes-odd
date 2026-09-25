@@ -16,6 +16,22 @@ and the project uses [Semantic Versioning](https://semver.org/).
   child's own summary. Tool arguments and results are never stored. At most 50 records;
   finished runs are dropped after 24 h and runs with no stop event after 6 h are marked
   `stale`. Output stays under 3,500 characters for Telegram.
+- `/odd_tasks [feature|project]` (`/odd-tasks` in the CLI): plain-text view of ODD
+  feature documents (`odd/tasks/<feature>.md`), a concept port of gentle-shell's todo
+  card. The overview lists each project's features, newest first, with a progress bar,
+  done/total, the next open task and the last change; a feature prefix (or
+  `project/feature`) shows every task, the next step and the file. A forgiving,
+  read-only parser (`hermes_odd.feature_docs`) handles `## Tasks` checkboxes with task
+  ids, nested items, continuation lines, fenced code, CRLF and documents without a
+  Tasks heading, reading at most 256 KB per file and 50 files per project and never
+  following symlinks. Projects come from the git roots of recent session working
+  directories (recorded, at most 10, in `ctx.state` schema `hermes-odd.projects/v1`)
+  plus the command process's own directory.
+
+### Changed
+- The `hermes-odd-workflow` prompt section is now registered as a callable so it can
+  record the session's project root for `/odd_tasks`; the rendered text is unchanged
+  byte for byte (tested, and checked through Hermes' render path in the smoke).
 
 ## [0.1.0] - 2026-09-24
 

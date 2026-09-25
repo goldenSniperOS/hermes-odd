@@ -139,7 +139,8 @@ Viewer state (subagent runs, changed files) is written by hooks into
 locked across processes and persistent, a subagent started from Telegram is
 visible to `/odd-agents` in the CLI of the same profile, and survives a
 gateway restart. Feature tasks are not duplicated in state: `/odd_tasks` reads
-the project's `odd/tasks/*.md` feature documents directly.
+the project's `odd/tasks/*.md` feature documents directly; state only holds
+the list of known project roots.
 
 ### Subagent records (`/odd_agents`)
 
@@ -198,6 +199,102 @@ first) of `<glyph> <short id> <role> · <elapsed>`, the goal on one line, and
 `✗` failed, `⊘` interrupted, `⏱` timed out, `○` stale. `/odd_agents <id
 prefix>` matches the full id or its 8-hex tail; `all` lists up to 50 one-line
 entries. Anything cut ends with `… N more`.
+
+### Feature documents (`/odd_tasks`)
+
+`/odd_tasks` is a concept port of gentle-shell's todo card
+(`extensions/gentle-todo.ts`, `lib/shell-todo.ts`) and the ODD feature
+document view. The interactive todo tool is not ported: Hermes' native
+`todo` is the session projection (see `skills/odd-feature-tracking`).
+
+#### Project resolution
+
+Command handlers receive only `raw_args` (verified: gateway
+`gateway/run.py` calls `plugin_handler(user_args)`; the TUI
+`tui_gateway/methods_tools.py` calls `handler(arg)`; the CLI calls the
+handler the same way). There is no session, chat or cwd. In the gateway the
+handler even runs after `reset_session_vars()` cleared the session cwd
+contextvar and before `_set_session_env` binds the new session, so
+`agent.runtime_cwd.resolve_agent_cwd()` would only return `TERMINAL_CWD` or
+the gateway's launch directory. What Hermes does expose:
+
+| Source | What it gives | Evidence |
+|---|---|---|
+| Prompt-section callable | `session_info["cwd"]` per new session: the session cwd override (TUI/ACP project switch), else `TERMINAL_CWD`, else `""` | `agent/system_prompt.py` `_plugin_session_info` -> `agent/runtime_cwd.py` `resolve_context_cwd` |
+| `TERMINAL_CWD` in the command process | CLI (local backend): its launch directory, always exported (`cli.py` load config: `terminal_config["cwd"] = os.getcwd()`); gateway: `terminal.cwd`, or `MESSAGING_CWD`, or the home directory for placeholders (`gateway/run.py` + `gateway/cwd_placeholder.py`); non-local backends: a sandbox path or unset | `cli.py`, `gateway/run.py`, `gateway/cwd_placeholder.py` |
+| `os.getcwd()` | the process launch directory | |
+
+hermes-odd therefore combines:
+
+1. **Known projects.** The `hermes-odd-workflow` section is registered as a
+   callable. On each render (once per new session) it passes `session_info`
+   to `ProjectStore.on_section_render`, which records the git top-level of
+   `cwd` (nearest ancestor with `.git`, no subprocess; the directory itself
+   when there is none; an empty `cwd` falls back to `os.getcwd()` of the
+   rendering process, the directory Hermes then uses for context files). The
+   state key `projects.v1` (schema `hermes-odd.projects/v1`) holds at most 10
+   entries `{root, platform, last_seen}`, most recent first, deduplicated by
+   root. The callable returns exactly `ODD_SECTION.strip()`; the recorder is
+   wrapped so a failure is logged at debug level and never makes Hermes skip
+   the section (Hermes skips a section whose callable raises). Tests and the
+   smoke assert the rendered text is byte-identical.
+2. **The command process's own directories**: `TERMINAL_CWD` and
+   `os.getcwd()`, each mapped to its git top-level.
+
+Candidates are deduplicated by resolved path and only directories holding
+`odd/tasks/` are shown. This makes `/odd_tasks` in Telegram show the
+projects the agent actually worked in (any platform of the same profile),
+and the CLI show the current project even before a session was rendered.
+Limits: a project is only known after a session rendered its prompt there;
+for non-local terminal backends the path is often a sandbox path that does
+not exist on the host and is filtered out.
+
+#### Engram mirror: not read
+
+The Engram mirror (topic `odd/<feature>/tasks`) is deliberately not used by
+`/odd_tasks`. `PluginContext.call_mcp(server, tool, arguments, timeout)`
+(`hermes_cli/plugins.py`) exists and is synchronous, but:
+
+- it is **default-off**: each server must be listed by the operator under
+  `plugins.entries.hermes-odd.mcp_allowlist` in `config.yaml`, otherwise it
+  raises `PermissionError`; hermes-odd never edits user config;
+- it **blocks the caller** up to the timeout (clamped to 1-600 s) through
+  `tools.mcp_tool._make_tool_handler`, and gateway plugin commands run inline
+  on the gateway's asyncio event loop, so a slow or reconnecting Engram
+  server would stall every chat of the gateway (a lazy server may even be
+  spawned on first use);
+- the command does not know the Engram project name for a chat, and search
+  results are free text that would have to be parsed back into a document;
+- the mirror is a recovery copy, not the authority; the file is.
+
+Revisit if Hermes adds an async, non-blocking MCP path for commands. Until
+then the agent itself reads the mirror during the resume protocol.
+
+#### Parsing and output
+
+`hermes_odd/feature_docs.py` only matches lines; it never executes or
+evaluates content. Title: the first `# ` heading (`Feature:` stripped), else
+the file stem. Tasks: top-level checkboxes (`- [ ]`, `- [x]`, `[X]`, `*`/`+`
+bullets) under `## Tasks` until the next level-1/2 heading; without that
+heading, every top-level checkbox. Deeper-indented items are nested and
+ignored, indented non-checkbox lines are continuations (the title is the
+first line), fenced code is skipped, CRLF and a BOM are accepted. The id is
+the first token when it looks like one (`T1`, `T2b`, `10`, `**T3**`). Next
+step: the first paragraph under `## Next step(s)`. Limits: 256 KB per file
+(the rest ignored, marked truncated), 50 newest `*.md` files per project,
+symlinks never followed; an unreadable file shows as `⚠ <feature>:
+unreadable (<error type>)`.
+
+Output is plain text under 3,500 characters (`… N more` when cut), without
+full home paths (only the last two path components):
+
+- no arguments: per project (`name (…/parent/name)`), each feature as
+  `▰▰▰▰▰▱▱▱▱▱ 6/13 <feature> · <age>` plus the next open task, newest
+  first;
+- `<feature prefix>` or `project/feature`: title, progress, every task with
+  `✓` / `○` (the next one marked `← next`), the next step and the file; an
+  exact name wins over a prefix, then a project name (or prefix) lists that
+  project; ambiguous and not-found answers name the candidates.
 
 ## Install layouts and skill discovery
 

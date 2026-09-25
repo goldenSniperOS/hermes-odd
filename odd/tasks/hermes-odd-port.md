@@ -93,7 +93,7 @@ gateway.
       ported / not portable + reason / pending). Tests that every `derived-from` marker
       is indexed in the lock.
 - [x] T3 Subagent tracking + `/odd_agents` viewer.
-- [ ] T4 `/odd_tasks` feature-task viewer.
+- [x] T4 `/odd_tasks` feature-task viewer.
 - [ ] T5 `/odd_changes` viewer.
 - [ ] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
 - [ ] T7 `/odd_review_mode` + `rdd-review` skill (Hermes orchestration contract).
@@ -174,4 +174,4 @@ gateway.
 
 ## Next step
 
-T2 compact ODD prompt section + odd-workflow skill.
+T5 `/odd_changes` viewer.
