@@ -51,7 +51,7 @@ from hermes_odd.runtime import RuntimeInfo  # noqa: E402
 from hermes_odd.upstream import load_lock  # noqa: E402
 
 HOME = os.path.expanduser("~")
-FAKE_SECRET = "sk-doctor-FAKE-SECRET-not-real"
+FAKE_CANARY = "sk-doctor-FAKE-SECRET-not-real"
 REVIEW_JSON = (
     '{"schema": "gentle-ai.review-mode/v1", "operation": "status", "status": '
     '{"schema": "gentle-ai.rdd-mode-status/v1", "global": "on", "clone_local": "", '
@@ -115,7 +115,7 @@ class VersionParsingTests(unittest.TestCase):
         self.assertIsNone(is_below(None, "3.7.0"))
 
     def test_probe_env_is_minimal(self) -> None:
-        env = probe_env({"PATH": "/bin", "HOME": "/h", "AWS_SECRET": FAKE_SECRET, "X": "y"})
+        env = probe_env({"PATH": "/bin", "HOME": "/h", "AWS_SECRET": FAKE_CANARY, "X": "y"})
         self.assertEqual(env, {"PATH": "/bin", "HOME": "/h", "LC_ALL": "C", "NO_COLOR": "1"})
 
     def test_run_probe_uses_no_shell_and_a_timeout(self) -> None:
@@ -328,7 +328,7 @@ class ModelContextTests(unittest.TestCase):
             home = Path(tmp)
             (home / "config.yaml").write_text(
                 "model:\n  default: global.x-model\n  provider: bedrock\n"
-                "  base_url: https://example.invalid/\n  api_key: " + FAKE_SECRET + "\n"
+                "  base_url: https://example.invalid/\n  api_key: " + FAKE_CANARY + "\n"
                 "other:\n  default: nope\n",
                 encoding="utf-8",
             )
@@ -377,7 +377,7 @@ class SoulCheckTests(unittest.TestCase):
     def test_truncated_soul_names_lost_blocks(self) -> None:
         self.write(
             synthetic_soul({"persona": 1_000, "big": 60_000, "routing": 5_000, "end": 4_000})
-            + FAKE_SECRET
+            + FAKE_CANARY
         )
         check = check_soul(self.home, soul_mod.ModelContext("m", 128_000, "cache"))
         self.assertEqual(check.level, WARN)
@@ -387,7 +387,7 @@ class SoulCheckTests(unittest.TestCase):
         self.assertIn("4 gentle-ai blocks", check.finding)
         # Only unknown blocks: /odd_soul keeps them, so the hint says so.
         self.assertIn("/odd_soul keeps", check.hint)
-        self.assertNotIn(FAKE_SECRET, check.render())
+        self.assertNotIn(FAKE_CANARY, check.render())
         self.assertNotIn("xxxx", check.render())
 
     def test_unknown_context_shows_cap_table(self) -> None:

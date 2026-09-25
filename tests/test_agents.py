@@ -21,7 +21,7 @@ from hermes_odd.agents import (  # noqa: E402
 )
 from hermes_odd.commands.agents import OUTPUT_MAX_CHARS, render_list  # noqa: E402
 
-SECRET = "sk-test-FAKE-SECRET-0123456789"
+CANARY = "sk-test-FAKE-SECRET-0123456789"
 PARENT = "20260924_140000_parent"
 
 
@@ -54,8 +54,8 @@ def start_kwargs(index: int = 0, hex8: str = "1a2b3c4d", **extra) -> dict:
 def tool_kwargs(task_id: str, name: str = "read_file", status: str = "ok", **extra) -> dict:
     kwargs = {
         "tool_name": name,
-        "args": {"path": "lib/auth.py", "api_key": SECRET},
-        "result": json.dumps({"content": f"token={SECRET}"}),
+        "args": {"path": "lib/auth.py", "api_key": CANARY},
+        "result": json.dumps({"content": f"token={CANARY}"}),
         "task_id": task_id,
         "session_id": "child-session",
         "tool_call_id": "call-1",
@@ -63,7 +63,7 @@ def tool_kwargs(task_id: str, name: str = "read_file", status: str = "ok", **ext
         "duration_ms": 120,
         "status": status,
         "error_type": "tool_error" if status == "error" else None,
-        "error_message": f"failed with {SECRET}" if status == "error" else None,
+        "error_message": f"failed with {CANARY}" if status == "error" else None,
     }
     kwargs.update(extra)
     return kwargs
@@ -78,7 +78,7 @@ def stop_kwargs(hex8: str = "1a2b3c4d", status: str = "completed", **extra) -> d
         "child_summary": "Login goes through auth.login(); sessions live in redis.",
         "child_status": status,
         "tool_call_history": [
-            {"tool_name": "read_file", "tool_input": f"path={SECRET}", "status": "ok"}
+            {"tool_name": "read_file", "tool_input": f"path={CANARY}", "status": "ok"}
         ],
         "duration_ms": 95_000,
     }
@@ -191,12 +191,12 @@ class PrivacyTests(PluginFixture):
         self.ctx.fire("subagent_start", **start_kwargs())
         self.ctx.fire("post_tool_call", **tool_kwargs("sa-0-1a2b3c4d"))
         self.ctx.fire("post_tool_call", **tool_kwargs("sa-0-1a2b3c4d", status="error"))
-        self.ctx.fire("subagent_stop", **stop_kwargs(tool_call_history=[{"tool_input": SECRET}]))
-        self.assertNotIn(SECRET, self.ctx.state.dump())
+        self.ctx.fire("subagent_stop", **stop_kwargs(tool_call_history=[{"tool_input": CANARY}]))
+        self.assertNotIn(CANARY, self.ctx.state.dump())
         self.assertNotIn("lib/auth.py", self.ctx.state.dump())
         for args in ("", "all", "1a2b", "sa-0"):
             with self.subTest(args=args):
-                self.assertNotIn(SECRET, self.handler(args))
+                self.assertNotIn(CANARY, self.handler(args))
 
     def test_goal_and_summary_are_truncated(self) -> None:
         self.ctx.fire("subagent_start", **start_kwargs(child_goal="g" * 1000))

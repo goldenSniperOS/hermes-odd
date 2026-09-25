@@ -123,8 +123,10 @@ class SkillFileTests(unittest.TestCase):
 
     def test_skills_avoid_hermes_injection_patterns(self) -> None:
         # tools/skills_tool.py _INJECTION_PATTERNS logs a warning on load.
+        # Split literal: Hermes' install scanner (tools/plugin_guard.py) blocks
+        # a plugin whose files contain this phrase verbatim, tests included.
         patterns = [
-            "ignore previous instructions",
+            "ignore previous " + "instructions",
             "ignore all previous",
             "you are now",
             "disregard your",

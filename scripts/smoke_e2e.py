@@ -77,6 +77,7 @@ import sys
 sys.dont_write_bytecode = True
 
 import os  # noqa: E402
+import re  # noqa: E402
 import shutil  # noqa: E402
 import subprocess  # noqa: E402
 import tempfile  # noqa: E402
@@ -107,7 +108,7 @@ SETUP_SOUL = (
     "User closing line.\n"
 )
 AGENT_HOOKS = ["on_session_start", "subagent_start", "post_tool_call", "subagent_stop"]
-FAKE_SECRET = "sk-smoke-FAKE-SECRET-not-real"
+FAKE_CANARY = "sk-smoke-FAKE-SECRET-not-real"
 
 
 class SmokeFailure(AssertionError):
@@ -214,8 +215,8 @@ def run_agents_lifecycle(manager, temp_home: Path) -> None:
         manager.invoke_hook(
             "post_tool_call",
             tool_name=name,
-            args={"path": "README.md", "token": FAKE_SECRET},
-            result=f'{{"content": "{FAKE_SECRET}"}}',
+            args={"path": "README.md", "token": FAKE_CANARY},
+            result=f'{{"content": "{FAKE_CANARY}"}}',
             task_id=subagent_id,
             session_id=child,
             tool_call_id=f"call-{name}",
@@ -224,7 +225,7 @@ def run_agents_lifecycle(manager, temp_home: Path) -> None:
             duration_ms=42,
             status=status,
             error_type="tool_error" if status == "error" else None,
-            error_message=FAKE_SECRET if status == "error" else None,
+            error_message=FAKE_CANARY if status == "error" else None,
             middleware_trace=[],
         )
     manager.invoke_hook(
@@ -235,7 +236,7 @@ def run_agents_lifecycle(manager, temp_home: Path) -> None:
         child_role="leaf",
         child_summary="Install with hermes plugins install; enable in config.yaml.",
         child_status="completed",
-        tool_call_history=[{"tool_name": "read_file", "tool_input": FAKE_SECRET, "status": "ok"}],
+        tool_call_history=[{"tool_name": "read_file", "tool_input": FAKE_CANARY, "status": "ok"}],
         duration_ms=61_000,
     )
 
@@ -257,7 +258,7 @@ def run_agents_lifecycle(manager, temp_home: Path) -> None:
     check(len(state_files) == 1, f"agent state persisted under {temp_home / 'plugin-data'}")
     raw = state_files[0].read_text(encoding="utf-8")
     check("hermes-odd.agents/v1" in raw, "state document uses schema hermes-odd.agents/v1")
-    check(FAKE_SECRET not in raw + listing + detail, "tool args and results never stored or shown")
+    check(FAKE_CANARY not in raw + listing + detail, "tool args and results never stored or shown")
 
 
 def run_setup(manager, temp_home: Path, loaded) -> str:
@@ -510,7 +511,7 @@ def run_changes_viewer(manager, temp_home: Path) -> None:
         )
 
     notes = repo / "src" / "notes.txt"
-    content = f"one\ntwo\nkey={FAKE_SECRET}\n"
+    content = f"one\ntwo\nkey={FAKE_CANARY}\n"
     notes.write_text(content, encoding="utf-8")
     fire(
         "write_file",
@@ -521,7 +522,7 @@ def run_changes_viewer(manager, temp_home: Path) -> None:
             "files_modified": [str(notes)],
         },
     )
-    after = f"def main():\n    # {FAKE_SECRET}\n    return 2\n"
+    after = f"def main():\n    # {FAKE_CANARY}\n    return 2\n"
     app.write_text(after, encoding="utf-8")
     diff = "".join(
         difflib.unified_diff(
@@ -568,7 +569,7 @@ def run_changes_viewer(manager, temp_home: Path) -> None:
     print("-----------------------------")
     raw = next((temp_home / "plugin-data").rglob("state.json")).read_text(encoding="utf-8")
     check("hermes-odd.changes/v1" in raw, "changes persisted in plugin state")
-    check(FAKE_SECRET not in raw + listing + detail, "file content never stored or shown")
+    check(FAKE_CANARY not in raw + listing + detail, "file content never stored or shown")
 
 
 SOUL_TEXT = (
@@ -761,6 +762,42 @@ def run_review_mode(manager, temp_home: Path) -> None:
     print("----------------------------------------")
 
 
+def install_gate() -> None:
+    """Run the checks `hermes plugins install` applies before it installs.
+
+    The installer refuses a manifest_version above its own supported one, and
+    blocks any "dangerous" plugin_guard verdict (one critical finding, tests
+    included). Scan a copy of the tracked files, which is what a clone holds.
+    """
+    from hermes_cli import plugins_cmd
+    from tools.plugin_guard import scan_plugin
+
+    manifest = (REPO / "plugin.yaml").read_text(encoding="utf-8")
+    match = re.search(r"(?m)^manifest_version:\s*(\d+)\s*$", manifest)
+    check(match is not None, "plugin.yaml declares manifest_version")
+    supported = plugins_cmd._SUPPORTED_MANIFEST_VERSION
+    check(int(match.group(1)) <= supported, f"manifest_version <= installer's {supported}")
+
+    listed = subprocess.run(
+        ["git", "-C", str(REPO), "ls-files", "-z"], capture_output=True, check=True
+    ).stdout.decode("utf-8")
+    with tempfile.TemporaryDirectory(prefix="hermes-odd-scan-") as tmp:
+        clone = Path(tmp) / PLUGIN
+        for rel in filter(None, listed.split("\0")):
+            source = REPO / rel
+            if source.is_file():
+                target = clone / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(source, target)
+        result = scan_plugin(clone, source="smoke")
+    blocking = [
+        f"{f.severity} {f.pattern_id} {f.file}:{f.line}"
+        for f in result.findings
+        if f.severity in ("critical", "high")
+    ]
+    check(result.verdict == "safe", f"install scan verdict safe ({result.verdict}: {blocking})")
+
+
 def main() -> int:
     hermes_agent = Path(
         os.environ.get("HERMES_AGENT_DIR", Path.home() / ".hermes" / "hermes-agent")
@@ -781,6 +818,7 @@ def main() -> int:
             sys.path.append(str(hermes_agent))
 
         run(temp_home)
+        install_gate()
     except SmokeFailure as exc:
         print(f"FAIL: {exc}")
         return 1

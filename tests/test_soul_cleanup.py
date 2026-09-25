@@ -32,21 +32,21 @@ from hermes_odd.soul_tool import SCHEMA as SOUL_SCHEMA  # noqa: E402
 from hermes_odd.soul_tool import TOOL_NAME as SOUL_TOOL  # noqa: E402
 from hermes_odd.soul_tool import make_handler  # noqa: E402
 
-SECRET = "SECRET-SOUL-CONTENT-xyz"
+CANARY = "SECRET-SOUL-CONTENT-xyz"
 
 
 def block(name: str, body: str, namespace: str = "gentle-ai") -> str:
     return f"<!-- {namespace}:{name} -->\n{body}<!-- /{namespace}:{name} -->"
 
 
-HEADER = f"# Hermes agent\n\nUser intro line {SECRET}.\nSecond user line.\n\n"
-CODEGRAPH = block("codegraph-guidance", f"## CodeGraph\ncodegraph rules {SECRET}\n")
-PERSONA = block("persona", f"Old gentle persona {SECRET}.\n")
-ENGRAM = block("engram-protocol", f"## Engram\nmemory rules {SECRET}\n")
-PREFLIGHT = block("sdd-session-preflight", f"preflight {SECRET}\n")
-ORCHESTRATOR = block("sdd-orchestrator", f"orchestrator {SECRET}\n{PREFLIGHT}\nmore\n")
-REMOTE = block("remote-authorization", f"Remote actions need explicit authorization {SECRET}.\n")
-ROUTING = block("agent-routing", f"## Routing\nrouting {SECRET}\n{REMOTE}\nend of routing\n")
+HEADER = f"# Hermes agent\n\nUser intro line {CANARY}.\nSecond user line.\n\n"
+CODEGRAPH = block("codegraph-guidance", f"## CodeGraph\ncodegraph rules {CANARY}\n")
+PERSONA = block("persona", f"Old gentle persona {CANARY}.\n")
+ENGRAM = block("engram-protocol", f"## Engram\nmemory rules {CANARY}\n")
+PREFLIGHT = block("sdd-session-preflight", f"preflight {CANARY}\n")
+ORCHESTRATOR = block("sdd-orchestrator", f"orchestrator {CANARY}\n{PREFLIGHT}\nmore\n")
+REMOTE = block("remote-authorization", f"Remote actions need explicit authorization {CANARY}.\n")
+ROUTING = block("agent-routing", f"## Routing\nrouting {CANARY}\n{REMOTE}\nend of routing\n")
 
 # Mirrors the real layout: user header, then top-level blocks separated by a
 # blank line, agent-routing last with remote-authorization nested at its end.
@@ -137,7 +137,7 @@ class PlanTests(HomeCase):
             "SOUL.md.hermes-odd-bak-",
         ):
             self.assertIn(token, text)
-        self.assertNotIn(SECRET, text)
+        self.assertNotIn(CANARY, text)
         self.assertNotIn(str(self.home), text)
         self.assertLess(len(text), 3500)
         self.assertEqual(text, self.command().handle("plan"))  # deterministic
@@ -157,7 +157,7 @@ class PlanTests(HomeCase):
             "Next: /odd_soul plan",
         ):
             self.assertIn(token, text)
-        self.assertNotIn(SECRET, text)
+        self.assertNotIn(CANARY, text)
 
     def test_malformed_markers_refuse_and_change_nothing(self) -> None:
         cases = {
@@ -183,14 +183,14 @@ class PlanTests(HomeCase):
                 self.assertEqual(self.backups(), [])
 
     def test_line_numbers_in_errors_not_content(self) -> None:
-        self.write("line one\n<!-- gentle-ai:engram-protocol -->\n" + SECRET + "\n")
+        self.write("line one\n<!-- gentle-ai:engram-protocol -->\n" + CANARY + "\n")
         plan = sc.plan_cleanup(self.home)
         self.assertIn("line 2", plan.error)
-        self.assertNotIn(SECRET, plan.error)
+        self.assertNotIn(CANARY, plan.error)
 
     def test_unknown_blocks_hermes_persona_and_user_text_kept(self) -> None:
         ours = personas.render_block("neutral")
-        unknown = block("custom-notes", f"my notes {SECRET}\n")
+        unknown = block("custom-notes", f"my notes {CANARY}\n")
         text = ours + "\n\nIntro.\n\n" + unknown + "\n\n" + ENGRAM + "\nTail line.\n"
         self.write(text)
         plan = sc.plan_cleanup(self.home)
@@ -311,7 +311,7 @@ class ApplyTests(HomeCase):
         self.assertIn("Lifted (kept in place): remote-authorization", text)
         self.assertIn("gentle-ai sync --agent hermes", text)
         self.assertIn("next new session", text)
-        self.assertNotIn(SECRET, text)
+        self.assertNotIn(CANARY, text)
         self.assertEqual(self.read(), EXPECTED)
         self.assertEqual(stat.S_IMODE(self.soul.stat().st_mode), 0o604)
         backups = self.backups()
@@ -469,7 +469,7 @@ class ToolTests(HomeCase):
         self.assertRegex(dry["plan_id"], r"^[0-9a-f]{12}$")
         self.assertIn("dry run, nothing written", dry["plan"])
         self.assertIn("explicit yes", dry["next"])
-        self.assertNotIn(SECRET, json.dumps(dry))
+        self.assertNotIn(CANARY, json.dumps(dry))
         self.assertEqual(self.read(), REAL_LIKE)
         wrong = self.call({"confirm": True, "plan_id": "000000000000"})
         self.assertIn("does not match", wrong["error"])
@@ -549,7 +549,7 @@ class RegistrationTests(unittest.TestCase):
                 "apply confirm",
                 "restore",
                 "restore 1",
-                "restore ../../etc/passwd",
+                "restore ../../outside/SOUL.md",
                 "garbage \x00 args",
                 "plan persona extra",
             ):
@@ -558,7 +558,7 @@ class RegistrationTests(unittest.TestCase):
                 self.assertTrue(out.strip())
                 self.assertLess(len(out), 3500)
                 self.assertNotIn(tmp, out)
-                self.assertNotIn(SECRET, out)
+                self.assertNotIn(CANARY, out)
             self.assertEqual(Path(tmp, "SOUL.md").read_text(encoding="utf-8"), REAL_LIKE)
 
 

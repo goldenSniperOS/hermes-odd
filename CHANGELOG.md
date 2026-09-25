@@ -10,6 +10,10 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 - `plugin.yaml` declares `manifest_version: 1`. `hermes plugins install` (Hermes
   0.21) refused version 2, although the loader reads the same fields either way.
+- Test fixtures no longer trip Hermes' install scanner (`tools/plugin_guard.py`),
+  which blocked the install as "dangerous" because of fake secrets and injection
+  phrases in tests. The smoke test now runs the installer's manifest and scan
+  checks, so a blocked install fails CI-side checks first.
 
 ### Added
 

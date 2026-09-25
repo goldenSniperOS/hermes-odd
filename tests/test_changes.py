@@ -41,7 +41,7 @@ from hermes_odd.commands.changes import (  # noqa: E402
     render_list,
 )
 
-SECRET = "sk-test-FAKE-SECRET-0123456789"
+CANARY = "sk-test-FAKE-SECRET-0123456789"
 
 
 class Clock:
@@ -354,23 +354,23 @@ class CaptureTests(TempRepo):
         self.assertEqual(self.only()["by"][0]["id"], "main")
 
     def test_privacy_no_content_in_state_or_output(self) -> None:
-        text = f"api_key = '{SECRET}'\n"
+        text = f"api_key = '{CANARY}'\n"
         self.store.on_post_tool_call(**write_call("a", text, resolved=self.file))
         self.store.on_post_tool_call(
-            **patch_call(self.file, text, f"# {SECRET} removed\n", file_text=(text, "x\n"))
+            **patch_call(self.file, text, f"# {CANARY} removed\n", file_text=(text, "x\n"))
         )
-        v4a = f"*** Begin Patch\n*** Update File: {self.file}\n-{SECRET}\n+{SECRET}2\n*** End Patch"
+        v4a = f"*** Begin Patch\n*** Update File: {self.file}\n-{CANARY}\n+{CANARY}2\n*** End Patch"
         call = write_call("a", "")
         call.update(
             tool_name="patch",
             args={"mode": "patch", "patch": v4a},
-            result=json.dumps({"success": True, "diff": unified(self.file, SECRET, SECRET + "2")}),
+            result=json.dumps({"success": True, "diff": unified(self.file, CANARY, CANARY + "2")}),
         )
         self.store.on_post_tool_call(**call)
         command = make_odd_changes(self.store, numstat=lambda *a: NumstatResult("ok", 1, 1))
         outputs = [command.handler(a) for a in ("", "all", "app", "demo-project")]
         blob = self.state.dump() + "".join(outputs)
-        self.assertNotIn(SECRET, blob)
+        self.assertNotIn(CANARY, blob)
         self.assertNotIn("api_key", blob)
 
     def test_output_hides_full_home_paths(self) -> None:

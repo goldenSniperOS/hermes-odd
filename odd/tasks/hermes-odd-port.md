@@ -120,7 +120,7 @@ gateway.
 
 - Plugin loads in Hermes and every command answers without invoking the model.
 - Always-on prompt contribution <= 4000 chars, enforced by a test.
-- Commands produce identical plain-text output in CLI and gateway contexts.
+- Commands answer with the same plain text in the CLI and in gateways.
 - No SDD content anywhere in the package.
 
 ## Checks
