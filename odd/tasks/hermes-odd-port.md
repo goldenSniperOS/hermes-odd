@@ -142,6 +142,11 @@ gateway.
 
 ## Progress
 
+- 2026-09-25: Real SOUL cleanup applied with user consent (88,482 -> 9,862 chars; backup
+  SOUL.md.hermes-odd-bak-20260925T210233Z). Repo made public; real `hermes plugins install
+  goldenSniperOS/hermes-odd --enable` works after two fixes: manifest_version 1 (installer
+  caps at 1) and test fixtures that tripped plugin_guard critical patterns. Smoke now runs
+  the installer gates.
 - 2026-09-25: T9b /odd_soul + odd_soul_apply (plan_id guard); remote-authorization lifted
   with upstream markers. Real SOUL dry run: 88,482 -> 9,862 chars (not applied, awaiting
   user). README install guide: gentle-ai binaries + `hermes mcp add` (verified in a temp
