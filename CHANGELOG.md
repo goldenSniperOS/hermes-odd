@@ -6,6 +6,11 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `plugin.yaml` declares `manifest_version: 1`. `hermes plugins install` (Hermes
+  0.21) refused version 2, although the loader reads the same fields either way.
+
 ### Added
 
 - README install guide in three steps: the Gentle AI binaries and

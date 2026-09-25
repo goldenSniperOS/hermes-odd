@@ -1,6 +1,6 @@
 name: hermes-odd
 version: 0.3.0
-manifest_version: 2
+manifest_version: 1
 kind: standalone
 description: >-
   ODD and RDD workflow harness for Hermes Agent, based on and compatible with

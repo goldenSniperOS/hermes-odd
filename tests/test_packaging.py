@@ -37,6 +37,14 @@ class VersionSurfaceTests(unittest.TestCase):
     def test_version_is_semver(self) -> None:
         self.assertRegex(hermes_odd.__version__, r"^\d+\.\d+\.\d+$")
 
+    def test_manifest_version_is_installable(self) -> None:
+        # `hermes plugins install` (plugins_cmd._SUPPORTED_MANIFEST_VERSION)
+        # accepts only manifest_version <= 1, although the loader reads v2
+        # fields (config_schema, license, ...) regardless of the number.
+        match = re.search(r"(?m)^manifest_version:\s*(\d+)\s*$", MANIFEST)
+        self.assertIsNotNone(match, "plugin.yaml must declare manifest_version")
+        self.assertLessEqual(int(match.group(1)), 1)
+
     def test_changelog_has_unreleased_section(self) -> None:
         changelog = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertIn("## [Unreleased]", changelog)
