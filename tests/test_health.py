@@ -439,7 +439,7 @@ class PluginCheckTests(unittest.TestCase):
         self.assertEqual(check.level, OK, check.finding)
         self.assertIn("section hermes-odd-workflow", check.finding)
         self.assertIn("(all plugins share 8000)", check.finding)
-        self.assertIn("skills 5 (clone)", check.finding)
+        self.assertIn("skills 6 (clone)", check.finding)
         self.assertIn("hooks 5/5", check.finding)
         self.assertIn("state ok", check.finding)
 
@@ -680,7 +680,7 @@ class CommandsListingTests(unittest.TestCase):
         self.assertLess(text.index("Viewers:"), text.index("Health:"))
         for spec in registry:
             self.assertIn(f"/{spec.name}", text)
-            self.assertIn(spec.group, ("Viewers", "Review", "Health"))
+            self.assertIn(spec.group, ("Viewers", "Review", "Setup", "Health"))
         self.assertLess(text.index("Review:"), text.index("Health:"))
         self.assertIn("/odd_review_mode [status|enable|disable] [global|clone] [project]", text)
         self.assertEqual(registry.get("odd_review_mode").group, "Review")
@@ -691,6 +691,7 @@ class CommandsListingTests(unittest.TestCase):
                 "odd_tasks",
                 "odd_changes",
                 "odd_review_mode",
+                "odd_setup",
                 "odd_status",
                 "odd_doctor",
                 "odd_commands",
@@ -702,7 +703,7 @@ class CommandsListingTests(unittest.TestCase):
         register(ctx)
         with tempfile.TemporaryDirectory() as tmp:
             env = {"HERMES_HOME": tmp, "PATH": tmp}
-            for key in ("odd-status", "odd-doctor", "odd-commands", "odd-review-mode"):
+            for key in ("odd-status", "odd-doctor", "odd-commands", "odd-review-mode", "odd-setup"):
                 with (
                     mock.patch.dict(os.environ, env),
                     mock.patch.dict("sys.modules", {"hermes_constants": None}),

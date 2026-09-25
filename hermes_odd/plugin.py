@@ -19,10 +19,13 @@ from .prompt import (
     SECTION_ID,
     SECTION_MAX_CHARS,
     SectionObserver,
+    SetupInputs,
     build_odd_section,
     make_section_callable,
 )
 from .runtime import RuntimeInfo
+from .setup import Setup
+from .setup_tool import register_setup_tool
 
 logger = logging.getLogger("hermes_odd")
 
@@ -65,11 +68,16 @@ def register_commands(ctx: Any, registry: CommandRegistry) -> int:
     return registered
 
 
-def register_prompt_section(ctx: Any, observer: SectionObserver | None = None) -> bool:
+def register_prompt_section(
+    ctx: Any,
+    observer: SectionObserver | None = None,
+    setup_inputs: SetupInputs | None = None,
+) -> bool:
     """Register the compact always-on ODD section; return whether it succeeded.
 
     The content is a callable so ``observer`` (the ``/odd_tasks`` project
-    recorder) sees each session's ``cwd``; the rendered text is unchanged.
+    recorder) sees each session's ``cwd`` without changing the text, and
+    ``setup_inputs`` adds the TDD mode and setup-pending lines.
     """
     register_section = getattr(ctx, "register_system_prompt_section", None)
     if not callable(register_section):
@@ -78,7 +86,11 @@ def register_prompt_section(ctx: Any, observer: SectionObserver | None = None) -
         )
         return False
     try:
-        register_section(SECTION_ID, make_section_callable(observer), max_chars=SECTION_MAX_CHARS)
+        register_section(
+            SECTION_ID,
+            make_section_callable(observer, setup_inputs),
+            max_chars=SECTION_MAX_CHARS,
+        )
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: could not register the ODD section: %s", exc)
         return False
@@ -94,8 +106,16 @@ def register(ctx: Any) -> None:
         runtime.stores["projects"] = project_store
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: project tracking failed to start: %s", exc)
+    setup: Setup | None = None
+    try:
+        setup = Setup(ctx)
+        runtime.stores["setup"] = setup
+    except Exception as exc:  # noqa: BLE001 - never break Hermes startup
+        logger.warning("hermes-odd: setup failed to start: %s", exc)
     runtime.section_registered = register_prompt_section(
-        ctx, project_store.on_section_render if project_store is not None else None
+        ctx,
+        project_store.on_section_render if project_store is not None else None,
+        setup.section_inputs if setup is not None else None,
     )
     runtime.section_chars = len(build_odd_section())
     try:
@@ -117,8 +137,12 @@ def register(ctx: Any) -> None:
         runtime.hooks_registered += int(register_change_hooks(ctx, change_store))
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: change tracking failed to start: %s", exc)
+    if setup is not None:
+        runtime.tools_registered += int(register_setup_tool(ctx, setup))
     try:
-        registry = build_registry(agent_store, project_store, change_store, runtime=runtime)
+        registry = build_registry(
+            agent_store, project_store, change_store, runtime=runtime, setup=setup
+        )
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: command registry failed to build: %s", exc)
         return

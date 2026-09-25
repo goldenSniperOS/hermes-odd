@@ -104,7 +104,14 @@ gateway.
       `--agent hermes` (`immutable_review_transport_unsupported`; capability manifest
       advertises review transport only for claude-code, opencode, codex, pi). Never
       impersonate `--agent pi`. Ask upstream via the gentle-ai Discussion.
-- [ ] T9 `/odd_persona` + SOUL migration command (backup, dry-run).
+- [x] T9a First-run setup: `/odd_setup`, tool `odd_setup_apply`, skill `setup` (one
+      `clarify`, <=5 questions), plugin `config_schema`, pending-setup hint in the section.
+      Persona (no default; mentor rioplatense / mentor neutral / own text / none) is
+      written ONLY as one `<!-- hermes-odd:persona -->` block at the top of SOUL.md, with
+      backup and explicit confirmation; own wording, no Gentle AI identity or branding.
+- [ ] T9b SOUL cleanup (explicit consent, dry-run + backup): remove gentle-ai SDD blocks
+      (sdd-orchestrator, sdd-session-preflight) and agent-routing; move engram-protocol and
+      codegraph-guidance to lazy skills; keep remote-authorization.
 - [ ] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
       upstream sources per component and new upstream commands/skills to triage) +
       scheduled CI.
@@ -135,6 +142,12 @@ gateway.
 
 ## Progress
 
+- 2026-09-25: T9a setup: clarify always marks choices[0] "(Recommended)" (no opt-out),
+  so the persona question is asked with no choices (options in the question text).
+  Persona block written only at top of SOUL.md, backup + atomic write + confirmation.
+- 2026-09-25: v0.3.0 released. Setup design approved with changes: persona goes to
+  SOUL.md as a single hermes-odd managed block (user: personality belongs in SOUL);
+  no recommended persona (user choice among equals).
 - 2026-09-25: T7 honest RDD: gentle-ai 3.7.0 refuses `--agent hermes`
   (`immutable_review_transport_unsupported`; manifest advertises review transport and
   immutable executor only for claude-code, opencode, codex, pi). /odd_review_mode wraps
@@ -198,4 +211,4 @@ gateway.
 
 ## Next step
 
-Cut v0.3.0 (honest RDD), then T9 persona + SOUL migration.
+T9b SOUL cleanup + engram-protocol and codegraph lazy skills.

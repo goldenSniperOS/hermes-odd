@@ -69,13 +69,21 @@ class RegisterTests(unittest.TestCase):
             ],
         )
         self.assertNotIn("pre_tool_call", names)  # fails closed on timeout in Hermes
-        self.assertEqual(self.ctx.tools, [])
+        # The only tool is the first-run setup's write path.
+        self.assertEqual([t["name"] for t in self.ctx.tools], ["odd_setup_apply"])
 
     def test_manifest_lists_the_registered_hooks(self) -> None:
         manifest = (REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8")
         line = next(ln for ln in manifest.splitlines() if ln.startswith("provides_hooks:"))
         for name, _ in self.ctx.hooks:
             self.assertIn(name, line)
+
+    def test_manifest_lists_the_registered_tools(self) -> None:
+        manifest = (REPO_ROOT / "plugin.yaml").read_text(encoding="utf-8")
+        line = next(ln for ln in manifest.splitlines() if ln.startswith("provides_tools:"))
+        self.assertEqual(line, "provides_tools: [odd_setup_apply]")
+        for tool in self.ctx.tools:
+            self.assertIn(tool["name"], line)
 
 
 class DefensiveRegistrationTests(unittest.TestCase):

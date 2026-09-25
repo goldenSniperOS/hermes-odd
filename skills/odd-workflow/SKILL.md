@@ -136,6 +136,12 @@ When you or a tool must block on the human (including a child's
 - Resolve TDD on/off from project or session configuration or an explicit
   user choice; keep its source and exact runner and record them in the
   feature document. Tests existing does not enable TDD.
+- A `TDD mode: <mode>` line in the always-on section is the user's explicit
+  choice from the hermes-odd setup (`hermes-odd:setup`, `/odd_setup tdd`);
+  record its source as "hermes-odd setup". `strict`: TDD on everywhere;
+  `off`: ordinary functional checks; `per project`: resolve from the
+  project's own configuration and detect its runner, asking once if unclear.
+  Without the line, resolve as above.
 - Forward mode, source and runner in every implementation mission. When on:
   observed RED before implementation, then GREEN, then REFACTOR; never invent
   evidence. When off: ordinary functional checks, not no checks.

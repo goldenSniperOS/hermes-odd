@@ -28,9 +28,10 @@ preflight, or `gentle-sdd-*` commands.
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
 ships lazy ODD skills, and registers the viewers `/odd_agents`,
 `/odd_tasks`, `/odd_changes`, the RDD switch `/odd_review_mode` and the
-health commands `/odd_status`, `/odd_doctor`, `/odd_commands`. Native RDD
-review is blocked upstream for Hermes (see [RDD on Hermes](#rdd-on-hermes));
-the persona command is planned (see [Planned commands](#planned-commands)).
+health commands `/odd_status`, `/odd_doctor`, `/odd_commands`, plus a
+[first-run setup](#first-run-setup) (`/odd_setup`, persona and preferences).
+Native RDD review is blocked upstream for Hermes (see
+[RDD on Hermes](#rdd-on-hermes)).
 
 ## What gets injected
 
@@ -50,6 +51,14 @@ the persona command is planned (see [Planned commands](#planned-commands)).
   - `hermes-odd:odd-feature-tracking` — feature document template,
     Engram™ mirror (`mcp__engram__*` tools), resume protocol, `todo`
     projection.
+  - `hermes-odd:setup` — the first-run setup conversation (see
+    [First-run setup](#first-run-setup)).
+- **Only while setup is pending:** one extra line in the section asking the
+  agent to offer the setup once, never mid-task. After setup, one
+  `TDD mode: <mode>` line when you chose a TDD mode. Every combination stays
+  under the 3,800-character cap (tested).
+- **Only if you choose a persona:** one `<!-- hermes-odd:persona -->` block at
+  the top of `SOUL.md` (see below). Nothing else in `SOUL.md` is touched.
 
 The canonical gentle-ai routing render for Hermes is vendored in
 `upstream/odd-routing-hermes.canonical.md` for drift tracking.
@@ -60,7 +69,7 @@ hermes-odd supports **gentle-ai v3.7.0** (binary >= 3.7.0) and **gentle-shell
 v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits in
 [`upstream/upstream.lock.json`](upstream/upstream.lock.json).
 [`upstream/SUPPORTED.md`](upstream/SUPPORTED.md) has the support matrix per
-component (ODD, RDD, review contract, viewers), the upstream sync procedure and
+component (ODD, RDD, review contract, viewers, persona), the upstream sync procedure and
 the triage log that records, for every upstream change, whether it was ported,
 is not portable (and why) or is pending.
 
@@ -151,6 +160,12 @@ registered name exactly.
 |---|---|
 | `/odd_review_mode [status\|enable\|disable] [global\|clone] [project]` | `status` (default, read-only): the effective RDD mode and its source for the repository (a known project by name or prefix, else the directory Hermes runs from), both sources (global, clone), and whether native review is available on Hermes. `enable`/`disable` run the real `gentle-ai review mode <enable\|disable> --scope <global\|clone> --json`; the scope is required, and `clone` needs a git repository |
 
+**Setup**
+
+| Command | What it does |
+|---|---|
+| `/odd_setup [status\|skip\|reset\|persona ID [confirm]\|tdd MODE\|engram on\|off\|verbosity short\|detailed]` | `status` (default): pending / complete / skipped, every answer with its value, where it came from (config, setup, default) and where it is applied, and the SOUL.md block. `skip` stops the agent from offering setup; `reset` clears the answers and makes setup pending again (it does not remove the SOUL.md block: use `persona none`). `persona <rioplatense\|neutral\|custom\|none>` shows a dry-run preview of the SOUL.md change; only `persona <id> confirm` writes it (backup first). `tdd <off\|strict\|project>`, `engram <on\|off>`, `verbosity <short\|detailed>` store one answer |
+
 **Health**
 
 | Command | What it does |
@@ -197,6 +212,54 @@ read, SOUL content is never printed, and paths under your home show as `~/…`.
 In a gateway the command runs from the gateway's directory, so the RDD mode
 of a repository is usually only known from the CLI.
 
+## First-run setup
+
+Like the gentle-ai installer's persona step, but over chat (CLI, TUI and
+Telegram). Until you run or skip it, the prompt section carries one line
+asking the agent to offer it once when you are not in the middle of a task.
+The agent loads `hermes-odd:setup` and asks everything in **one** `clarify`
+form (buttons on Telegram):
+
+1. **Persona** — Mentor rioplatense (voseo), Mentor neutral, your own text,
+   or None (Hermes default). There is no default and no recommended option:
+   Hermes' `clarify` marks the first choice as "(Recommended)", so this
+   question is asked as free text with the four options listed.
+2. **Answer style** — short first, or detailed.
+3. **TDD mode** — per project (detect the runner), strict (RED → GREEN →
+   REFACTOR) or off.
+4. **Engram memory protocol** — auto (when `mcp__engram__*` tools exist) or
+   off. Stored now; the protocol arrives with the next release (T9b).
+5. **SOUL cleanup of gentle-ai blocks** — yes, later with a preview, or no.
+   Stored now; the cleanup itself arrives with T9b.
+
+The agent then sends one summary and asks you to confirm before it calls the
+`odd_setup_apply` tool. If you decline the persona, the other answers are
+kept and `SOUL.md` is not touched. You can do everything without the model
+too: `/odd_setup persona neutral` (preview), then
+`/odd_setup persona neutral confirm`.
+
+Where each answer goes:
+
+- **Persona and answer style**: one managed block, `<!-- hermes-odd:persona -->`
+  … `<!-- /hermes-odd:persona -->`, at the top of `SOUL.md` (after a leading
+  `# title` or comment header). Hermes cuts the middle of a long `SOUL.md`,
+  so the top is the safe place. Before every write the file is copied to
+  `SOUL.md.hermes-odd-bak-<UTC timestamp>` (the last 5 are kept) and the new
+  file is written atomically with the same permissions. Your own text and any
+  `<!-- gentle-ai:... -->` blocks stay byte-identical; if a gentle-ai persona
+  block exists, both personas coexist and the summary says so. `/odd_setup
+  persona none` (then `confirm`) removes the block again.
+- **TDD mode**: one `TDD mode: <mode>` line in the prompt section.
+- **All answers**: `plugins.entries.hermes-odd.settings` in `config.yaml`
+  (the plugin's `config_schema`), and the setup record in the plugin state.
+  A valid value you edit in `config.yaml` wins. Managed installs refuse the
+  config write; the answers then stay in the plugin state.
+
+Everything takes effect in the **next new session** (`/new` or a new chat).
+The built-in personas are hermes-odd's own wording of the upstream behavior
+rules (short answers, one question at a time, verify before agreeing,
+artifacts in English, ...); they carry no product identity.
+
 ## RDD on Hermes
 
 Receipt-driven development (RDD) is Gentle AI's review discipline: a frozen
@@ -240,7 +303,8 @@ review facade waits on upstream runtime eligibility for Hermes.
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:persona` | `/odd_persona [gentleman\|neutral]` | swaps compact persona section |
+| `gentle:persona` | `/odd_setup persona ID` | shipped as the [first-run setup](#first-run-setup) |
+| SOUL.md cleanup of gentle-ai blocks | planned (T9b) | explicit consent, dry-run and backup |
 | `gentle_review*` tools | native review facade | blocked upstream: gentle-ai does not accept Hermes as an immutable review runtime yet |
 | `skill-registry:refresh` | Hermes native skill index | not needed |
 

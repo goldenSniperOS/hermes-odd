@@ -12,7 +12,29 @@ author: goldenSniperOS
 license: MIT
 homepage: https://github.com/goldenSniperOS/hermes-odd
 tags: [workflow, odd, rdd, review, gentle-ai-compatible]
-# Settings live under plugins.entries.hermes-odd.settings; none are defined yet.
-config_schema: {}
-provides_tools: []
+# Settings live under plugins.entries.hermes-odd.settings. The first-run setup
+# (/odd_setup, tool odd_setup_apply) writes them; a valid value here wins over
+# the setup answers kept in plugin state.
+config_schema:
+  persona:
+    type: str
+    default: unset
+    description: "Chat persona written as one hermes-odd block at the top of SOUL.md: unset (not chosen yet), rioplatense, neutral, custom or none. Change it with /odd_setup persona <id>."
+  verbosity:
+    type: str
+    default: short
+    description: "Answer style inside the persona block: short (short first) or detailed."
+  tdd_mode:
+    type: str
+    default: unset
+    description: "TDD mode for ODD work, shown as one 'TDD mode:' line in the prompt section: unset (no line), off, strict or project."
+  engram_protocol:
+    type: str
+    default: auto
+    description: "Engram memory protocol: auto (when mcp__engram__* tools exist) or off. Stored now; it activates with T9b."
+  soul_cleanup:
+    type: str
+    default: unset
+    description: "Cleanup of gentle-ai blocks in SOUL.md: unset, later (with a preview) or no. Stored now; the cleanup arrives with T9b."
+provides_tools: [odd_setup_apply]
 provides_hooks: [on_session_start, subagent_start, post_tool_call, subagent_stop]

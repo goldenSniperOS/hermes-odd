@@ -22,6 +22,7 @@ class RuntimeInfo:
     hooks_expected: int = 0
     hooks_registered: int = 0
     commands_registered: int = 0
+    tools_registered: int = 0
     stores: dict[str, Any] = field(default_factory=dict)  # name -> store
 
     def skills_layout(self) -> str:

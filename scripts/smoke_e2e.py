@@ -7,8 +7,18 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
 * ``odd-commands`` is registered and its handler lists itself as plain text;
 * the ``hermes-odd-workflow`` prompt section is registered, renders, and fits
   in 4000 characters;
-* the ``hermes-odd:*`` skills (three ODD skills plus ``rdd-review`` and
-  ``rdd-review-lenses``) are registered;
+* the ``hermes-odd:*`` skills (three ODD skills, ``rdd-review``,
+  ``rdd-review-lenses`` and ``setup``) are registered;
+* first-run setup: the fresh home renders the section with the
+  setup-pending line; with a synthetic ``SOUL.md`` (user text plus a gentle-ai
+  block) the ``odd_setup_apply`` tool is registered in Hermes' tool registry
+  and dispatched through ``tools.registry.registry.dispatch``: a declined
+  persona leaves ``SOUL.md`` untouched, a confirmed ``rioplatense`` persona
+  writes one hermes-odd block at the top (after the H1), keeps every other
+  byte, makes a backup and passes Hermes' own ``load_soul_md`` threat scan;
+  the answers land in the throwaway ``config.yaml`` and pass Hermes'
+  ``validate_config_schema``; ``/odd-setup status`` and ``/odd-doctor``
+  reflect them, and the pending line is gone;
 * the subagent observer hooks are registered, and a synthetic
   ``subagent_start`` / ``post_tool_call`` / ``subagent_stop`` lifecycle
   dispatched through Hermes' own ``PluginManager.invoke_hook`` shows up in
@@ -76,7 +86,17 @@ EXPECTED_SKILLS = [
     "odd-workflow",
     "rdd-review",
     "rdd-review-lenses",
+    "setup",
 ]
+SETUP_PENDING_LINE = (
+    "hermes-odd setup is pending: when the user is not mid-task, offer it once "
+    "(load hermes-odd:setup); never interrupt work."
+)
+SETUP_SOUL = (
+    "# Smoke agent\n\nUser line one: be kind.\n\n"
+    "<!-- gentle-ai:persona -->\nOld gentle persona.\n<!-- /gentle-ai:persona -->\n"
+    "User closing line.\n"
+)
 AGENT_HOOKS = ["on_session_start", "subagent_start", "post_tool_call", "subagent_stop"]
 FAKE_SECRET = "sk-smoke-FAKE-SECRET-not-real"
 
@@ -138,6 +158,13 @@ def run(temp_home: Path) -> None:
     check(SECTION_ID in rendered, f"Hermes renders {SECTION_ID!r} (not skipped)")
     size = len(rendered[SECTION_ID].content)
     check(size <= SECTION_LIMIT, f"rendered section is {size} chars (<= {SECTION_LIMIT})")
+    check(
+        rendered[SECTION_ID].content.endswith(SETUP_PENDING_LINE),
+        "a fresh home renders the section with the setup-pending line",
+    )
+    print("---- pending line ----")
+    print(rendered[SECTION_ID].content.splitlines()[-1])
+    print("----------------------")
 
     skills = manager.list_plugin_skills(PLUGIN)
     check(skills == EXPECTED_SKILLS, f"skills registered as {PLUGIN}:* -> {skills}")
@@ -146,7 +173,8 @@ def run(temp_home: Path) -> None:
         check(path is not None and Path(path).is_file(), f"{PLUGIN}:{name} resolves to a file")
 
     run_agents_lifecycle(manager, temp_home)
-    run_tasks_viewer(manager, temp_home, rendered[SECTION_ID].content)
+    completed_section = run_setup(manager, temp_home, loaded)
+    run_tasks_viewer(manager, temp_home, completed_section)
     run_changes_viewer(manager, temp_home)
     run_health(manager, temp_home)
     run_review_mode(manager, temp_home)
@@ -220,6 +248,116 @@ def run_agents_lifecycle(manager, temp_home: Path) -> None:
     raw = state_files[0].read_text(encoding="utf-8")
     check("hermes-odd.agents/v1" in raw, "state document uses schema hermes-odd.agents/v1")
     check(FAKE_SECRET not in raw + listing + detail, "tool args and results never stored or shown")
+
+
+def run_setup(manager, temp_home: Path, loaded) -> str:
+    """First-run setup through Hermes' tool registry; returns the completed section."""
+    import json
+    import re
+
+    from agent.prompt_builder import load_soul_md
+    from hermes_cli.plugins import validate_config_schema
+    from tools.registry import registry
+
+    soul = temp_home / "SOUL.md"
+    soul.write_text(SETUP_SOUL, encoding="utf-8")
+    os.chmod(soul, 0o640)
+
+    schema = loaded.manifest.config_schema
+    check(
+        sorted(schema) == ["engram_protocol", "persona", "soul_cleanup", "tdd_mode", "verbosity"],
+        f"Hermes parsed config_schema keys {sorted(schema)}",
+    )
+    check(schema["persona"].get("default") == "unset", "persona default is 'unset'")
+    check("odd_setup_apply" in loaded.manifest.provides_tools, "manifest provides_tools lists it")
+    check("odd_setup_apply" in manager._plugin_tool_names, "odd_setup_apply is a plugin tool")
+    entry = registry.get_entry("odd_setup_apply", scope=manager.scope_key)
+    check(
+        entry is not None and entry.toolset == "hermes_odd", "tool registered, toolset hermes_odd"
+    )
+
+    def dispatch(args):
+        raw = registry.dispatch("odd_setup_apply", args, scope=manager.scope_key)
+        return json.loads(raw)
+
+    bad = dispatch({"persona": "gentleman", "apply_persona_to_soul": True})
+    check("error" in bad, f"invalid persona rejected: {bad.get('error')}")
+    declined = dispatch({"persona": "rioplatense", "apply_persona_to_soul": False})
+    check(declined.get("ok") and not declined["persona_applied"], "declined persona not applied")
+    check(soul.read_text(encoding="utf-8") == SETUP_SOUL, "declined: SOUL.md byte-identical")
+    check(not list(temp_home.glob("SOUL.md.hermes-odd-bak-*")), "declined: no backup")
+
+    result = dispatch(
+        {
+            "persona": "rioplatense",
+            "verbosity": "short",
+            "engram_protocol": "auto",
+            "soul_cleanup": "later",
+            "apply_persona_to_soul": True,
+        }
+    )
+    check(result.get("ok") and result["persona_applied"], f"confirmed apply: {result}")
+    check("next new session" in result["note"], "tool result carries the next-session note")
+    check("two personas now coexist" in result["summary"], "summary warns about two personas")
+    text = soul.read_text(encoding="utf-8")
+    check(
+        text.startswith("# Smoke agent\n\n<!-- hermes-odd:persona -->\n"),
+        "block written at the top, right after the H1",
+    )
+    stripped = re.sub(
+        r"<!-- hermes-odd:persona -->.*?<!-- /hermes-odd:persona -->\n\n", "", text, flags=re.S
+    )
+    check(stripped == SETUP_SOUL, "everything outside the block is byte-identical")
+    check(text.count("<!-- hermes-odd:persona -->") == 1, "exactly one hermes-odd block")
+    backups = sorted(temp_home.glob("SOUL.md.hermes-odd-bak-*"))
+    check(len(backups) == 1, f"one backup {backups[0].name if backups else '-'}")
+    check(backups[0].read_text(encoding="utf-8") == SETUP_SOUL, "backup holds the original")
+    check((soul.stat().st_mode & 0o777) == 0o640, "SOUL.md permissions kept (0640)")
+    loaded_soul = load_soul_md(home_override=temp_home) or ""
+    check(
+        "BLOCKED" not in loaded_soul and "hermes-odd:persona" in loaded_soul,
+        "Hermes' load_soul_md loads the new SOUL.md (threat scan passes)",
+    )
+
+    settings = manager_settings(temp_home)
+    check(settings.get("persona") == "rioplatense", "config.yaml persona = rioplatense")
+    warnings = validate_config_schema("hermes-odd", schema, settings)
+    check(warnings == [], f"Hermes validate_config_schema: no warnings {warnings}")
+
+    status = manager._plugin_commands["odd-setup"]["handler"]("status")
+    check(status.startswith("hermes-odd setup: complete"), "/odd-setup status: complete")
+    check(
+        "Persona: Mentor rioplatense (voseo) · config" in status,
+        "/odd-setup status reflects the persona from config.yaml",
+    )
+    check("SOUL cleanup of gentle-ai blocks: later" in status, "status shows the cleanup answer")
+    check("hermes-odd persona block present" in status, "status sees the block")
+    preview = manager._plugin_commands["odd-setup"]["handler"]("persona neutral")
+    check("dry run, nothing written" in preview, "persona preview is a dry run")
+    check(soul.read_text(encoding="utf-8") == text, "preview did not write")
+    doctor = manager._plugin_commands["odd-doctor"]["handler"]("")
+    check("hermes-odd persona block" in doctor and "(at the top)" in doctor, "doctor sees it")
+    check("1 gentle-ai blocks" in doctor, "doctor counts gentle-ai blocks separately")
+
+    rendered = {s.id: s for s in manager.render_system_prompt_sections({"platform": "cli"})}
+    content = rendered[SECTION_ID].content
+    check(SETUP_PENDING_LINE not in content, "the pending line is gone after completion")
+    print("---- /odd-setup status output ----")
+    print(status)
+    print("---- /odd-setup persona neutral (dry run) ----")
+    print(preview)
+    print("---- SOUL.md after apply (head) ----")
+    print(text[:2200])
+    print("-----------------------------------")
+    return content
+
+
+def manager_settings(temp_home: Path) -> dict:
+    import yaml
+
+    config = yaml.safe_load((temp_home / "config.yaml").read_text(encoding="utf-8")) or {}
+    entry = ((config.get("plugins") or {}).get("entries") or {}).get(PLUGIN) or {}
+    return entry.get("settings") or {}
 
 
 DEMO_DOC = """\
@@ -425,7 +563,7 @@ def run_health(manager, temp_home: Path) -> None:
     status = status_cmd["handler"]("")
     check(status.startswith("hermes-odd "), "/odd-status starts with the plugin version")
     check(f"Prompt: {SECTION_ID} " in status, "/odd-status shows the prompt section")
-    check("Skills: 5 (" in status, "/odd-status counts the skills")
+    check("Skills: 6 (" in status, "/odd-status counts the skills")
     check("Native review on Hermes: " in status, "/odd-status shows native review availability")
     check("Subagents: " in status and "Changes (24 h): 2 files" in status, "status reads stores")
     check("ODD features: " in status, "/odd-status counts feature documents")

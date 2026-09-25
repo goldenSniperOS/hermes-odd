@@ -320,6 +320,37 @@
           "sha256": "1f65b73818d2f7883da698c23c10d081b5d4552aa97b2566d29568e7a5bd3fd6"
         }
       ]
+    },
+    "persona": {
+      "status": "ported",
+      "tasks": ["T9a"],
+      "description": "First-run setup over chat (the gentle-ai installer's persona step, rebuilt for Hermes): skill hermes-odd:setup (one clarify call), /odd_setup, tool odd_setup_apply, plugin config_schema, and one hermes-odd persona block at the top of SOUL.md with backup and explicit confirmation.",
+      "port_notes": "T9a: persona texts are hermes-odd's own wording of the upstream behavior rules (no AI attribution in commits, short answers by default, one question at a time, no option menus without a real fork, verify before agreeing, explain why with evidence, alternatives with tradeoffs, persona scope limited to chat with artifacts in English, reply in the user's language, caring and direct mentor tone, concepts before code; Rioplatense voseo or neutral Spanish). Excluded: the '## Identity' product identity, branding, author biography, tool preferences (editor and terminal multiplexers), the Hermes skill-loading and Engram memory sections (Hermes and the T9b Engram skill cover them). Installer presets, component selection and model pickers are not portable (see upstream/SUPPORTED.md). T9b pending: SOUL cleanup of gentle-ai blocks and the lazy Engram protocol skill.",
+      "local_files": [
+        "hermes_odd/personas.py",
+        "hermes_odd/setup.py",
+        "hermes_odd/setup_tool.py",
+        "hermes_odd/soul_persona.py",
+        "hermes_odd/commands/setup.py",
+        "skills/setup/SKILL.md"
+      ],
+      "sources": [
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/hermes/persona-gentleman.md",
+          "sha256": "dd60b53847ecc4ce4f859004bf7a28bd269a694cb4c2be6c1218938d643dc911"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/hermes/persona-neutral.md",
+          "sha256": "56ad6d274645ed2f30ecb565d626da63028864149834739a0280ffa90c703c8c"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-ai.ts",
+          "sha256": "0fef2ef2786b88922cb37fb89862a025d1b7138c45d2365e2f5f80fd1e75b981"
+        }
+      ]
     }
   },
   "excluded": [

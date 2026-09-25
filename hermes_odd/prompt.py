@@ -66,17 +66,43 @@ Before substantial work load with `skill_view`: hermes-odd:odd-workflow (routing
 """
 
 
-def build_odd_section(session_info: Mapping[str, Any] | None = None) -> str:
-    """Return the compact ODD section. ``session_info`` is accepted for the
-    Hermes callable contract; the text is static today."""
-    return ODD_SECTION.strip()
+# Appended only while the first-run setup is pending (no ``setup`` record in
+# ``ctx.state``); removed once setup is completed or skipped.
+SETUP_PENDING_LINE = (
+    "hermes-odd setup is pending: when the user is not mid-task, offer it once "
+    "(load hermes-odd:setup); never interrupt work."
+)
+SETUP_PENDING_LINE_MAX_CHARS = 200
+
+
+def build_odd_section(
+    session_info: Mapping[str, Any] | None = None,
+    *,
+    setup_pending: bool = False,
+    tdd_line: str | None = None,
+) -> str:
+    """Return the compact ODD section.
+
+    With no setup input the text is exactly ``ODD_SECTION.strip()``. A
+    ``tdd_line`` (the user's TDD mode from setup) and the setup-pending line
+    are appended, one line each, only when present. ``session_info`` is
+    accepted for the Hermes callable contract.
+    """
+    text = ODD_SECTION.strip()
+    extra = [line for line in (tdd_line, SETUP_PENDING_LINE if setup_pending else None) if line]
+    if extra:
+        text += "\n\n" + "\n".join(extra)
+    return text
 
 
 SectionObserver = Callable[[Mapping[str, Any]], None]
+# Returns ``(setup_pending, tdd_line or None)``.
+SetupInputs = Callable[[], tuple[bool, str | None]]
 
 
 def make_section_callable(
     observer: SectionObserver | None = None,
+    setup_inputs: SetupInputs | None = None,
 ) -> Callable[[Mapping[str, Any]], str]:
     """Return the callable registered as the section content.
 
@@ -84,8 +110,9 @@ def make_section_callable(
     mapping (``session_id``, ``model``, ``provider``, ``platform``,
     ``profile_name``, ``cwd``). ``observer`` sees that mapping (``/odd_tasks``
     uses it to learn project roots); its failures are swallowed so the
-    section is never skipped. The returned text is always exactly
-    :func:`build_odd_section`: the observer cannot change the prompt.
+    section is never skipped, and the observer cannot change the prompt.
+    ``setup_inputs`` (the first-run setup) decides the optional TDD mode and
+    setup-pending lines; when it fails the section renders without them.
     """
 
     def render(session_info: Mapping[str, Any] | None = None) -> str:
@@ -94,7 +121,14 @@ def make_section_callable(
                 observer(session_info if isinstance(session_info, Mapping) else {})
             except Exception:  # noqa: BLE001 - never skip the section
                 logger.debug("hermes-odd: section observer failed", exc_info=True)
-        return build_odd_section(session_info)
+        pending, tdd_line = False, None
+        if setup_inputs is not None:
+            try:
+                pending, tdd_line = setup_inputs()
+            except Exception:  # noqa: BLE001 - never skip the section
+                logger.debug("hermes-odd: setup inputs failed", exc_info=True)
+                pending, tdd_line = False, None
+        return build_odd_section(session_info, setup_pending=bool(pending), tdd_line=tdd_line)
 
     render.__name__ = "hermes_odd_workflow_section"
     return render

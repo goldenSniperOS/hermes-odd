@@ -1,7 +1,11 @@
-"""SOUL.md size, gentle-ai managed blocks and Hermes truncation math for ``/odd_doctor``.
+"""SOUL.md size, managed blocks and Hermes truncation math for ``/odd_doctor``.
 
 gentle-ai's Hermes writer puts its managed blocks into ``<HERMES_HOME>/SOUL.md``
 between ``<!-- gentle-ai:<name> -->`` and ``<!-- /gentle-ai:<name> -->``.
+hermes-odd's setup writes its own single block the same way, in the
+``hermes-odd`` namespace (``<!-- hermes-odd:persona -->``, see
+:mod:`hermes_odd.soul_persona`); the parser recognizes both namespaces so the
+truncation math accounts for every managed block.
 Hermes loads SOUL.md with ``agent/prompt_builder.py`` ``load_soul_md``: it
 strips the text and truncates it with ``_truncate_content`` when it is longer
 than the context-file cap, keeping the first 70% and the last 20% of the cap
@@ -41,7 +45,10 @@ REFERENCE_CONTEXTS = (128_000, 200_000, 1_000_000)
 MAX_SOUL_BYTES = 4 * 1024 * 1024
 MAX_CONFIG_BYTES = 1024 * 1024
 MAX_BLOCKS = 32
-_MARKER_RE = re.compile(r"<!--\s*(/?)gentle-ai:([a-z0-9][a-z0-9_-]{0,63})\s*-->")
+GENTLE_AI = "gentle-ai"
+HERMES_ODD = "hermes-odd"
+NAMESPACES = (GENTLE_AI, HERMES_ODD)
+_MARKER_RE = re.compile(r"<!--\s*(/?)(gentle-ai|hermes-odd):([a-z0-9][a-z0-9_-]{0,63})\s*-->")
 _INT_RE = re.compile(r"^\d{1,9}$")
 
 
@@ -52,10 +59,16 @@ class Block:
     end: int
     depth: int = 0
     closed: bool = True
+    namespace: str = GENTLE_AI
 
     @property
     def size(self) -> int:
         return self.end - self.start
+
+    @property
+    def label(self) -> str:
+        """``name`` for gentle-ai blocks, ``hermes-odd:name`` for ours."""
+        return self.name if self.namespace == GENTLE_AI else f"{self.namespace}:{self.name}"
 
 
 @dataclass
@@ -71,8 +84,17 @@ class SoulReport:
         return (self.chars + CHARS_PER_TOKEN - 1) // CHARS_PER_TOKEN
 
     @property
+    def gentle_blocks(self) -> list[Block]:
+        return [b for b in self.blocks if b.namespace == GENTLE_AI]
+
+    @property
+    def hermes_blocks(self) -> list[Block]:
+        return [b for b in self.blocks if b.namespace == HERMES_ODD]
+
+    @property
     def managed_chars(self) -> int:
-        return sum(b.size for b in self.blocks if b.depth == 0)
+        """Top-level gentle-ai block characters (hermes-odd's block is separate)."""
+        return sum(b.size for b in self.gentle_blocks if b.depth == 0)
 
 
 @dataclass(frozen=True)
@@ -140,25 +162,27 @@ def dropped_blocks(blocks: list[Block], length: int, cap: int) -> list[tuple[Blo
 
 
 def parse_blocks(text: str) -> list[Block]:
-    """Managed ``gentle-ai:<name>`` blocks (nesting-aware; unclosed runs to EOF)."""
+    """Managed ``gentle-ai:<name>`` and ``hermes-odd:<name>`` blocks
+    (nesting-aware; a closer matches its own namespace and name; unclosed runs
+    to EOF)."""
     blocks: list[Block] = []
-    stack: list[tuple[str, int]] = []
+    stack: list[tuple[str, str, int]] = []
     for match in _MARKER_RE.finditer(text):
-        closing, name = match.group(1) == "/", match.group(2)
+        closing, namespace, name = match.group(1) == "/", match.group(2), match.group(3)
         if not closing:
-            stack.append((name, match.start()))
+            stack.append((namespace, name, match.start()))
             continue
         for index in range(len(stack) - 1, -1, -1):
-            if stack[index][0] == name:
-                open_name, start = stack[index]
+            if stack[index][:2] == (namespace, name):
+                _ns, open_name, start = stack[index]
                 depth = index
                 del stack[index:]
-                blocks.append(Block(open_name, start, match.end(), depth))
+                blocks.append(Block(open_name, start, match.end(), depth, namespace=namespace))
                 break
         if len(blocks) >= MAX_BLOCKS:
             break
-    for depth, (name, start) in enumerate(stack):
-        blocks.append(Block(name, start, len(text), depth, closed=False))
+    for depth, (namespace, name, start) in enumerate(stack):
+        blocks.append(Block(name, start, len(text), depth, closed=False, namespace=namespace))
     blocks.sort(key=lambda b: (b.start, b.depth))
     return blocks[:MAX_BLOCKS]
 

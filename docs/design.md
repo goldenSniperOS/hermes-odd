@@ -33,7 +33,7 @@ mode, doctor, status) are Pi TUI features and do not exist in Hermes at all.
 ## Architecture: plugin plus lazy skills
 
 hermes-odd is a standard Hermes plugin (`plugin.yaml` + `register(ctx)`) that
-contributes three kinds of surface:
+contributes these surfaces:
 
 1. **One compact always-on prompt section**, `hermes-odd-workflow`, registered
    with `ctx.register_system_prompt_section`. It holds only what must be in
@@ -44,9 +44,11 @@ contributes three kinds of surface:
    `ctx.register_skill` and exposed as `hermes-odd:<name>`. They never enter
    the always-on skills index; the agent loads them with `skill_view` when the
    section tells it to. Detail lives here: `odd-workflow`, `odd-delegation`,
-   `odd-feature-tracking` today; `rdd-review` with RDD.
+   `odd-feature-tracking`, `rdd-review`, `rdd-review-lenses` and `setup`.
 3. **Plain-text slash commands** (`/odd_*`) whose handlers never call the
    model, so the CLI, the TUI and every gateway get identical output.
+4. **One tool**, `odd_setup_apply`, the model's write path for the first-run
+   setup, and one optional managed block in `SOUL.md` (the persona).
 
 `register(ctx)` never raises: every step is guarded and a missing optional
 `ctx` method is skipped with one warning, so an API change in Hermes degrades
@@ -59,7 +61,7 @@ hermes-odd instead of breaking Hermes startup.
 | Hermes max per section | 4,000 chars | `MAX_SYSTEM_PROMPT_SECTION_CHARS`; longer sections are **skipped**, not truncated |
 | Hermes max across all plugins | 8,000 chars | `MAX_SYSTEM_PROMPT_SECTIONS_TOTAL_CHARS`, checked in `render_system_prompt_sections` |
 | hermes-odd test budget | 3,800 chars | `SECTION_BUDGET_CHARS`, enforced by `tests/test_prompt_and_skills.py` |
-| Current section | ~3.3k chars | measured by the smoke |
+| Current section | ~3.3k chars (+ ~120 while setup is pending, + ~130 with a TDD mode) | measured by the smoke; every combination tested |
 
 Because an oversized section disappears entirely, the test budget keeps 200
 characters of headroom, and anything that does not have to be read every turn
@@ -83,8 +85,31 @@ Verified against the hermes-agent source; later tasks depend on them.
   the parent's toolsets including MCP, and cannot call `clarify`, `memory`,
   `delegate_task`, `cronjob` or `send_message`.
 - **Engram** tools are exposed as `mcp__engram__*`.
-- **`clarify`** exists: at most 4 choices plus "Other"; rendered as buttons on
-  Telegram.
+- **`clarify`** exists: at most 5 questions per call, at most 4 choices plus
+  "Other"; rendered as buttons on Telegram. `tools/clarify_tool.py`
+  `mark_recommended` appends " (Recommended)" to the first choice of every
+  list of 2+ choices (single and batch path, no opt-out parameter; only a
+  first choice already ending in "(Recommended)" is left alone).
+- **Tools**: `ctx.register_tool(name, toolset, schema, handler, check_fn=None,
+  requires_env=None, is_async=False, description="", emoji="",
+  override=False)`; the schema is the OpenAI function format (`name`,
+  `description`, `parameters`); `registry.dispatch` calls `handler(args,
+  **kwargs)` and expects a string, and errors are `{"error": "..."}` JSON
+  (`tools.registry.tool_error`). Plugin toolsets are enabled by default until
+  the user disables them in `hermes tools`. `provides_tools` in the manifest
+  is informational for standalone plugins (it only triggers `tools.py`
+  pre-registration for deferred platform plugins).
+- **Config**: `ctx.get_config(key, default)` / `ctx.set_config(key, value)`
+  read and write `plugins.entries.<id>.settings.<key>` (plugin-relative keys
+  only). `set_config` raises `PermissionError` in a managed install or for
+  an administrator-managed key, and writes atomically under a lock. The
+  manifest `config_schema` (`{type, default, description, required}` per
+  key) is parsed at discovery and the settings are validated at load
+  (`_validate_plugin_config_schema`): mismatches are warnings, never a load
+  failure. `get_config` does not apply schema defaults.
+- **SOUL.md scan**: `load_soul_md` runs `tools.threat_patterns.scan_for_threats`
+  (scope `context`) on the whole file; one match replaces the **entire**
+  SOUL.md with a `[BLOCKED: ...]` notice.
 - **Hooks** (for the viewers) are called with keyword arguments
   (`invoke_hook(name, **kwargs)`, plus `telemetry_schema_version`):
   `subagent_start` (parent_session_id, parent_turn_id, parent_subagent_id,
@@ -400,6 +425,105 @@ Plain text under 3,500 characters (`… N more` when cut):
 - a project name (or prefix): that project's files over 7 days;
 - `clear`: forget every recorded change and say how many.
 
+## First-run setup
+
+`/odd_setup`, the tool `odd_setup_apply` and the skill `hermes-odd:setup`
+are a concept port of the gentle-ai installer's persona and strict TDD steps
+(`internal/tui/screens/persona.go`, `strict_tdd.go`) to chat. Installer
+presets, component selection and model pickers do not apply to one Hermes
+plugin (triage in `upstream/SUPPORTED.md`).
+
+### Model
+
+- **Setup record.** `ctx.state` key `setup`, schema `hermes-odd.setup/v1`:
+  `version`, `completed_at`, `skipped`, `answers`, plus the sanitized own
+  persona text and the `source` (`tool` or `command`). Setup is **pending
+  while there is no record**; `skip` writes a skipped record, a setter or an
+  apply writes a completed one, `reset` clears it.
+- **Preferences** are the plugin's `config_schema` keys: `persona`
+  (`unset` default, `rioplatense`, `neutral`, `custom`, `none`), `verbosity`
+  (`short`, `detailed`), `tdd_mode` (`unset` default, `off`, `strict`,
+  `project`), `engram_protocol` (`auto`, `off`), `soul_cleanup` (`unset`,
+  `later`, `no`). Answers are recorded in the setup record and mirrored with
+  `ctx.set_config`; a refusal (managed install) or a Hermes without
+  `set_config` is reported and the answers stay in state. The effective value
+  is a valid `config.yaml` value first (hand edits and administrator values
+  win), then the record, then the default.
+- **Surfaces.** The prompt section callable appends, one line each and only
+  when present, the TDD mode line and the setup-pending line; without them
+  the text is byte-identical to `ODD_SECTION`. The skill runs the
+  conversation; the tool is the model's only write path; `/odd_setup` is the
+  deterministic user path (status, skip, reset, setters, persona dry-run and
+  `confirm`). Everything takes effect in the next new session because Hermes
+  builds `SOUL.md` and plugin sections into the prompt once per session.
+- **Engram protocol and SOUL cleanup** answers are stored only; their
+  behavior is T9b.
+
+### Clarify and the persona question
+
+The user decided the four personas are equals: no default, no recommended
+option. Hermes' `clarify` marks the first choice "(Recommended)" with no way
+to turn it off (see the API facts). The persona question is therefore sent
+in the same single `clarify` call **without `choices`**: the four options
+are listed in the question text and the user answers with a number or their
+own text (which also covers "My own text" without a separate "Other" row).
+The other four questions keep `choices`, ordered so that the marked first
+choice is the plugin default. `tests/test_setup.py` parses the skill's
+`clarify` example and asserts the persona question has no `choices` and no
+persona label carries a recommendation.
+
+### Persona block placement and truncation
+
+The only SOUL.md mutation is one block,
+`<!-- hermes-odd:persona -->` … `<!-- /hermes-odd:persona -->`, holding the
+persona text and the answer style line (`hermes_odd/soul_persona.py`).
+Hermes keeps the first 70% and the last 20% of its cap of a long SOUL.md and
+drops the middle, and gentle-ai's own blocks often already push SOUL.md past
+the cap. A block appended at the end could fall into the dropped middle as
+soon as the user adds text; the top is always kept. So a new block goes right
+after a leading H1 line and/or a leading HTML comment header (not a managed
+marker) and their blank lines, else at line 1; it never lands inside a
+`gentle-ai:` block. An existing block is replaced in place, wherever it is;
+extra copies are collapsed; persona `none` removes it. `soul.py`'s parser
+knows both namespaces, so `/odd_doctor`'s truncation math covers every block,
+and it reports ours with its size and whether it is at the top.
+
+### Reversibility and safety
+
+- Before every write the current SOUL.md is copied (`shutil.copy2`, same
+  mode) to `SOUL.md.hermes-odd-bak-<UTC timestamp>`; the last 5 are kept.
+  The new text goes to a temporary file in the same directory, is fsynced,
+  gets the original permissions (0600 for a new file) and is moved with
+  `os.replace`, so a crash leaves either the old or the new file.
+- Before writing, the plan is checked: the text outside our block is
+  byte-identical (up to the separator newlines insert adds), every
+  `gentle-ai:` block is unchanged, and exactly one hermes-odd block remains
+  (none after removal). The newline style (`\r\n`) and a BOM are kept.
+- Refused, never rewritten: a symlinked SOUL.md, a file over 4 MB, invalid
+  UTF-8, unbalanced hermes-odd markers.
+- Own persona text is sanitized (HTML comments, leftover `<!--`/`-->`,
+  control and format characters removed; at most 1,500 characters), so it can
+  neither close the block early nor open another managed block. When Hermes
+  is loaded, the block is scanned with Hermes' own context threat patterns
+  and refused if it would get the whole SOUL.md blocked.
+- A gentle-ai persona block is left alone; the summary warns that two
+  personas coexist until the T9b cleanup removes the old one.
+- Undo: `/odd_setup persona none confirm` removes the block (the result is
+  byte-identical to the file before an insert), or copy a backup back.
+
+### Persona texts
+
+`hermes_odd/personas.py` holds two texts (each under 2,000 characters) in
+hermes-odd's own words, condensed from the behavior rules of gentle-ai's
+`internal/assets/hermes/persona-{gentleman,neutral}.md` and gentle-shell's
+`GENTLEMAN_PERSONA_PROMPT` / `NEUTRAL_PERSONA_PROMPT`: no AI attribution in
+commits, answer length from the answer style, one question at a time, no
+option menus without a real fork, verify before agreeing, explain why with
+evidence, alternatives with tradeoffs, persona scope limited to chat with
+artifacts in English, the user's language, a caring and direct mentor tone,
+concepts before code; Rioplatense voseo or neutral Spanish. Product identity,
+branding, the author biography and tool preferences are excluded (tested).
+
 ## Health commands (`/odd_status`, `/odd_doctor`)
 
 Concept ports of gentle-pi's `gentle:status` and `gentle:doctor`
@@ -461,7 +585,9 @@ the single value of that model); both files are read by a line matcher for
 exactly those keys, no YAML and nothing else kept. When unknown the doctor
 shows the cap for 128k / 200k / 1M. A top-level block is `dropped` when it
 lies entirely in the lost middle and `partly` when it overlaps it. SOUL
-content is never returned. The migration that strips the blocks is T9.
+content is never returned. The hermes-odd persona block written by the setup
+is parsed too (namespace `hermes-odd`, see [First-run setup](#first-run-setup)).
+The migration that strips the gentle-ai blocks is T9b.
 
 ### Privacy and limits
 
@@ -586,7 +712,7 @@ hermes-odd tracks upstream by pinned commits, not by following branches:
 - `upstream/upstream.lock.json` (schema `hermes-odd.upstream-lock/v1`) pins
   the supported gentle-ai release, commit and minimum binary version and the
   gentle-shell release, commit and `gentle-pi` version, and indexes every
-  upstream source per component (`odd`, `rdd`, `review-contract`, `viewers`)
+  upstream source per component (`odd`, `rdd`, `review-contract`, `viewers`, `persona`)
   with its SHA-256 at the pin; `hermes_odd.upstream.load_lock()` reads it from
   `hermes_odd/_upstream` (wheel) or `upstream/` (git clone), the same order as
   the skills. `upstream/SUPPORTED.md` keeps the human support matrix, the sync

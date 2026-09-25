@@ -38,6 +38,21 @@ class FakeState:
         return json.dumps(self.data, ensure_ascii=False)
 
 
+def mark_setup_complete(state: FakeState) -> None:
+    """Store a completed first-run setup record (no answers): the section then
+    renders exactly ``ODD_SECTION`` (no pending or TDD line)."""
+    state.set(
+        "setup",
+        {
+            "schema": "hermes-odd.setup/v1",
+            "version": 1,
+            "completed_at": "2026-01-01T00:00:00Z",
+            "skipped": False,
+            "answers": {},
+        },
+    )
+
+
 class FakeContext:
     """Records every ``register_*`` call made by the plugin."""
 

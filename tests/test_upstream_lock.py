@@ -25,7 +25,7 @@ NOTICES = REPO_ROOT / "THIRD_PARTY_NOTICES.md"
 MARKER_RE = re.compile(r"<!-- derived-from: (gentle-ai|gentle-shell)@([0-9a-f]{40}) (\S+) -->")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 UPSTREAMS = ("gentle-ai", "gentle-shell")
-COMPONENTS = ("odd", "rdd", "review-contract", "viewers")
+COMPONENTS = ("odd", "rdd", "review-contract", "viewers", "persona")
 STATUSES = {"ported", "partial", "pending"}
 # Local read-only upstream checkouts (developer machines only; CI has none).
 # The directory name is built from parts so the old-name test never matches it.
@@ -42,7 +42,7 @@ def load_lock() -> dict:
 
 
 def marker_files() -> list[Path]:
-    files = [REPO_ROOT / "hermes_odd" / "prompt.py"]
+    files = sorted((REPO_ROOT / "hermes_odd").rglob("*.py"))
     for root in ("skills", "upstream"):
         files.extend(p for p in sorted((REPO_ROOT / root).rglob("*")) if p.is_file())
     return files
@@ -181,6 +181,25 @@ class LockConsistencyTests(unittest.TestCase):
         supported = SUPPORTED.read_text(encoding="utf-8")
         self.assertIn("blocked upstream: runtime eligibility", supported)
         self.assertIn("ported as a receipt-less skill", supported)
+
+    def test_persona_markers_are_indexed_under_persona(self) -> None:
+        persona = {
+            (s["upstream"], s["path"]) for s in self.lock["components"]["persona"]["sources"]
+        }
+        text = (REPO_ROOT / "hermes_odd" / "personas.py").read_text(encoding="utf-8")
+        markers = {(u, rel) for u, _c, rel in MARKER_RE.findall(text)}
+        self.assertEqual(
+            markers,
+            {
+                ("gentle-ai", "internal/assets/hermes/persona-gentleman.md"),
+                ("gentle-ai", "internal/assets/hermes/persona-neutral.md"),
+                ("gentle-shell", "extensions/gentle-ai.ts"),
+            },
+        )
+        self.assertEqual(markers, persona)
+        self.assertIn("hermes_odd/personas.py", self.lock["components"]["persona"]["local_files"])
+        supported = SUPPORTED.read_text(encoding="utf-8")
+        self.assertIn("ported as the first-run setup", supported)
 
     def test_odd_indexes_routing_and_capability_manifest(self) -> None:
         sources = {(s["upstream"], s["path"]) for s in self.lock["components"]["odd"]["sources"]}

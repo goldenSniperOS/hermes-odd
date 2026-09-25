@@ -22,6 +22,10 @@ Buscaglia. See the README for the full notice.
 
 Files in this repository derived from gentle-ai:
 
+- `hermes_odd/personas.py` (persona behavior rules condensed, in hermes-odd's own
+  words and without identity or branding, from
+  `internal/assets/hermes/persona-gentleman.md` and
+  `internal/assets/hermes/persona-neutral.md`)
 - `hermes_odd/prompt.py`
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
@@ -69,6 +73,9 @@ SOFTWARE.
 
 Files in this repository derived from gentle-shell:
 
+- `hermes_odd/personas.py` (persona rules condensed from
+  `GENTLEMAN_PERSONA_PROMPT` and `NEUTRAL_PERSONA_PROMPT` in
+  `extensions/gentle-ai.ts`)
 - `hermes_odd/prompt.py`
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
@@ -111,5 +118,5 @@ SOFTWARE.
 
 Hermes Agent is the host platform. hermes-odd uses its public plugin API
 (`register(ctx)`, `register_system_prompt_section`, `register_skill`,
-`register_command`) and copies no Hermes Agent code, so no Hermes Agent
+`register_command`, `register_tool`, `get_config`/`set_config`, `state`) and copies no Hermes Agent code, so no Hermes Agent
 license notice is reproduced here.

@@ -6,6 +6,44 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- First-run setup over chat, the Hermes version of the gentle-ai installer's persona
+  step. While it is pending, the prompt section carries one line asking the agent to
+  offer it once, never mid-task. Skill `hermes-odd:setup` asks five questions in one
+  `clarify` call (persona with no default and no recommended option, answer style, TDD
+  mode, Engram protocol, SOUL cleanup), shows one summary and asks for explicit
+  confirmation before writing anything to `SOUL.md`.
+- Tool `odd_setup_apply` (toolset `hermes_odd`, strict schema): validates the answers,
+  mirrors them to `plugins.entries.hermes-odd.settings` with `ctx.set_config` (managed
+  installs and older Hermes are reported, answers stay in plugin state), records the
+  setup (`hermes-odd.setup/v1`) and writes the persona only when
+  `apply_persona_to_soul` is true. It never raises; errors are `{"error": ...}` JSON.
+- `/odd_setup [status|skip|reset|persona ID [confirm]|tdd MODE|engram on|off|verbosity
+  short|detailed]` (group Setup): deterministic status with where each answer is
+  applied, skip, reset (keeps the SOUL.md block), and direct setters. Persona changes
+  are a dry-run preview until the `confirm` form.
+- Persona block: exactly one `<!-- hermes-odd:persona -->` block at the top of
+  `SOUL.md` (after a leading H1 or comment header), replaced in place, removed with
+  persona `none`. Every write backs up to `SOUL.md.hermes-odd-bak-<UTC timestamp>`
+  (last 5 kept) and replaces the file atomically with its permissions; user text and
+  `gentle-ai:` blocks stay byte-identical, and a coexisting gentle-ai persona is
+  reported. Own text is sanitized (no comments or markers, at most 1,500 characters)
+  and checked against Hermes' own SOUL.md threat scan when available. The built-in
+  personas (`hermes_odd/personas.py`) are hermes-odd's own wording of the upstream
+  behavior rules, without product identity or branding.
+- Plugin `config_schema` for `persona` (default `unset`), `verbosity`, `tdd_mode`,
+  `engram_protocol` and `soul_cleanup`. A chosen TDD mode adds one `TDD mode:` line
+  to the prompt section, which `hermes-odd:odd-workflow` reads.
+
+### Changed
+- `/odd_doctor` also reports the hermes-odd persona block (size, whether it is at the
+  top), and SOUL.md truncation math covers `hermes-odd:` blocks too; only gentle-ai
+  blocks trigger the "sent with every message" warning.
+- Upstream lock: new component `persona` indexing the gentle-ai Hermes persona assets
+  and gentle-shell `extensions/gentle-ai.ts`; `upstream/SUPPORTED.md` triages the
+  installer steps (persona and strict TDD ported as setup; presets, component
+  selection and model pickers not portable or not applicable).
+
 ## [0.3.0] - 2026-09-25
 
 Honest RDD on Hermes: toggle and inspect gentle-ai's receipt-driven development switch,

@@ -58,7 +58,7 @@ UPGRADE_HINT = "brew upgrade gentleman-programming/tap/gentle-ai"
 INSTALL_HINT = "brew install gentleman-programming/tap/gentle-ai"
 SOUL_HINT = (
     "hermes-odd already supplies ODD through its prompt section; the SOUL.md "
-    "migration (strip gentle-ai blocks, with backup and dry-run) arrives in T9 "
+    "migration (strip gentle-ai blocks, with backup and dry-run) arrives in T9b "
     "as /odd_soul. Until then trim SOUL.md by hand or pin context_file_max_chars."
 )
 
@@ -248,7 +248,7 @@ def check_native_review(
 
 
 def _blocks_text(report: soul_mod.SoulReport) -> str:
-    top = [b for b in report.blocks if b.depth == 0]
+    top = [b for b in report.gentle_blocks if b.depth == 0]
     parts = [f"{b.name} {_k(b.size)}" + ("" if b.closed else " unclosed") for b in top]
     more = len(parts) - MAX_LISTED_BLOCKS
     text = ", ".join(parts[:MAX_LISTED_BLOCKS])
@@ -259,11 +259,39 @@ def _lost_text(report: soul_mod.SoulReport, cap: int) -> str:
     lost = soul_mod.dropped_blocks(report.blocks, report.chars, cap)
     if not lost:
         return "no managed block lost"
-    names = [f"{b.name}{'' if how == 'dropped' else ' (partly)'}" for b, how in lost]
+    names = [f"{b.label}{'' if how == 'dropped' else ' (partly)'}" for b, how in lost]
     more = len(names) - MAX_LISTED_BLOCKS
     return (
         "loses " + ", ".join(names[:MAX_LISTED_BLOCKS]) + (f", … {more} more" if more > 0 else "")
     )
+
+
+def _hermes_block_text(report: soul_mod.SoulReport) -> str:
+    """The hermes-odd persona block written by ``/odd_setup`` / ``odd_setup_apply``."""
+    ours = [b for b in report.hermes_blocks if b.name == "persona"]
+    if not ours:
+        return "hermes-odd persona block: none (/odd_setup)"
+    block = ours[0]
+    if not block.closed:
+        return "hermes-odd persona block: unclosed (fix SOUL.md by hand)"
+    # Measured on the stripped text, like Hermes; the header offset tells
+    # whether only an H1/comment header precedes it.
+    top = "at the top" if block.start <= _header_offset(report) else f"at char {block.start:,}"
+    extra = f", {len(ours)} copies" if len(ours) > 1 else ""
+    return f"hermes-odd persona block {_k(block.size)} ({top}{extra})"
+
+
+def _header_offset(report: soul_mod.SoulReport) -> int:
+    from ..soul_persona import header_end
+
+    try:
+        with open(report.path, encoding="utf-8", errors="replace") as handle:
+            text = handle.read(soul_mod.MAX_SOUL_BYTES).strip()
+    except OSError:
+        return 0
+    if text.startswith("\ufeff"):
+        text = text[1:]
+    return header_end(text)[0]
 
 
 def check_soul(home: Path, context: soul_mod.ModelContext | None = None) -> Check:
@@ -277,11 +305,12 @@ def check_soul(home: Path, context: soul_mod.ModelContext | None = None) -> Chec
         )
     ctx = context if context is not None else soul_mod.model_context(home)
     finding = f"{where} {report.chars:,} chars (~{_k(report.tokens)} tokens)"
-    if report.blocks:
-        managed = [b for b in report.blocks if b.depth == 0]
+    managed = [b for b in report.gentle_blocks if b.depth == 0]
+    if managed:
         finding += (
             f"; {len(managed)} gentle-ai blocks {_k(report.managed_chars)}: {_blocks_text(report)}"
         )
+    finding += "; " + _hermes_block_text(report)
     truncated = False
     if ctx.pinned_cap or ctx.context_length:
         cap = soul_mod.truncation_cap(ctx.context_length, ctx.pinned_cap)
@@ -309,7 +338,7 @@ def check_soul(home: Path, context: soul_mod.ModelContext | None = None) -> Chec
             finding += f"; at {_ctx_label(smallest_cut[0])} {_lost_text(report, smallest_cut[1])}"
     if truncated:
         return Check(WARN, "SOUL.md", finding, SOUL_HINT)
-    if report.blocks:
+    if managed:
         return Check(
             WARN,
             "SOUL.md",

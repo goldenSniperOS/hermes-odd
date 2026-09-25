@@ -9,7 +9,13 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fake_context import REPO_ROOT, FakeContext, FakeState, ensure_repo_on_path
+from fake_context import (
+    REPO_ROOT,
+    FakeContext,
+    FakeState,
+    ensure_repo_on_path,
+    mark_setup_complete,
+)
 
 ensure_repo_on_path()
 
@@ -298,6 +304,7 @@ class SectionRecordingTests(unittest.TestCase):
     def test_register_records_known_project_from_section(self) -> None:
         ctx = FakeContext()
         register(ctx)
+        mark_setup_complete(ctx.state)  # no pending-setup line
         section = next(s for s in ctx.prompt_sections if s["id"] == SECTION_ID)
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project(Path(tmp).resolve(), {"demo": doc_text("Demo", 1, 3)})

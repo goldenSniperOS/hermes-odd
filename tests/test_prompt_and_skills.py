@@ -5,7 +5,13 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fake_context import REPO_ROOT, BareContext, FakeContext, ensure_repo_on_path
+from fake_context import (
+    REPO_ROOT,
+    BareContext,
+    FakeContext,
+    ensure_repo_on_path,
+    mark_setup_complete,
+)
 
 ensure_repo_on_path()
 
@@ -164,6 +170,12 @@ class RegistrationTests(unittest.TestCase):
         self.assertEqual(section["id"], SECTION_ID)
         self.assertEqual(section["max_chars"], SECTION_MAX_CHARS)
         self.assertTrue(callable(section["content"]))
+        # A fresh install is pending setup; once complete the text is exactly ODD_SECTION.
+        self.assertEqual(
+            section["content"]({"platform": "cli", "cwd": ""}),
+            build_odd_section(setup_pending=True),
+        )
+        mark_setup_complete(ctx.state)
         self.assertEqual(section["content"]({"platform": "cli", "cwd": ""}), build_odd_section())
         self.assertEqual(set(ctx.skills), shipped_skill_names())
         for name, entry in ctx.skills.items():

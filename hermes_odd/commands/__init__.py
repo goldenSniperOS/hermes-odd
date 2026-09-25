@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from ..agents import AgentStore
+from ..agents import AgentStore, MemoryBackend
 from ..changes import ChangeStore
 from ..probes import Prober
 from ..projects import ProjectStore
 from ..runtime import RuntimeInfo
+from ..setup import Setup
 from .agents import make_odd_agents
 from .changes import make_odd_changes
 from .doctor import Doctor, make_odd_doctor
@@ -19,6 +20,7 @@ from .registry import (
     validate_command_name,
 )
 from .review_mode import ReviewModeCommand, make_odd_review_mode
+from .setup import SetupCommand, make_odd_setup
 from .status import Status, make_odd_status
 from .tasks import make_odd_tasks
 
@@ -29,6 +31,7 @@ def build_registry(
     change_store: ChangeStore | None = None,
     runtime: RuntimeInfo | None = None,
     prober: Prober | None = None,
+    setup: Setup | None = None,
 ) -> CommandRegistry:
     """Return the registry holding every odd command.
 
@@ -40,6 +43,7 @@ def build_registry(
     ``runtime`` (what ``register`` registered) feeds ``/odd_status`` and
     ``/odd_doctor``; ``prober`` is the cached gentle-ai prober they share with
     ``/odd_review_mode`` (which resolves projects like ``/odd_tasks``).
+    ``setup`` feeds ``/odd_setup``; without one an in-memory setup is used.
     """
     agents = agent_store if agent_store is not None else AgentStore()
     changes = change_store if change_store is not None else ChangeStore(agent_store=agent_store)
@@ -49,6 +53,9 @@ def build_registry(
     registry.add(make_odd_tasks(project_store))
     registry.add(make_odd_changes(changes))
     registry.add(make_odd_review_mode(ReviewModeCommand(shared_prober, project_store)))
+    registry.add(
+        make_odd_setup(SetupCommand(setup if setup is not None else Setup(backend=MemoryBackend())))
+    )
     registry.add(make_odd_status(Status(runtime, shared_prober, agents, changes, project_store)))
     registry.add(make_odd_doctor(Doctor(runtime, shared_prober, project_store=project_store)))
     registry.add(make_odd_commands(registry))
