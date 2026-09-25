@@ -48,7 +48,15 @@ def load_lock(candidates: Sequence[Path] = UPSTREAM_DIR_CANDIDATES) -> dict[str,
     if path is None:
         looked = ", ".join(str(c / LOCK_FILE) for c in candidates)
         raise FileNotFoundError(f"hermes-odd: upstream lock not found (looked in {looked})")
-    data = json.loads(path.read_text(encoding="utf-8"))
+    return load_lock_file(path)
+
+
+def load_lock_file(path: Path) -> dict[str, Any]:
+    """Load and minimally validate one explicit lock file (see :func:`load_lock`).
+
+    Used by ``scripts/check_upstream_drift.py --lock``.
+    """
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
     if not isinstance(data, dict) or data.get("schema") != LOCK_SCHEMA:
         raise ValueError(f"{path}: expected schema {LOCK_SCHEMA!r}")
     if not isinstance(data.get("upstreams"), dict) or not isinstance(data.get("components"), dict):
