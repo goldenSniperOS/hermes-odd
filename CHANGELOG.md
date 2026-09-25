@@ -39,8 +39,28 @@ and the project uses [Semantic Versioning](https://semver.org/).
   last 24 h (`all`: 7 days) grouped by project; a file shows its edit timeline and, in a
   git repository, `git diff --numstat` for that file (no shell, minimal environment,
   2 s timeout); `clear` forgets everything.
+- `/odd_status` (`/odd-status` in the CLI): one compact status message, a concept port
+  of gentle-pi's `gentle:status`: hermes-odd version, prompt section size, registered
+  skills, subagents running / finished (24 h), changes in 24 h, ODD features and open
+  tasks, the first-on-PATH gentle-ai version against the lock minimum, the RDD mode
+  when `/odd_doctor` cached it, and the supported upstream versions. It runs no
+  subprocess except a `gentle-ai version` probe cached for 60 s.
+- `/odd_doctor` (`/odd-doctor` in the CLI): read-only health report, a concept port of
+  gentle-pi's `gentle:doctor`, one `✓ / ⚠ / ✗` line per check with a fix hint: every
+  `gentle-ai` on `PATH` with its version (below the minimum, or a stale binary
+  shadowing another; hints repeat the binary-only rule), the RDD mode of the current
+  git repository (`gentle-ai review mode status --json`), `SOUL.md` size, gentle-ai
+  managed blocks and Hermes' truncation cap (`max(20000, min(ctx*4*0.06, 500000))`,
+  70/20 head/tail, naming the managed blocks in the dropped middle), the plugin's
+  section, skills, hooks and a `ctx.state` write/read probe, the upstream lock, and
+  Hermes' version and enabled state. Subprocesses run without a shell, with a minimal
+  environment and a 3 s timeout (about 6 s in total), cached for 60 s; `.env`,
+  `auth.json` and SOUL content are never read or printed beyond sizes.
+- README: the official "Built with Gentle-AI" badge under the credits, and a note that
+  hermes-odd is being built with Gentle AI's ODD workflow through gentle-pi.
 
 ### Changed
+- `/odd_commands` groups the commands under Viewers and Health.
 - The `hermes-odd-workflow` prompt section is now registered as a callable so it can
   record the session's project root for `/odd_tasks`; the rendered text is unchanged
   byte for byte (tested, and checked through Hermes' render path in the smoke).

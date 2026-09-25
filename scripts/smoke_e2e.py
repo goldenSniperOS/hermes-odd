@@ -26,7 +26,14 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
   ``difflib`` unified diff); ``/odd-changes`` lists both with the right
   counts and attribution, the detail shows the timeline and the real
   ``git diff --numstat``, a failed call leaves no row, and the fake secret in
-  the content never reaches state or output.
+  the content never reaches state or output;
+* ``/odd-status`` and ``/odd-doctor``: a synthetic ``SOUL.md`` with two
+  gentle-ai managed blocks is written into the throwaway home; the status
+  shows each summary line under 1,500 characters and the doctor reports
+  every check, finds the synthetic blocks (not the real ``~/.hermes`` SOUL),
+  never prints SOUL content or full home paths, and stays under 3,500
+  characters. The doctor runs the real ``gentle-ai version`` and read-only
+  ``gentle-ai review mode status`` from ``PATH``.
 
 Isolation: the temporary home holds only a ``config.yaml`` that enables
 ``hermes-odd`` and a ``plugins/hermes-odd`` symlink to this checkout. Nothing
@@ -120,6 +127,7 @@ def run(temp_home: Path) -> None:
     run_agents_lifecycle(manager, temp_home)
     run_tasks_viewer(manager, temp_home, rendered[SECTION_ID].content)
     run_changes_viewer(manager, temp_home)
+    run_health(manager, temp_home)
 
 
 def run_agents_lifecycle(manager, temp_home: Path) -> None:
@@ -376,6 +384,48 @@ def run_changes_viewer(manager, temp_home: Path) -> None:
     raw = next((temp_home / "plugin-data").rglob("state.json")).read_text(encoding="utf-8")
     check("hermes-odd.changes/v1" in raw, "changes persisted in plugin state")
     check(FAKE_SECRET not in raw + listing + detail, "file content never stored or shown")
+
+
+SOUL_TEXT = (
+    "# Smoke soul\n\n<!-- gentle-ai:persona -->\nBe kind.\n<!-- /gentle-ai:persona -->\n"
+    "<!-- gentle-ai:smoke-block -->\n"
+    + "s" * 30_000
+    + "\n<!-- /gentle-ai:smoke-block -->\n"
+    + "tail " * 2_000
+)
+
+
+def run_health(manager, temp_home: Path) -> None:
+    (temp_home / "SOUL.md").write_text(SOUL_TEXT, encoding="utf-8")
+    status_cmd = manager._plugin_commands.get("odd-status")
+    doctor_cmd = manager._plugin_commands.get("odd-doctor")
+    check(status_cmd is not None and doctor_cmd is not None, "/odd-status and /odd-doctor exist")
+    status = status_cmd["handler"]("")
+    check(status.startswith("hermes-odd "), "/odd-status starts with the plugin version")
+    check(f"Prompt: {SECTION_ID} " in status, "/odd-status shows the prompt section")
+    check("Skills: 3 (" in status, "/odd-status counts the skills")
+    check("Subagents: " in status and "Changes (24 h): 2 files" in status, "status reads stores")
+    check("ODD features: " in status, "/odd-status counts feature documents")
+    check("gentle-ai: " in status and "Upstream: gentle-ai v" in status, "binary + lock lines")
+    check(len(status) < 1500, f"/odd-status is {len(status)} chars (< 1500)")
+    doctor = doctor_cmd["handler"]("")
+    for name in ("gentle-ai binary", "RDD mode", "SOUL.md", "plugin surface", "upstream lock"):
+        check(f"  {name}: " in doctor, f"/odd-doctor reports {name}")
+    check(
+        "3 gentle-ai blocks" not in doctor and "2 gentle-ai blocks" in doctor,
+        "/odd-doctor finds the synthetic SOUL's 2 managed blocks in the throwaway home",
+    )
+    check("persona" in doctor and "smoke-block" in doctor, "doctor names the managed blocks")
+    check("hooks 5/5" in doctor and "state ok (write+read)" in doctor, "plugin surface ok")
+    check("hermes-odd 0.1.0 enabled" in doctor, "doctor sees the plugin enabled via ctx")
+    check(len(doctor) < 3500, f"/odd-doctor is {len(doctor)} chars (< 3500)")
+    check("Be kind." not in doctor and "sssss" not in doctor, "SOUL content is never printed")
+    check(str(Path.home()) + "/" not in status + doctor, "no full home paths in the output")
+    print("---- /odd-status output ----")
+    print(status)
+    print("---- /odd-doctor output ----")
+    print(doctor)
+    print("----------------------------")
 
 
 def main() -> int:

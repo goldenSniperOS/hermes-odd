@@ -15,7 +15,7 @@ with every message, 56% of it SDD**, which hermes-odd does not use.
 
 Hermes truncates context files instead of rejecting them
 (`agent/prompt_builder.py`): the cap is
-`max(20000, context_length * 4 * 0.06)` characters (unless
+`max(20000, min(context_length * 4 * 0.06, 500000))` characters (unless
 `context_file_max_chars` is pinned), and a truncated file keeps the first 70%
 and the last 20% of the cap, dropping the middle.
 
@@ -399,6 +399,72 @@ Plain text under 3,500 characters (`… N more` when cut):
   read). Ambiguous and not-found answers name the candidates;
 - a project name (or prefix): that project's files over 7 days;
 - `clear`: forget every recorded change and say how many.
+
+## Health commands (`/odd_status`, `/odd_doctor`)
+
+Concept ports of gentle-pi's `gentle:status` and `gentle:doctor`
+(`extensions/gentle-ai.ts`): the Pi versions report Pi package assets,
+OpenSpec, model routing and the dev binary; the Hermes versions report what
+matters here. No upstream code or text is copied. The RDD wording follows
+gentle-ai's own `receipt-driven development: <mode> (decided by <source>)`.
+The gentle-shell RDD sidebar labels (`lib/review-sidebar-state.ts`, commits
+`2ac9c68` and `8becfd8`) describe a review lineage (`Reviewing`, `Awaiting
+consent`, `Approved · awaiting acknowledgement`, ...) and only apply once the
+review facade exists (T8); the status reports the review *mode* only.
+
+### What `register` records
+
+`register(ctx)` fills a `RuntimeInfo` (`hermes_odd/runtime.py`) as each step
+succeeds: section registered and its length, the skills directory (`wheel`
+= `hermes_odd/_skills`, `clone` = `<plugin>/skills`) and registered skill
+names, hooks registered out of expected (4 agent hooks + 1 change hook),
+commands registered, and the stores (whose memory-fallback flag the doctor
+reports). The commands read this record instead of guessing.
+
+### Probes (`hermes_odd/probes.py`)
+
+Only two subcommands of the user's `gentle-ai` binary are ever run:
+`gentle-ai version` (output `gentle-ai X.Y.Z`) and `gentle-ai review mode
+status --cwd <repo> --json` (verified with `gentle-ai review mode --help`:
+`status` is read-only; the JSON is schema `gentle-ai.review-mode/v1` with
+`status.effective` `on`/`off` and `status.source`). Every run has no shell,
+stdin closed, a 3 s timeout and a minimal environment (`PATH`, `HOME` for
+gentle-ai's own config, `LC_ALL=C`, `NO_COLOR=1`). Binaries are found with
+`shutil.which` plus a scan of every `PATH` entry, deduplicated by real path
+(a Homebrew symlink and its Cellar target count once); version probes run in
+parallel so the doctor stays within about 6 s in total. A shared `Prober`
+caches results for 60 s: `/odd_status` only runs the cached version probe
+and shows the RDD mode only if `/odd_doctor` cached it for the same
+repository. The repository is the git root (nearest `.git`, no subprocess)
+of `TERMINAL_CWD`, then `os.getcwd()`; gateways run from their launch
+directory, so the RDD mode of a project is usually known only from the CLI.
+
+### SOUL.md check (`hermes_odd/soul.py`)
+
+The home is `hermes_constants.get_hermes_home()` when Hermes already imported
+it (profile-aware), else `HERMES_HOME`, else `~/.hermes`. The size is measured
+as Hermes does (`load_soul_md`: `strip()`, then a leading BOM is dropped).
+Managed blocks are `<!-- gentle-ai:<name> -->` … `<!-- /gentle-ai:<name> -->`
+(nesting-aware; an unclosed block runs to the end). The cap mirrors
+`agent/prompt_builder.py` (`CONTEXT_FILE_MAX_CHARS = 20_000`,
+`_CONTEXT_FILE_CHARS_PER_TOKEN = 4`, `_CONTEXT_FILE_WINDOW_FRACTION = 0.06`,
+`_CONTEXT_FILE_DYNAMIC_CEILING = 500_000`, head 0.7 / tail 0.2, an explicit
+`context_file_max_chars` wins). The context length is `model.context_length`,
+else the `context_length_cache.yaml` entry `<model.default>@<base_url>` (or
+the single value of that model); both files are read by a line matcher for
+exactly those keys, no YAML and nothing else kept. When unknown the doctor
+shows the cap for 128k / 200k / 1M. A top-level block is `dropped` when it
+lies entirely in the lost middle and `partly` when it overlaps it. SOUL
+content is never returned. The migration that strips the blocks is T9.
+
+### Privacy and limits
+
+Never read: `.env`, `auth.json`, credentials. Paths under the home show as
+`~/…`, others as their last three components. The `ctx.state` probe writes
+the key `doctor.probe`, reads it back and restores the previous value.
+`/odd_status` stays under 1,500 characters and `/odd_doctor` under 3,500.
+Each status line and each doctor check is guarded: a failure becomes a line,
+never an exception.
 
 ## Install layouts and skill discovery
 

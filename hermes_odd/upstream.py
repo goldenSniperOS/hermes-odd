@@ -3,7 +3,7 @@
 The lock is the authoritative, machine-checked record of which gentle-ai and
 gentle-shell versions hermes-odd supports and which upstream files each
 component derives from; ``upstream/SUPPORTED.md`` is its human counterpart
-with the triage log. ``/odd_doctor`` will use :func:`min_gentle_ai_version`
+with the triage log. ``/odd_status`` and ``/odd_doctor`` use :func:`min_gentle_ai_version`
 to check the installed ``gentle-ai`` binary.
 
 The lock lives in ``upstream/`` at the repository root. As with the skills

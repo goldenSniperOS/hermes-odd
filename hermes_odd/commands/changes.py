@@ -310,4 +310,5 @@ def make_odd_changes(
         description="Show which files the agent and its subagents changed",
         handler=handler,
         args_hint="[file|project|all|clear]",
+        group="Viewers",
     )

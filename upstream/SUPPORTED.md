@@ -34,7 +34,7 @@ Notes:
 | `odd` | ported | `hermes_odd/prompt.py` (section `hermes-odd-workflow`), `skills/odd-workflow`, `skills/odd-delegation`, `skills/odd-feature-tracking`, `upstream/odd-routing-hermes.canonical.md` | gentle-ai `internal/components/agentguidance/routing.go`, `internal/agents/capabilitymanifest/manifest.go`; gentle-shell `extensions/gentle-ai.ts`, `assets/orchestrator.md`, `assets/orchestrator-delegation.md`, `assets/orchestrator-skills.md`, `assets/orchestrator-memory.md` |
 | `rdd` | pending (T7, T8) | planned `skills/rdd-review`, `odd_review` tool, `/odd_review_mode` | gentle-ai `internal/assets/skills/rdd-defect-workflow/SKILL.md`; gentle-shell `skills/rdd-defect-workflow/SKILL.md`, `docs/review-integration.md`, `extensions/gentle-ai.ts`, `lib/review-integration-v2.ts`, `lib/native-review-cli.ts` |
 | `review-contract` | pending (T7, T8) | CLI contract `gentle-ai.review-integration/v2` (capabilities v2.6); provider contract mirror 1.2.0 | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
-| `viewers` | partial (T6 pending) | `/odd_commands`, `/odd_agents`, `/odd_tasks` and `/odd_changes` ship (`/odd_agents`, `/odd_tasks` and `/odd_changes` are concept ports, no copied text); `/odd_status`, `/odd_doctor` pending | gentle-shell `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts`, `docs/gentle-agents-activity.md`, `extensions/gentle-shell.ts`, `extensions/gentle-todo.ts`, `docs/gentle-shell.md`, `lib/shell-changes.ts`, `lib/shell-todo.ts`, `lib/review-sidebar-state.ts`, `lib/session-changes.ts`, `lib/shell-changes-view.ts`, `README.md` |
+| `viewers` | ported | Viewers `/odd_agents`, `/odd_tasks`, `/odd_changes`; Health `/odd_status`, `/odd_doctor`, `/odd_commands` (all concept ports, no copied text) | gentle-shell `extensions/gentle-ai.ts`, `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts`, `docs/gentle-agents-activity.md`, `extensions/gentle-shell.ts`, `extensions/gentle-todo.ts`, `docs/gentle-shell.md`, `lib/shell-changes.ts`, `lib/shell-todo.ts`, `lib/review-sidebar-state.ts`, `lib/session-changes.ts`, `lib/shell-changes-view.ts`, `README.md` |
 
 Deliberately not ported (see `excluded` in the lock): SDD in every form; Pi
 themes, banners, animations, TUI widgets and shortcuts; Pi runtime plumbing
@@ -89,7 +89,10 @@ Initial port at gentle-ai `f182ea2` (v3.7.0) and gentle-shell `4d702a4`
 | Pi interactive `todo` tool | not portable: Hermes' native `todo` tool is used instead (the `odd-feature-tracking` skill maps feature tasks onto it) |
 | Pi Gentle Changes capture and list (gentle-shell `lib/session-changes.ts`, `lib/shell-changes.ts`, `lib/shell-changes-view.ts`, Gentle Changes in `README.md` / `docs/gentle-shell.md`) | ported as text: `/odd_changes` (T5), concept port with no copied text; successful `write_file`/`patch` calls from Hermes' `post_tool_call` (main agent and subagents), per-file line counts computed at capture time, attribution, 24 h / 7 day windows, per-file timeline and `git diff --numstat`; like upstream, shell edits are not captured. No file content or diff is stored, so `write_file` removed lines are unknown |
 | Pi Gentle Changes two-pane diff viewer (`lib/shell-changes-view.ts`: accordion, captured diff pane, `alt+g`, `o` to open in the editor) and before/after snapshots | not portable: Pi TUI overlay; hermes-odd commands answer plain text on every gateway and never store file content |
-| Pi views: status, doctor, review mode, persona | pending: T6, T7, T9 (`/odd_commands` ported) |
+| Pi `gentle:status` (`extensions/gentle-ai.ts`) | ported: `/odd_status` (T6), concept port with no copied text: version, prompt section size, skills, subagents, changes, ODD features, gentle-ai binary against the lock minimum, cached RDD mode, supported upstreams |
+| Pi `gentle:doctor` (`extensions/gentle-ai.ts`) | ported: `/odd_doctor` (T6), concept port with no copied text: pass/warn/fail checks with remedies for the gentle-ai binaries on `PATH`, RDD mode (`gentle-ai review mode status --json`), `SOUL.md` size, managed blocks and Hermes truncation, the plugin surface and `ctx.state`, the upstream lock and Hermes |
+| Pi doctor/status checks for package assets, OpenSpec config, skill registry, model routing and the dev binary | not portable: Pi package and runtime plumbing (OpenSpec is SDD) |
+| Pi views: review mode, persona | pending: T7, T9 (`/odd_commands` ported) |
 | gentle-ai `internal/assets/skills/hermes-ephemeral-delegation` | pending: T10 review against `odd-delegation`; its frontmatter declares Apache-2.0, confirm licensing before deriving |
 | gentle-ai `internal/assets/hermes/persona-*.md` | pending: T9 (`/odd_persona`) |
 | SDD assets, agents, chains, skills, commands, preflight | not portable: hermes-odd ships no SDD |
@@ -103,12 +106,12 @@ Included in the pin; decisions below record what hermes-odd takes from each.
 
 | Commit | Subject | Decision |
 |---|---|---|
-| `2ac9c68` | feat(sidebar): add RDD status contract and renderer | pending: T6/T7, reuse the review-status wording for `/odd_status`; the sidebar widget is not portable (Pi TUI) |
-| `8becfd8` | fix(sidebar): distinguish pending reviews and accept replayed starts | pending: T6/T7, same as `2ac9c68` (pending vs replayed START semantics) |
+| `2ac9c68` | feat(sidebar): add RDD status contract and renderer | partly ported (T6): `/odd_status` and `/odd_doctor` show the RDD mode in gentle-ai's own wording; the lineage labels (`Reviewing`, `Awaiting consent`, ...) are pending: T8 (they need the review facade); the sidebar widget is not portable (Pi TUI) |
+| `8becfd8` | fix(sidebar): distinguish pending reviews and accept replayed starts | pending: T8, pending vs replayed START semantics belong to the review facade; nothing to port for the review mode shown in T6 |
 | `b019517` | feat(agents): require user consent before cross-orchestrator communication (#1364) | not portable: gates Pi `orchestrator_send_message` between Pi sessions; hermes-odd adds no inter-session messaging tool |
 | `4210e56` | fix(agents): sanitize consent prompt, derive concrete reason, and handle prompt session change (#1364) | not portable: same Pi messaging consent as `b019517` |
 | `46abadb` | docs(odd): record Gentle Shell v3.7.0 publication | not applicable: upstream feature document |
-| `be2d7b1` | Merge pull request #1319 (feat/rdd-status-sidebar-01-contract-renderer) | pending: T6/T7, merge of `2ac9c68`/`8becfd8` |
+| `be2d7b1` | Merge pull request #1319 (feat/rdd-status-sidebar-01-contract-renderer) | as `2ac9c68`/`8becfd8`: mode wording ported in T6, lineage labels pending: T8 |
 | `fdc46b4` | fix(tests): run all pnpm test stages independently of stage-1 failures (#1285) | not applicable: upstream test runner |
 | `e12ecb9` | test(tests): cover the run-test-suite CLI branch exit contract (#1285) | not applicable: upstream test runner |
 | `1a33f21` | test(tests): use double quotes in CLI stage fixtures for cmd.exe compatibility (#1285) | not applicable: upstream test runner |

@@ -279,4 +279,5 @@ def make_odd_agents(store: AgentStore) -> CommandSpec:
         description="Show what your subagents are doing and what they did",
         handler=handler,
         args_hint="[id|all]",
+        group="Viewers",
     )

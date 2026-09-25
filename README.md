@@ -7,6 +7,14 @@ Based on the ODD and RDD workflows of
 [Hermes Agent](https://github.com/NousResearch/hermes-agent) by Nous Research.
 Independent community project; see [Not affiliated](#not-affiliated).
 
+<div align="center">
+
+<a href="https://github.com/Gentleman-Programming/gentle-ai">
+  <img width="220" src="https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/docs/assets/brand/built-with-gentle-ai.png" alt="Built with Gentle-AI" />
+</a>
+
+</div>
+
 hermes-odd is an **Organic Driven Development (ODD)** and **receipt-driven
 development (RDD)** workflow harness for Hermes Agent. It adapts the Gentle AI
 workflows to Hermes-native surfaces: a compact system prompt section, lazy
@@ -18,9 +26,10 @@ preflight, or `gentle-sdd-*` commands.
 ## Status
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
-ships lazy ODD skills, and registers `/odd_commands`, `/odd_agents`,
-`/odd_tasks` and `/odd_changes` (unreleased). The other viewers and RDD integration are planned (see
-[Planned commands](#planned-commands)).
+ships lazy ODD skills, and registers the viewers `/odd_agents`,
+`/odd_tasks`, `/odd_changes` and the health commands `/odd_status`,
+`/odd_doctor`, `/odd_commands` (unreleased). RDD integration and the persona
+command are planned (see [Planned commands](#planned-commands)).
 
 ## What gets injected
 
@@ -127,12 +136,21 @@ example `/odd_commands`; the hyphen form works too. In the Hermes CLI type
 the hyphen form, for example `/odd-commands`, because the CLI matches the
 registered name exactly.
 
+**Viewers**
+
 | Command | What it does |
 |---|---|
-| `/odd_commands` | Lists hermes-odd commands |
 | `/odd_agents [id\|all]` | Shows your `delegate_task` subagents: running first, then the last 24 h (up to 10; `all` lists up to 50, one line each). An id prefix shows one run: goal, role, status, timings, parent session and platform, a tool timeline and the child's summary |
 | `/odd_tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
 | `/odd_changes [file\|project\|all\|clear]` | Shows which files the agent and its subagents changed in the last 24 h (`all`: 7 days), grouped by project: `+added −removed  path  (n edits · by main/sa-xxxx · age)`, newest first, with per-project totals. A file (path, name or prefix) shows its edit timeline and, inside a git repository, its current uncommitted `git diff --numstat`; a project name lists that project; `clear` forgets every recorded change |
+
+**Health**
+
+| Command | What it does |
+|---|---|
+| `/odd_status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the RDD mode when `/odd_doctor` checked it in the last minute, and the supported upstream versions |
+| `/odd_doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), the RDD mode of the current git repository (`gentle-ai review mode status`), `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
+| `/odd_commands` | Lists hermes-odd commands, grouped |
 
 `/odd_agents` records only metadata, from Hermes' `subagent_start`,
 `post_tool_call` and `subagent_stop` hooks: per tool call the name,
@@ -160,13 +178,21 @@ session id and platform are kept; file content and diffs are never stored or
 shown. `write_file` replaces a whole file, so its removed lines are unknown
 and show as `−?`. Entries are kept for 7 days, at most 200 files.
 
+`/odd_status` runs no subprocess except a `gentle-ai version` probe cached
+for 60 s. `/odd_doctor` runs only `gentle-ai version` and `gentle-ai review
+mode status --json` (no shell, minimal environment, 3 s timeout each, about
+6 s in total, cached for 60 s); it never runs `gentle-ai install` or `sync`.
+It measures `SOUL.md` and reads only the model name, base URL and context
+length keys of `config.yaml` and `context_length_cache.yaml` to compute
+Hermes' truncation cap; `.env`, `auth.json` and other secrets are never
+read, SOUL content is never printed, and paths under your home show as `~/…`.
+In a gateway the command runs from the gateway's directory, so the RDD mode
+of a repository is usually only known from the CLI.
+
 ## Planned commands
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:status` | `/odd_status` | plugin, binary, review mode, prompt budget |
-| `gentle:doctor` | `/odd_doctor` | binary version pin, SOUL size/truncation, markers |
-| `gentle:commands` | `/odd_commands` | lists hermes-odd commands |
 | `gentle:review-mode` | `/odd_review_mode [status\|enable\|disable]` | wraps `gentle-ai review mode` |
 | `gentle:persona` | `/odd_persona [gentleman\|neutral]` | swaps compact persona section |
 | `gentle_review*` tools | review tool facade (+ RDD skill) | CLI facade over `gentle-ai review`, opaque bindings only |
@@ -218,6 +244,8 @@ the Engram memory protocol, and native review. hermes-odd only adapts those
 workflows to Hermes surfaces (prompt sections, plugin skills,
 `delegate_task`, gateway-safe commands). Thank you for building them in the
 open and under the MIT license.
+
+hermes-odd itself is being built with Gentle AI: planned and implemented with the ODD workflow through gentle-pi.
 
 Thanks as well to Nous Research for Hermes Agent, the daily driver this
 plugin runs on. The author is a Hermes user and admirer; hermes-odd uses its

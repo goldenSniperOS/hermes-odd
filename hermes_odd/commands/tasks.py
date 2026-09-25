@@ -254,4 +254,5 @@ def make_odd_tasks(
         description="Show ODD feature documents and task progress",
         handler=handler,
         args_hint="[feature|project]",
+        group="Viewers",
     )

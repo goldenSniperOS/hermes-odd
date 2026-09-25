@@ -136,6 +136,18 @@ class AttributionTests(unittest.TestCase):
         ]:
             self.assertIn(token, readme)
 
+    def test_readme_has_the_official_built_with_badge(self) -> None:
+        readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
+        image = (
+            "https://raw.githubusercontent.com/Gentleman-Programming/gentle-ai/main/"
+            "docs/assets/brand/built-with-gentle-ai.png"
+        )
+        self.assertIn(f'src="{image}"', readme)
+        self.assertIn('<a href="https://github.com/Gentleman-Programming/gentle-ai">', readme)
+        self.assertIn('alt="Built with Gentle-AI"', readme)
+        # Right after the credit paragraph, before the project description.
+        self.assertLess(readme.index(image), readme.index("hermes-odd is an **Organic"))
+
 
 if __name__ == "__main__":
     unittest.main()

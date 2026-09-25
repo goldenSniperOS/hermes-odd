@@ -95,7 +95,7 @@ gateway.
 - [x] T3 Subagent tracking + `/odd_agents` viewer.
 - [x] T4 `/odd_tasks` feature-task viewer.
 - [x] T5 `/odd_changes` viewer.
-- [ ] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
+- [x] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
 - [ ] T7 `/odd_review_mode` + `rdd-review` skill (Hermes orchestration contract).
 - [ ] T8 `odd_review` tool facade over `gentle-ai review` (lifecycle, consent relay).
 - [ ] T9 `/odd_persona` + SOUL migration command (backup, dry-run).
@@ -182,4 +182,4 @@ gateway.
 
 ## Next step
 
-T6 `/odd_status`, `/odd_doctor`; then cut v0.2.0.
+Cut v0.2.0, then T7 `/odd_review_mode` + `rdd-review` skill.

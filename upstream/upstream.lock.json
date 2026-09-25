@@ -1,6 +1,6 @@
 {
   "schema": "hermes-odd.upstream-lock/v1",
-  "updated": "2026-09-24",
+  "updated": "2026-09-25",
   "notes": "Authoritative record of the upstream versions hermes-odd supports. sha256 values hash the file content at pinned_commit (git show <commit>:<path> | shasum -a 256). Human triage of upstream changes lives in upstream/SUPPORTED.md.",
   "upstreams": {
     "gentle-ai": {
@@ -185,10 +185,10 @@
       ]
     },
     "viewers": {
-      "status": "partial",
+      "status": "ported",
       "tasks": ["T3", "T4", "T5", "T6"],
-      "description": "Plain-text viewer commands: /odd_agents, /odd_tasks, /odd_changes, /odd_status, /odd_doctor, /odd_commands (/odd_commands, /odd_agents, /odd_tasks and /odd_changes ship; T6 pending).",
-      "port_notes": "/odd_agents (T3) is a concept port of the gentle-shell Gentle Agents TaskRecord model (extensions/gentle-agents.ts, lib/agents-protocol.ts, lib/agents-view.ts, docs/gentle-agents-activity.md): no upstream code or text is copied, so it carries no derived-from marker. The Pi card, widget and RPC activity transport are not ported. /odd_tasks (T4) is a concept port of the gentle-shell todo card (extensions/gentle-todo.ts, lib/shell-todo.ts) plus the ODD feature document view: it reads odd/tasks/*.md directly and renders plain text; no upstream code or text is copied. The interactive Pi todo tool is not ported: Hermes' native todo tool is used instead. /odd_changes (T5) is a concept port of gentle-shell Gentle Changes (lib/session-changes.ts capture model, lib/shell-changes-view.ts, the Gentle Changes sections of README.md and docs/gentle-shell.md): successful write_file/patch calls captured from Hermes' post_tool_call hook, attributed to main or the subagent, with line counts computed at capture time and no stored content; no upstream code or text is copied. The two-pane diff viewer and before/after snapshots are not ported (Pi TUI; hermes-odd keeps no file content).",
+      "description": "Plain-text viewer and health commands: /odd_agents, /odd_tasks, /odd_changes (Viewers) and /odd_status, /odd_doctor, /odd_commands (Health).",
+      "port_notes": "/odd_agents (T3) is a concept port of the gentle-shell Gentle Agents TaskRecord model (extensions/gentle-agents.ts, lib/agents-protocol.ts, lib/agents-view.ts, docs/gentle-agents-activity.md): no upstream code or text is copied, so it carries no derived-from marker. The Pi card, widget and RPC activity transport are not ported. /odd_tasks (T4) is a concept port of the gentle-shell todo card (extensions/gentle-todo.ts, lib/shell-todo.ts) plus the ODD feature document view: it reads odd/tasks/*.md directly and renders plain text; no upstream code or text is copied. The interactive Pi todo tool is not ported: Hermes' native todo tool is used instead. /odd_changes (T5) is a concept port of gentle-shell Gentle Changes (lib/session-changes.ts capture model, lib/shell-changes-view.ts, the Gentle Changes sections of README.md and docs/gentle-shell.md): successful write_file/patch calls captured from Hermes' post_tool_call hook, attributed to main or the subagent, with line counts computed at capture time and no stored content; no upstream code or text is copied. The two-pane diff viewer and before/after snapshots are not ported (Pi TUI; hermes-odd keeps no file content). /odd_status and /odd_doctor (T6) are concept ports of gentle-pi's gentle:status and gentle:doctor (extensions/gentle-ai.ts): one compact status message and a read-only check list with pass/warn/fail marks and remedies, rebuilt for Hermes (gentle-ai binaries on PATH against the lock minimum, RDD mode via `gentle-ai review mode status --json`, SOUL.md size, gentle-ai managed blocks and Hermes' truncation cap, the plugin's own surface, the upstream lock, Hermes); no upstream code or text is copied. The Pi-specific checks (package assets, OpenSpec config, skill registry, model routing, dev binary) are not ported. The RDD mode wording follows gentle-ai's `receipt-driven development: <mode> (decided by <source>)`; the RDD sidebar lifecycle labels of lib/review-sidebar-state.ts (2ac9c68, 8becfd8) describe review lineages and are left for the odd_review facade (T8).",
       "local_files": [
         "hermes_odd/commands/meta.py",
         "hermes_odd/agents.py",
@@ -197,9 +197,19 @@
         "hermes_odd/projects.py",
         "hermes_odd/commands/tasks.py",
         "hermes_odd/changes.py",
-        "hermes_odd/commands/changes.py"
+        "hermes_odd/commands/changes.py",
+        "hermes_odd/runtime.py",
+        "hermes_odd/probes.py",
+        "hermes_odd/soul.py",
+        "hermes_odd/commands/status.py",
+        "hermes_odd/commands/doctor.py"
       ],
       "sources": [
+        {
+          "upstream": "gentle-shell",
+          "path": "extensions/gentle-ai.ts",
+          "sha256": "0fef2ef2786b88922cb37fb89862a025d1b7138c45d2365e2f5f80fd1e75b981"
+        },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-agents.ts",

@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from ..agents import AgentStore
 from ..changes import ChangeStore
+from ..probes import Prober
 from ..projects import ProjectStore
+from ..runtime import RuntimeInfo
 from .agents import make_odd_agents
 from .changes import make_odd_changes
+from .doctor import Doctor, make_odd_doctor
 from .meta import make_odd_commands
 from .registry import (
     COMMAND_NAME_RE,
@@ -15,6 +18,7 @@ from .registry import (
     hermes_command_key,
     validate_command_name,
 )
+from .status import Status, make_odd_status
 from .tasks import make_odd_tasks
 
 
@@ -22,6 +26,8 @@ def build_registry(
     agent_store: AgentStore | None = None,
     project_store: ProjectStore | None = None,
     change_store: ChangeStore | None = None,
+    runtime: RuntimeInfo | None = None,
+    prober: Prober | None = None,
 ) -> CommandRegistry:
     """Return the registry holding every odd command.
 
@@ -30,16 +36,19 @@ def build_registry(
     ``project_store`` feeds ``/odd_tasks`` with known project roots; without
     one only the process's own directories are searched. ``change_store``
     feeds ``/odd_changes``; without one an empty in-memory store is used.
+    ``runtime`` (what ``register`` registered) feeds ``/odd_status`` and
+    ``/odd_doctor``; ``prober`` is their shared, cached gentle-ai prober.
     """
+    agents = agent_store if agent_store is not None else AgentStore()
+    changes = change_store if change_store is not None else ChangeStore(agent_store=agent_store)
+    shared_prober = prober if prober is not None else Prober()
     registry = CommandRegistry()
-    registry.add(make_odd_commands(registry))
-    registry.add(make_odd_agents(agent_store if agent_store is not None else AgentStore()))
+    registry.add(make_odd_agents(agents))
     registry.add(make_odd_tasks(project_store))
-    registry.add(
-        make_odd_changes(
-            change_store if change_store is not None else ChangeStore(agent_store=agent_store)
-        )
-    )
+    registry.add(make_odd_changes(changes))
+    registry.add(make_odd_status(Status(runtime, shared_prober, agents, changes, project_store)))
+    registry.add(make_odd_doctor(Doctor(runtime, shared_prober)))
+    registry.add(make_odd_commands(registry))
     return registry
 
 

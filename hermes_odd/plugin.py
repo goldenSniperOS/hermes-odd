@@ -10,12 +10,19 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from .agents import AgentStore, register_agent_hooks, resolve_backend
+from . import skills as skills_mod
+from .agents import HOOK_NAMES, AgentStore, register_agent_hooks, resolve_backend
 from .changes import ChangeStore, register_change_hooks
 from .commands import CommandRegistry, CommandSpec, build_registry
 from .projects import ProjectStore
-from .prompt import SECTION_ID, SECTION_MAX_CHARS, SectionObserver, make_section_callable
-from .skills import register_skills
+from .prompt import (
+    SECTION_ID,
+    SECTION_MAX_CHARS,
+    SectionObserver,
+    build_odd_section,
+    make_section_callable,
+)
+from .runtime import RuntimeInfo
 
 logger = logging.getLogger("hermes_odd")
 
@@ -80,33 +87,39 @@ def register_prompt_section(ctx: Any, observer: SectionObserver | None = None) -
 
 def register(ctx: Any) -> None:
     """Hermes plugin entry point."""
+    runtime = RuntimeInfo(ctx=ctx, hooks_expected=len(HOOK_NAMES) + 1)
     project_store: ProjectStore | None = None
     try:
         project_store = ProjectStore(resolve_backend(ctx))
+        runtime.stores["projects"] = project_store
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: project tracking failed to start: %s", exc)
-    register_prompt_section(
+    runtime.section_registered = register_prompt_section(
         ctx, project_store.on_section_render if project_store is not None else None
     )
+    runtime.section_chars = len(build_odd_section())
     try:
-        register_skills(ctx)
+        runtime.skills_dir = skills_mod.SKILLS_DIR
+        skills_mod.register_skills(ctx, skills_mod.SKILLS_DIR, runtime.skills)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: skill registration failed: %s", exc)
     agent_store: AgentStore | None = None
     try:
         agent_store = AgentStore(resolve_backend(ctx))
-        register_agent_hooks(ctx, agent_store)
+        runtime.stores["agents"] = agent_store
+        runtime.hooks_registered += register_agent_hooks(ctx, agent_store)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: subagent tracking failed to start: %s", exc)
     change_store: ChangeStore | None = None
     try:
         change_store = ChangeStore(resolve_backend(ctx), agent_store=agent_store)
-        register_change_hooks(ctx, change_store)
+        runtime.stores["changes"] = change_store
+        runtime.hooks_registered += int(register_change_hooks(ctx, change_store))
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: change tracking failed to start: %s", exc)
     try:
-        registry = build_registry(agent_store, project_store, change_store)
+        registry = build_registry(agent_store, project_store, change_store, runtime=runtime)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: command registry failed to build: %s", exc)
         return
-    register_commands(ctx, registry)
+    runtime.commands_registered = register_commands(ctx, registry)

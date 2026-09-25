@@ -163,8 +163,13 @@ def discover_skills(skills_dir: Path | None = SKILLS_DIR) -> list[SkillSpec]:
     return specs
 
 
-def register_skills(ctx: Any, skills_dir: Path | None = SKILLS_DIR) -> int:
-    """Register every shipped skill with Hermes; return how many succeeded."""
+def register_skills(
+    ctx: Any, skills_dir: Path | None = SKILLS_DIR, registered_names: list[str] | None = None
+) -> int:
+    """Register every shipped skill with Hermes; return how many succeeded.
+
+    ``registered_names`` (optional) receives the name of each registered skill.
+    """
     register_skill = getattr(ctx, "register_skill", None)
     if not callable(register_skill):
         logger.warning("hermes-odd: ctx.register_skill is unavailable; skills skipped")
@@ -185,6 +190,8 @@ def register_skills(ctx: Any, skills_dir: Path | None = SKILLS_DIR) -> int:
                 frontmatter=spec.frontmatter,
             )
             registered += 1
+            if registered_names is not None:
+                registered_names.append(spec.name)
         except Exception as exc:  # noqa: BLE001 - never break Hermes startup
             logger.warning("hermes-odd: could not register skill %s: %s", spec.name, exc)
     return registered
