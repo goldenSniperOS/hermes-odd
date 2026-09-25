@@ -6,6 +6,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-25
+
+Viewers and health: see what your Hermes subagents are doing, your ODD feature
+progress, the files the agent changed, and a read-only doctor, from the CLI or any
+gateway (Telegram first), without calling the model.
+
 ### Added
 - `/odd_agents [id|all]` (`/odd-agents` in the CLI): plain-text view of `delegate_task`
   subagents, a concept port of gentle-shell's Gentle Agents. Observer hooks
@@ -100,5 +106,6 @@ First release: the ODD foundation. Viewer commands (`/odd_agents`, `/odd_tasks`,
   `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `docs/design.md` and an
   isolated end-to-end smoke (`scripts/smoke_e2e.py`).
 
-[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/goldenSniperOS/hermes-odd/releases/tag/v0.1.0

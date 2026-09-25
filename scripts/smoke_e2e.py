@@ -73,6 +73,15 @@ class SmokeFailure(AssertionError):
     pass
 
 
+def _repo_version() -> str:
+    """Version declared in this checkout's hermes_odd/__init__.py."""
+    import re
+
+    text = (Path(__file__).resolve().parent.parent / "hermes_odd" / "__init__.py").read_text()
+    match = re.search(r'^__version__ = "([^"]+)"', text, re.M)
+    return match.group(1) if match else "?"
+
+
 def check(condition: bool, message: str) -> None:
     if not condition:
         raise SmokeFailure(message)
@@ -417,7 +426,9 @@ def run_health(manager, temp_home: Path) -> None:
     )
     check("persona" in doctor and "smoke-block" in doctor, "doctor names the managed blocks")
     check("hooks 5/5" in doctor and "state ok (write+read)" in doctor, "plugin surface ok")
-    check("hermes-odd 0.1.0 enabled" in doctor, "doctor sees the plugin enabled via ctx")
+    check(
+        f"hermes-odd {_repo_version()} enabled" in doctor, "doctor sees the plugin enabled via ctx"
+    )
     check(len(doctor) < 3500, f"/odd-doctor is {len(doctor)} chars (< 3500)")
     check("Be kind." not in doctor and "sssss" not in doctor, "SOUL content is never printed")
     check(str(Path.home()) + "/" not in status + doctor, "no full home paths in the output")

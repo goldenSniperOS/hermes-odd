@@ -13,7 +13,7 @@ from fake_context import FakeContext, FakeState, ensure_repo_on_path
 
 ensure_repo_on_path()
 
-from hermes_odd import register  # noqa: E402
+from hermes_odd import __version__, register  # noqa: E402
 from hermes_odd import soul as soul_mod  # noqa: E402
 from hermes_odd.agents import AgentStore  # noqa: E402
 from hermes_odd.changes import ChangeStore, FileOp  # noqa: E402
@@ -592,7 +592,7 @@ class StatusTests(unittest.TestCase):
             self.assertIn("RDD: unknown here · run /odd_doctor", text)
             prober.review_mode(go, Path("/work/proj"))
             text2 = status.render()
-        self.assertIn("hermes-odd 0.1.0 is active", text)
+        self.assertIn(f"hermes-odd {__version__} is active", text)
         self.assertIn("Prompt: hermes-odd-workflow 3332/4000 chars", text)
         self.assertIn("Skills: 1 (odd-workflow)", text)
         self.assertIn("Subagents: 1 running · 1 finished (24 h)", text)
