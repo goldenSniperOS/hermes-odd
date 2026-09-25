@@ -660,6 +660,8 @@ class DisplayPathTests(unittest.TestCase):
         self.assertEqual(display_path(HOME), "~")
         self.assertEqual(display_path("/opt/homebrew/bin/gentle-ai"), "…/homebrew/bin/gentle-ai")
         self.assertEqual(display_path("/usr/bin"), "/usr/bin")
+        # Regression: Linux CI temp homes (/tmp/tmpXXXX) must never be printed in full.
+        self.assertEqual(display_path("/tmp/tmp79f4j516/SOUL.md"), "…/tmp79f4j516/SOUL.md")
 
 
 class ReviewModeTextTests(unittest.TestCase):

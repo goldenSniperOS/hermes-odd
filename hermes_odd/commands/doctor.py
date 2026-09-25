@@ -65,8 +65,10 @@ class Check:
 
 
 def display_path(path: Any) -> str:
-    """``~/rel`` under the home directory, else the last three components:
-    never a full home path in a gateway reply."""
+    """``~/rel`` under the home directory; short system paths (two components,
+    such as ``/usr/bin``) as is; anything deeper as a tail of at most three
+    components that always drops the first directory, so a gateway reply never
+    carries a full path (``/tmp/x/SOUL.md`` -> ``…/x/SOUL.md``)."""
     try:
         p = Path(str(path))
         home = Path(os.path.expanduser("~"))
@@ -74,7 +76,10 @@ def display_path(path: Any) -> str:
             rel = p.relative_to(home)
             return "~" if str(rel) == "." else f"~/{rel}"
         except ValueError:
-            return path_tail(p, 3)
+            depth = len([part for part in p.parts if part not in ("/", "\\")])
+            if depth <= 2:
+                return str(p)  # short system paths such as /usr/bin carry nothing private
+            return path_tail(p, min(3, depth - 1))
     except Exception:  # noqa: BLE001
         return "?"
 
