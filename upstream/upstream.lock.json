@@ -187,15 +187,17 @@
     "viewers": {
       "status": "partial",
       "tasks": ["T3", "T4", "T5", "T6"],
-      "description": "Plain-text viewer commands: /odd_agents, /odd_tasks, /odd_changes, /odd_status, /odd_doctor, /odd_commands (/odd_commands, /odd_agents and /odd_tasks ship; T5-T6 pending).",
-      "port_notes": "/odd_agents (T3) is a concept port of the gentle-shell Gentle Agents TaskRecord model (extensions/gentle-agents.ts, lib/agents-protocol.ts, lib/agents-view.ts, docs/gentle-agents-activity.md): no upstream code or text is copied, so it carries no derived-from marker. The Pi card, widget and RPC activity transport are not ported. /odd_tasks (T4) is a concept port of the gentle-shell todo card (extensions/gentle-todo.ts, lib/shell-todo.ts) plus the ODD feature document view: it reads odd/tasks/*.md directly and renders plain text; no upstream code or text is copied. The interactive Pi todo tool is not ported: Hermes' native todo tool is used instead.",
+      "description": "Plain-text viewer commands: /odd_agents, /odd_tasks, /odd_changes, /odd_status, /odd_doctor, /odd_commands (/odd_commands, /odd_agents, /odd_tasks and /odd_changes ship; T6 pending).",
+      "port_notes": "/odd_agents (T3) is a concept port of the gentle-shell Gentle Agents TaskRecord model (extensions/gentle-agents.ts, lib/agents-protocol.ts, lib/agents-view.ts, docs/gentle-agents-activity.md): no upstream code or text is copied, so it carries no derived-from marker. The Pi card, widget and RPC activity transport are not ported. /odd_tasks (T4) is a concept port of the gentle-shell todo card (extensions/gentle-todo.ts, lib/shell-todo.ts) plus the ODD feature document view: it reads odd/tasks/*.md directly and renders plain text; no upstream code or text is copied. The interactive Pi todo tool is not ported: Hermes' native todo tool is used instead. /odd_changes (T5) is a concept port of gentle-shell Gentle Changes (lib/session-changes.ts capture model, lib/shell-changes-view.ts, the Gentle Changes sections of README.md and docs/gentle-shell.md): successful write_file/patch calls captured from Hermes' post_tool_call hook, attributed to main or the subagent, with line counts computed at capture time and no stored content; no upstream code or text is copied. The two-pane diff viewer and before/after snapshots are not ported (Pi TUI; hermes-odd keeps no file content).",
       "local_files": [
         "hermes_odd/commands/meta.py",
         "hermes_odd/agents.py",
         "hermes_odd/commands/agents.py",
         "hermes_odd/feature_docs.py",
         "hermes_odd/projects.py",
-        "hermes_odd/commands/tasks.py"
+        "hermes_odd/commands/tasks.py",
+        "hermes_odd/changes.py",
+        "hermes_odd/commands/changes.py"
       ],
       "sources": [
         {
@@ -247,6 +249,21 @@
           "upstream": "gentle-shell",
           "path": "lib/review-sidebar-state.ts",
           "sha256": "992a6cf467d5b00765cbe9ca71cca1ec7e3692de273a89136a3e54f997076091"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/session-changes.ts",
+          "sha256": "ec64bc54484b4a597ffa16aba5aed950cd9eb1ecf0a1caf0c1405dbbb721d4d9"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "lib/shell-changes-view.ts",
+          "sha256": "0c52be91704e139fadc307d1691ff678a50f89fba8f489d8717d98dfda0cfc76"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "README.md",
+          "sha256": "1f65b73818d2f7883da698c23c10d081b5d4552aa97b2566d29568e7a5bd3fd6"
         }
       ]
     }

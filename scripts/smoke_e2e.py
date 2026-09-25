@@ -18,7 +18,15 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
   then ``PluginManager.render_system_prompt_sections``) for a throwaway git
   repository holding ``odd/tasks/demo.md``; the rendered text stays
   byte-identical, the repository is recorded as a known project, and
-  ``/odd-tasks`` lists and details the demo feature.
+  ``/odd-tasks`` lists and details the demo feature;
+* ``/odd-changes``: in a throwaway git repository with one committed file,
+  a synthetic ``write_file`` (new file) and ``patch`` (edit of the committed
+  file) are dispatched through ``PluginManager.invoke_hook("post_tool_call")``
+  with Hermes' result shapes (``resolved_path``, ``files_modified``, the
+  ``difflib`` unified diff); ``/odd-changes`` lists both with the right
+  counts and attribution, the detail shows the timeline and the real
+  ``git diff --numstat``, a failed call leaves no row, and the fake secret in
+  the content never reaches state or output.
 
 Isolation: the temporary home holds only a ``config.yaml`` that enables
 ``hermes-odd`` and a ``plugins/hermes-odd`` symlink to this checkout. Nothing
@@ -111,6 +119,7 @@ def run(temp_home: Path) -> None:
 
     run_agents_lifecycle(manager, temp_home)
     run_tasks_viewer(manager, temp_home, rendered[SECTION_ID].content)
+    run_changes_viewer(manager, temp_home)
 
 
 def run_agents_lifecycle(manager, temp_home: Path) -> None:
@@ -255,6 +264,118 @@ def run_tasks_viewer(manager, temp_home: Path, baseline_section: str) -> None:
     print("---------------------------")
     raw = next((temp_home / "plugin-data").rglob("state.json")).read_text(encoding="utf-8")
     check("hermes-odd.projects/v1" in raw, "known projects persisted in plugin state")
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", "-c", "user.name=smoke", "-c", "user.email=smoke@example.invalid", "-C", str(repo)]
+        + list(args),
+        check=True,
+        capture_output=True,
+        env={"PATH": os.environ.get("PATH", ""), "HOME": str(repo), "GIT_CONFIG_NOSYSTEM": "1"},
+    )
+
+
+def run_changes_viewer(manager, temp_home: Path) -> None:
+    import difflib
+    import json
+
+    check(
+        len(manager._hooks.get("post_tool_call") or []) >= 2,
+        "post_tool_call has separate callbacks for agents and changes",
+    )
+    repo = (temp_home / "work" / "changes-project").resolve()
+    (repo / "src").mkdir(parents=True)
+    app = repo / "src" / "app.py"
+    before = "def main():\n    return 1\n"
+    app.write_text(before, encoding="utf-8")
+    try:
+        subprocess.run(["git", "init", "-q", str(repo)], check=True, capture_output=True)
+        _git(repo, "add", "src/app.py")
+        _git(repo, "commit", "-qm", "init")
+        has_git = True
+    except (OSError, subprocess.CalledProcessError):
+        (repo / ".git").mkdir(exist_ok=True)
+        has_git = False
+
+    def fire(tool, args, result, status="ok", task_id="smoke-main-run"):
+        manager.invoke_hook(
+            "post_tool_call",
+            tool_name=tool,
+            args=args,
+            result=json.dumps(result),
+            task_id=task_id,
+            session_id="smoke-changes-session",
+            tool_call_id=f"call-{tool}",
+            turn_id="turn-1",
+            api_request_id="",
+            duration_ms=7,
+            status=status,
+            error_type=None if status == "ok" else "tool_error",
+            error_message=None,
+            middleware_trace=[],
+        )
+
+    notes = repo / "src" / "notes.txt"
+    content = f"one\ntwo\nkey={FAKE_SECRET}\n"
+    notes.write_text(content, encoding="utf-8")
+    fire(
+        "write_file",
+        {"path": "src/notes.txt", "content": content},
+        {
+            "bytes_written": len(content),
+            "resolved_path": str(notes),
+            "files_modified": [str(notes)],
+        },
+    )
+    after = f"def main():\n    # {FAKE_SECRET}\n    return 2\n"
+    app.write_text(after, encoding="utf-8")
+    diff = "".join(
+        difflib.unified_diff(
+            before.splitlines(True), after.splitlines(True), f"a/{app}", f"b/{app}"
+        )
+    )
+    fire(
+        "patch",
+        {"path": "src/app.py", "old_string": "    return 1", "new_string": after},
+        {"success": True, "diff": diff, "files_modified": [str(app)], "resolved_path": str(app)},
+        task_id="sa-0-5e0e5e0e",
+    )
+    fire(
+        "patch",
+        {"path": "src/missing.py", "old_string": "x", "new_string": "y"},
+        {"error": "Could not find a match"},
+        status="error",
+    )
+
+    command = manager._plugin_commands.get("odd-changes")
+    check(command is not None, "/odd-changes is registered")
+    listing = command["handler"]("")
+    check("changes-project (" in listing, "/odd-changes groups by the git project")
+    check(
+        "+3 −?  src/notes.txt  (1 edit · by main" in listing,
+        "/odd-changes lists the write_file with +3 −? (overwrite)",
+    )
+    check(
+        "+2 −1  src/app.py  (1 edit · by sa-5e0e5e0e" in listing,
+        "/odd-changes lists the subagent patch with +2 −1",
+    )
+    check("missing.py" not in listing, "a failed patch leaves no row")
+    detail = command["handler"]("app.py")
+    check("patch +2 −1 sa-5e0e5e0e" in detail, "detail shows the timeline entry")
+    if has_git:
+        check(
+            "git (uncommitted, not staged): +2 −1" in detail,
+            "detail shows the real git diff --numstat",
+        )
+    print("---- /odd-changes output ----")
+    print(listing)
+    print("---- /odd-changes app.py output ----")
+    print(detail)
+    print("-----------------------------")
+    raw = next((temp_home / "plugin-data").rglob("state.json")).read_text(encoding="utf-8")
+    check("hermes-odd.changes/v1" in raw, "changes persisted in plugin state")
+    check(FAKE_SECRET not in raw + listing + detail, "file content never stored or shown")
 
 
 def main() -> int:

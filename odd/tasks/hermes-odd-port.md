@@ -94,7 +94,7 @@ gateway.
       is indexed in the lock.
 - [x] T3 Subagent tracking + `/odd_agents` viewer.
 - [x] T4 `/odd_tasks` feature-task viewer.
-- [ ] T5 `/odd_changes` viewer.
+- [x] T5 `/odd_changes` viewer.
 - [ ] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
 - [ ] T7 `/odd_review_mode` + `rdd-review` skill (Hermes orchestration contract).
 - [ ] T8 `odd_review` tool facade over `gentle-ai review` (lifecycle, consent relay).
@@ -129,6 +129,14 @@ gateway.
 
 ## Progress
 
+- 2026-09-25: T3 01ac068 (/odd_agents), T4 277b771 (/odd_tasks; projects learned from
+  the section callable cwd; Engram mirror not queried: call_mcp opt-in + blocks the
+  gateway loop), T5 (/odd_changes; captures write_file/patch via a second post_tool_call
+  callback; abs path from result files_modified/resolved_path; shell edits not tracked).
+- 2026-09-25: RDD relay failure root cause: Pi auth.json applies AWS_PROFILE/AWS_REGION
+  (encora-continue) only to the main session; the in-process reviewer falls back to the
+  [default] profile, which has no credentials. Lineages review-509c2e2a804627f6 (T1) and
+  review-794c6354241a4f12 (T3) left open pending the user's choice.
 - 2026-09-24: **v0.1.0 released** (tag on 8f67746 `chore(release): 0.1.0`, CI + Release
   workflows green; assets zip, wheel, sdist, SHA256SUMS; wheel verified to ship skills,
   upstream lock and notices). Commits: T1 ce942ab, T2 333cd5e, T2c 8bc4966,
@@ -174,4 +182,4 @@ gateway.
 
 ## Next step
 
-T5 `/odd_changes` viewer.
+T6 `/odd_status`, `/odd_doctor`; then cut v0.2.0.

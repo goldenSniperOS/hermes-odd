@@ -18,8 +18,8 @@ preflight, or `gentle-sdd-*` commands.
 ## Status
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
-ships lazy ODD skills, and registers `/odd_commands`, `/odd_agents` and
-`/odd_tasks` (unreleased). The other viewers and RDD integration are planned (see
+ships lazy ODD skills, and registers `/odd_commands`, `/odd_agents`,
+`/odd_tasks` and `/odd_changes` (unreleased). The other viewers and RDD integration are planned (see
 [Planned commands](#planned-commands)).
 
 ## What gets injected
@@ -132,6 +132,7 @@ registered name exactly.
 | `/odd_commands` | Lists hermes-odd commands |
 | `/odd_agents [id\|all]` | Shows your `delegate_task` subagents: running first, then the last 24 h (up to 10; `all` lists up to 50, one line each). An id prefix shows one run: goal, role, status, timings, parent session and platform, a tool timeline and the child's summary |
 | `/odd_tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
+| `/odd_changes [file\|project\|all\|clear]` | Shows which files the agent and its subagents changed in the last 24 h (`all`: 7 days), grouped by project: `+added −removed  path  (n edits · by main/sa-xxxx · age)`, newest first, with per-project totals. A file (path, name or prefix) shows its edit timeline and, inside a git repository, its current uncommitted `git diff --numstat`; a project name lists that project; `clear` forgets every recorded change |
 
 `/odd_agents` records only metadata, from Hermes' `subagent_start`,
 `post_tool_call` and `subagent_stop` hooks: per tool call the name,
@@ -149,11 +150,20 @@ directory Hermes itself runs from (`terminal.cwd` / the CLI launch
 directory). Only directories with an `odd/tasks/` folder are shown. The
 Engram mirror of each feature is not read (see `docs/design.md`).
 
+`/odd_changes` captures only successful `write_file` and `patch` calls
+(including the ones `execute_code` makes through `hermes_tools`), from the
+main agent and its subagents, through Hermes' `post_tool_call` hook: no
+repository scans and no background polling. Edits made with terminal/shell
+commands or other tools are **not** tracked, so a missing file does not mean
+a clean tree. Only the path, line counts, tool name, time, attribution,
+session id and platform are kept; file content and diffs are never stored or
+shown. `write_file` replaces a whole file, so its removed lines are unknown
+and show as `−?`. Entries are kept for 7 days, at most 200 files.
+
 ## Planned commands
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:changes` | `/odd_changes` | `post_tool_call` on write/patch tools |
 | `gentle:status` | `/odd_status` | plugin, binary, review mode, prompt budget |
 | `gentle:doctor` | `/odd_doctor` | binary version pin, SOUL size/truncation, markers |
 | `gentle:commands` | `/odd_commands` | lists hermes-odd commands |

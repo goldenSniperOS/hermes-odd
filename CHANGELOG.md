@@ -27,6 +27,18 @@ and the project uses [Semantic Versioning](https://semver.org/).
   following symlinks. Projects come from the git roots of recent session working
   directories (recorded, at most 10, in `ctx.state` schema `hermes-odd.projects/v1`)
   plus the command process's own directory.
+- `/odd_changes [file|project|all|clear]` (`/odd-changes` in the CLI): plain-text view of
+  the files the agent and its subagents changed, a concept port of gentle-shell's Gentle
+  Changes. A second `post_tool_call` callback captures successful `write_file` and
+  `patch` calls only (replace and V4A modes; terminal/shell edits are not tracked), with
+  the absolute path Hermes reports in the result, line counts computed at capture time
+  (from the patch result's unified diff, else the arguments; `write_file` removed lines
+  are unknown), attribution (`main` or the subagent id, enriched with its role and goal)
+  and the session and platform. Content and diffs are never stored (schema
+  `hermes-odd.changes/v1`, in-memory fallback; 200 files, 7 days). The list covers the
+  last 24 h (`all`: 7 days) grouped by project; a file shows its edit timeline and, in a
+  git repository, `git diff --numstat` for that file (no shell, minimal environment,
+  2 s timeout); `clear` forgets everything.
 
 ### Changed
 - The `hermes-odd-workflow` prompt section is now registered as a callable so it can

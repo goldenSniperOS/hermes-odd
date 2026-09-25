@@ -56,8 +56,17 @@ class RegisterTests(unittest.TestCase):
 
     def test_registers_observer_hooks_only(self) -> None:
         names = sorted(name for name, _ in self.ctx.hooks)
+        # post_tool_call twice: subagent tracking and change capture are
+        # separate callbacks (Hermes bounds and suppresses per callback).
         self.assertEqual(
-            names, ["on_session_start", "post_tool_call", "subagent_start", "subagent_stop"]
+            names,
+            [
+                "on_session_start",
+                "post_tool_call",
+                "post_tool_call",
+                "subagent_start",
+                "subagent_stop",
+            ],
         )
         self.assertNotIn("pre_tool_call", names)  # fails closed on timeout in Hermes
         self.assertEqual(self.ctx.tools, [])

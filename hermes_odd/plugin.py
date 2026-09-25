@@ -11,6 +11,7 @@ from collections.abc import Callable
 from typing import Any
 
 from .agents import AgentStore, register_agent_hooks, resolve_backend
+from .changes import ChangeStore, register_change_hooks
 from .commands import CommandRegistry, CommandSpec, build_registry
 from .projects import ProjectStore
 from .prompt import SECTION_ID, SECTION_MAX_CHARS, SectionObserver, make_section_callable
@@ -97,8 +98,14 @@ def register(ctx: Any) -> None:
         register_agent_hooks(ctx, agent_store)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: subagent tracking failed to start: %s", exc)
+    change_store: ChangeStore | None = None
     try:
-        registry = build_registry(agent_store, project_store)
+        change_store = ChangeStore(resolve_backend(ctx), agent_store=agent_store)
+        register_change_hooks(ctx, change_store)
+    except Exception as exc:  # noqa: BLE001 - never break Hermes startup
+        logger.warning("hermes-odd: change tracking failed to start: %s", exc)
+    try:
+        registry = build_registry(agent_store, project_store, change_store)
     except Exception as exc:  # noqa: BLE001 - never break Hermes startup
         logger.warning("hermes-odd: command registry failed to build: %s", exc)
         return

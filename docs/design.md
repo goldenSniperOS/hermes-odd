@@ -296,6 +296,110 @@ full home paths (only the last two path components):
   exact name wins over a prefix, then a project name (or prefix) lists that
   project; ambiguous and not-found answers name the candidates.
 
+### Changed files (`/odd_changes`)
+
+`/odd_changes` is a concept port of gentle-shell's Gentle Changes
+(`lib/session-changes.ts`, `lib/shell-changes-view.ts`, the Gentle Changes
+sections of `README.md` and `docs/gentle-shell.md`): what the agent changed,
+attributed and counted, without repository scans or background polling. No
+upstream code or text is copied. Upstream keeps bounded before/after
+snapshots and shows a two-pane diff viewer; hermes-odd keeps no content and
+answers in plain text.
+
+#### Capture model
+
+Capture comes only from `post_tool_call` for the Hermes file-mutating tools
+(verified in `tools/file_tools.py`; there is no notebook or multi-edit
+tool):
+
+| Tool | Arguments | Success result (JSON) |
+|---|---|---|
+| `write_file` | `path`, `content` (full new content) | `bytes_written`, `verified`, `resolved_path`, `files_modified: [resolved_path]` |
+| `patch` (replace, default) | `path`, `old_string`, `new_string`, `replace_all` | `success`, `diff` (`difflib` unified diff, `a/<abs>` / `b/<abs>` headers), `files_modified`, `resolved_path`; `no_change` when already applied |
+| `patch` (`mode: "patch"`, V4A) | `patch` (`*** Update/Add/Delete/Move File:` sections) | as above, one diff section per file, `files_modified` with every resolved path, `files_created`, `files_deleted` |
+
+`execute_code`'s `hermes_tools.write_file` / `patch` go through
+`handle_function_call`, so they arrive under the same tool names. Terminal
+and shell commands, and scripts that write files directly, are not captured
+(same coverage as upstream); every output says so.
+
+- **Success.** Only `status == "ok"` (Hermes sets `error` when the result
+  JSON has an `error` key) and a result that is not `success: false` or
+  `no_change`.
+- **Paths.** The absolute paths come from the result's `files_modified` /
+  `resolved_path`: Hermes resolved them with the task's live terminal cwd,
+  the registered session cwd, or `TERMINAL_CWD`, which a plugin cannot see
+  (`post_tool_call` has no cwd). Only when the result is unparsable is
+  `args["path"]` used: `~` expanded, relative paths joined to an absolute
+  `TERMINAL_CWD`, else `os.getcwd()` of the hook process. That fallback
+  ignores a terminal `cd` and container backends' paths; it is rare because
+  every successful Hermes write reports its resolved path.
+- **Project.** The git top-level of the file's own directory (nearest
+  ancestor with `.git`, `projects.git_root`, no subprocess), so a nested
+  repository is attributed to itself. Outside git the project is the file's
+  directory.
+- **Line counts**, computed at capture time, only numbers kept. `patch`: from
+  the result diff, consumed by hunk lengths (added = new length minus
+  context, removed = old length minus context), so content that looks like
+  a header and `difflib`'s missing-final-newline joins are counted right;
+  without a usable diff, from `old_string`/`new_string` (line diff; CRLF and
+  a trailing newline are normalized) or the V4A `+`/`-` lines. `write_file`:
+  the written lines as added and removed **unknown** (`−?`), because an
+  overwrite's old content is never in the call.
+- **Attribution.** `task_id` is the subagent id (`sa-*`) for
+  `delegate_task` children and a per-run UUID for the main agent, so
+  `sa-*`/`sx-*` or an id the agent store saw start is a subagent, anything
+  else is `main`. The subagent's role comes from the `/odd_agents` record at
+  capture time; its goal is looked up when the detail is rendered. The
+  platform is the parent session's (`on_session_start`) or the child record's.
+
+#### Hook registration
+
+Hermes' `register_hook` appends to a per-hook callback list, and
+`invoke_hook` bounds each callback with `plugins.hook_callback_timeout`, skips
+a callback that is still running from a previous call, and suppresses it for a
+while after a timeout, **per callback**. Change capture is therefore its own
+`post_tool_call` callback, next to the subagent tracker, so one never delays
+or suppresses the other. Its fast path returns before any I/O for tools other
+than `write_file`/`patch` and for non-`ok` calls. Limit: when the agent runs
+file tools concurrently, a call whose post hook arrives while the previous
+one is still being recorded is skipped by Hermes (no row).
+
+#### Store, privacy, limits
+
+`hermes_odd/changes.py` keeps schema `hermes-odd.changes/v1` under the
+state key `changes.v1`, with the same fallback and concurrency model as the
+agent store. One entry per file: absolute path, project root, relative path,
+whether it is in git, operation count, lines added and removed (plus a
+"removed unknown" flag), first/last time, last tool, attribution (at most 5:
+id, role, count, last time), last session id and platform, and a 12-entry
+timeline (time, tool, +/−, attribution). At most 200 files (least recently
+changed dropped first); entries not changed for 7 days are dropped.
+
+File content, diffs, `old_string`/`new_string`/`patch` text and tool results
+are never stored or shown; tests push a fake secret through every one of
+them. Output never prints full home paths (a project is shown by name and
+its last two path components).
+
+#### Output
+
+Plain text under 3,500 characters (`… N more` when cut):
+
+- no arguments: the last 24 h grouped by project, newest first, with
+  per-project totals and one line per file,
+  `+A −R  path  (n edits · by main, sa-xxxxxxxx · 3m ago)`, and a footer on
+  the capture scope; `all` covers the 7 days kept;
+- a file (exact path, name, `project/path`, then a path prefix or
+  substring): the detail with attribution, subagent goals, platform and
+  session, the timeline, and, only inside a git repository with `git`
+  available, the file's current uncommitted count from
+  `git -c core.fsmonitor=false -C <root> diff --no-ext-diff --no-textconv
+  --numstat -- <rel>` (no shell, minimal environment `PATH`/`HOME`/`LC_ALL`
+  and non-interactive git variables, 2 s timeout; only the two numbers are
+  read). Ambiguous and not-found answers name the candidates;
+- a project name (or prefix): that project's files over 7 days;
+- `clear`: forget every recorded change and say how many.
+
 ## Install layouts and skill discovery
 
 hermes-odd supports two install layouts:

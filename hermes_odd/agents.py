@@ -262,6 +262,44 @@ class AgentStore:
     def now(self) -> float:
         return self._clock()
 
+    def is_active(self, subagent_id: Any) -> bool:
+        """Whether this process saw ``subagent_id`` start and not stop (no I/O)."""
+        key = _clean_id(subagent_id)
+        with self._lock:
+            return bool(key) and key in self._active
+
+    def lookup(self, subagent_id: Any) -> dict[str, Any] | None:
+        """Return a copy of the record for ``subagent_id``, or ``None``. Never raises."""
+        key = _clean_id(subagent_id)
+        if not key:
+            return None
+        try:
+            with self._lock:
+                for record in self._load()["records"]:
+                    if record.get("subagent_id") == key:
+                        return copy.deepcopy(record)
+        except Exception:  # noqa: BLE001 - enrichment is optional
+            logger.debug("hermes-odd: agent lookup failed", exc_info=True)
+        return None
+
+    def platform_for(self, session_id: Any) -> str:
+        """Platform of a parent session (seen at start) or of a child session."""
+        key = _clean_id(session_id)
+        if not key:
+            return ""
+        with self._lock:
+            platform = self._platforms.get(key, "")
+        if platform:
+            return platform
+        try:
+            with self._lock:
+                for record in self._load()["records"]:
+                    if record.get("child_session_id") == key:
+                        return str(record.get("platform") or "")
+        except Exception:  # noqa: BLE001 - enrichment is optional
+            logger.debug("hermes-odd: platform lookup failed", exc_info=True)
+        return ""
+
     # -- hook handlers (never raise) ---------------------------------------
 
     def on_session_start(self, **kwargs: Any) -> None:
