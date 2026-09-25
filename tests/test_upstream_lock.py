@@ -136,8 +136,12 @@ class LockConsistencyTests(unittest.TestCase):
     def setUp(self) -> None:
         self.lock = load_lock()
 
-    def test_every_derived_from_marker_is_indexed_in_odd(self) -> None:
-        sources = {(s["upstream"], s["path"]) for s in self.lock["components"]["odd"]["sources"]}
+    def test_every_derived_from_marker_is_indexed_in_the_lock(self) -> None:
+        sources = {
+            (s["upstream"], s["path"])
+            for component in self.lock["components"].values()
+            for s in component["sources"]
+        }
         markers = []
         for path in marker_files():
             markers.extend(MARKER_RE.findall(path.read_text(encoding="utf-8")))
@@ -146,6 +150,37 @@ class LockConsistencyTests(unittest.TestCase):
             with self.subTest(upstream=upstream, path=rel):
                 self.assertIn((upstream, rel), sources)
                 self.assertEqual(commit, self.lock["upstreams"][upstream]["pinned_commit"])
+
+    def test_rdd_markers_are_indexed_under_rdd(self) -> None:
+        rdd = {(s["upstream"], s["path"]) for s in self.lock["components"]["rdd"]["sources"]}
+        for name in ("rdd-review", "rdd-review-lenses"):
+            text = (REPO_ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
+            markers = MARKER_RE.findall(text)
+            self.assertTrue(markers, name)
+            for upstream, _commit, rel in markers:
+                self.assertIn((upstream, rel), rdd, f"{name}: {rel}")
+
+    def test_rdd_is_partial_and_native_review_blocked(self) -> None:
+        rdd = self.lock["components"]["rdd"]
+        self.assertEqual(rdd["status"], "partial")
+        for rel in (
+            "skills/rdd-review/SKILL.md",
+            "skills/rdd-review-lenses/SKILL.md",
+            "hermes_odd/commands/review_mode.py",
+        ):
+            self.assertIn(rel, rdd["local_files"])
+        self.assertIn("hermes_odd/review.py", rdd["planned_files"])
+        self.assertIn("immutable_review_transport_unsupported", rdd["port_notes"])
+        contract = self.lock["components"]["review-contract"]
+        self.assertEqual(contract["hermes_failure_code"], "immutable_review_transport_unsupported")
+        self.assertEqual(contract["failure_schema"], "gentle-ai.review-integration.failure/v2")
+        self.assertEqual(
+            contract["immutable_review_runtimes"], ["claude-code", "opencode", "codex", "pi"]
+        )
+        self.assertIn("immutable_review_transport_unsupported", contract["capability_note"])
+        supported = SUPPORTED.read_text(encoding="utf-8")
+        self.assertIn("blocked upstream: runtime eligibility", supported)
+        self.assertIn("ported as a receipt-less skill", supported)
 
     def test_odd_indexes_routing_and_capability_manifest(self) -> None:
         sources = {(s["upstream"], s["path"]) for s in self.lock["components"]["odd"]["sources"]}

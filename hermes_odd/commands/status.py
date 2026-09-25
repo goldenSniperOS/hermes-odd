@@ -4,8 +4,10 @@ Concept port of gentle-shell's ``gentle:status`` (``extensions/gentle-ai.ts``):
 what is active and at which version, in a few lines. It reads the plugin's own
 records (prompt section, skills, the ``/odd_agents`` and ``/odd_changes``
 stores, feature documents through the ``/odd_tasks`` resolution) and runs no
-subprocess except the cached ``gentle-ai version`` probe; the RDD mode is only
-shown when ``/odd_doctor`` cached it in the last minute. The RDD wording
+subprocess except the cached ``gentle-ai version`` probe and the cached,
+read-only native review availability probe (``gentle-ai review status ...
+--agent hermes``, see :mod:`hermes_odd.rdd`); the RDD mode is only shown when
+``/odd_doctor`` or ``/odd_review_mode`` cached it in the last minute. The RDD wording
 follows gentle-ai's ``receipt-driven development: <mode> (decided by
 <source>)``. No upstream code or text is copied. Output stays under
 :data:`OUTPUT_MAX_CHARS`.
@@ -24,6 +26,7 @@ from ..changes import ChangeStore
 from ..probes import Prober, is_below, process_repo
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
+from ..rdd import native_review_line, probe_repo
 from ..runtime import RuntimeInfo
 from .changes import counts
 from .doctor import display_path, review_mode_text, supported_text
@@ -125,6 +128,13 @@ class Status:
             return "RDD: unknown here · run /odd_doctor"
         return f"RDD: {review_mode_text(cached)}"
 
+    def _native_line(self) -> str:
+        info = self.prober.first_version()
+        native = self.prober.native_review(
+            info.path if info else None, probe_repo(self.project_store, self._repo)
+        )
+        return native_review_line(native, info.version if info else None)
+
     def lines(self) -> list[str]:
         runtime = self.runtime
         lock = self._lock()
@@ -140,6 +150,7 @@ class Status:
             ("ODD features", lambda: _features_line(self.project_store, self._cwd)),
             ("gentle-ai", lambda: self._binary_line(lock)),
             ("RDD", self._rdd_line),
+            ("Native review on Hermes", self._native_line),
             (
                 "Upstream",
                 lambda: f"Upstream: {supported_text(lock)}" if lock else "Upstream: lock ✗",

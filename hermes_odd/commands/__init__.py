@@ -18,6 +18,7 @@ from .registry import (
     hermes_command_key,
     validate_command_name,
 )
+from .review_mode import ReviewModeCommand, make_odd_review_mode
 from .status import Status, make_odd_status
 from .tasks import make_odd_tasks
 
@@ -37,7 +38,8 @@ def build_registry(
     one only the process's own directories are searched. ``change_store``
     feeds ``/odd_changes``; without one an empty in-memory store is used.
     ``runtime`` (what ``register`` registered) feeds ``/odd_status`` and
-    ``/odd_doctor``; ``prober`` is their shared, cached gentle-ai prober.
+    ``/odd_doctor``; ``prober`` is the cached gentle-ai prober they share with
+    ``/odd_review_mode`` (which resolves projects like ``/odd_tasks``).
     """
     agents = agent_store if agent_store is not None else AgentStore()
     changes = change_store if change_store is not None else ChangeStore(agent_store=agent_store)
@@ -46,8 +48,9 @@ def build_registry(
     registry.add(make_odd_agents(agents))
     registry.add(make_odd_tasks(project_store))
     registry.add(make_odd_changes(changes))
+    registry.add(make_odd_review_mode(ReviewModeCommand(shared_prober, project_store)))
     registry.add(make_odd_status(Status(runtime, shared_prober, agents, changes, project_store)))
-    registry.add(make_odd_doctor(Doctor(runtime, shared_prober)))
+    registry.add(make_odd_doctor(Doctor(runtime, shared_prober, project_store=project_store)))
     registry.add(make_odd_commands(registry))
     return registry
 

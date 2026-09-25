@@ -409,8 +409,9 @@ matters here. No upstream code or text is copied. The RDD wording follows
 gentle-ai's own `receipt-driven development: <mode> (decided by <source>)`.
 The gentle-shell RDD sidebar labels (`lib/review-sidebar-state.ts`, commits
 `2ac9c68` and `8becfd8`) describe a review lineage (`Reviewing`, `Awaiting
-consent`, `Approved · awaiting acknowledgement`, ...) and only apply once the
-review facade exists (T8); the status reports the review *mode* only.
+consent`, `Approved · awaiting acknowledgement`, ...) and are not applicable
+until native review exists on Hermes (T8, blocked upstream); the status
+reports the review *mode* and the native review availability only.
 
 ### What `register` records
 
@@ -423,21 +424,26 @@ reports). The commands read this record instead of guessing.
 
 ### Probes (`hermes_odd/probes.py`)
 
-Only two subcommands of the user's `gentle-ai` binary are ever run:
-`gentle-ai version` (output `gentle-ai X.Y.Z`) and `gentle-ai review mode
-status --cwd <repo> --json` (verified with `gentle-ai review mode --help`:
-`status` is read-only; the JSON is schema `gentle-ai.review-mode/v1` with
-`status.effective` `on`/`off` and `status.source`). Every run has no shell,
-stdin closed, a 3 s timeout and a minimal environment (`PATH`, `HOME` for
-gentle-ai's own config, `LC_ALL=C`, `NO_COLOR=1`). Binaries are found with
-`shutil.which` plus a scan of every `PATH` entry, deduplicated by real path
-(a Homebrew symlink and its Cellar target count once); version probes run in
-parallel so the doctor stays within about 6 s in total. A shared `Prober`
-caches results for 60 s: `/odd_status` only runs the cached version probe
-and shows the RDD mode only if `/odd_doctor` cached it for the same
-repository. The repository is the git root (nearest `.git`, no subprocess)
-of `TERMINAL_CWD`, then `os.getcwd()`; gateways run from their launch
-directory, so the RDD mode of a project is usually known only from the CLI.
+Only three subcommands of the user's `gentle-ai` binary are run by the
+read-only commands: `gentle-ai version` (output `gentle-ai X.Y.Z`),
+`gentle-ai review mode status [--cwd <repo>] --json` (verified with
+`gentle-ai review mode --help`: `status` is read-only; the JSON is schema
+`gentle-ai.review-mode/v1` with `status.effective` `on`/`off`,
+`status.source`, `status.global` and `status.clone_local`), and the native
+review availability probe (see [RDD on Hermes](#rdd-on-hermes-odd_review_mode)).
+Every run has no shell, stdin closed, a 3 s timeout and a minimal environment
+(`PATH`, `HOME` for gentle-ai's own config, `LC_ALL=C`, `NO_COLOR=1`).
+Binaries are found with `shutil.which` plus a scan of every `PATH` entry,
+deduplicated by real path (a Homebrew symlink and its Cellar target count
+once); version probes run in parallel, and the doctor runs the RDD mode and
+the native review probe in parallel, so it stays within about 6 s in total. A
+shared `Prober` caches results for 60 s: `/odd_status` runs the cached
+version and native review probes and shows the RDD mode only if
+`/odd_doctor` or `/odd_review_mode` cached it for the same repository. The
+repository is the git root (nearest `.git`, no subprocess) of `TERMINAL_CWD`,
+then `os.getcwd()`; gateways run from their launch directory, so the RDD mode
+of a project is usually known only from the CLI (or from `/odd_review_mode
+<project>`).
 
 ### SOUL.md check (`hermes_odd/soul.py`)
 
@@ -465,6 +471,89 @@ the key `doctor.probe`, reads it back and restores the previous value.
 `/odd_status` stays under 1,500 characters and `/odd_doctor` under 3,500.
 Each status line and each doctor check is guarded: a failure becomes a line,
 never an exception.
+
+## RDD on Hermes (`/odd_review_mode`)
+
+### Upstream limitation (verified)
+
+gentle-ai compiles the runtimes eligible for native immutable review into its
+capability manifest (`internal/agents/capabilitymanifest/manifest.go`,
+`ContractReviewTransportV1` / `ContractImmutableReviewExecutorV1`): they are
+advertised only when a provider can launch a fresh, constrained reviewer and
+prove that boundary before review START. gentle-ai 3.7.0 advertises them for
+claude-code, opencode, codex and pi; the hermes adapter's exposures are
+dormant. `internal/cli/review_transport_capability.go` narrows that set per
+environment (pi only with its host relay handshake, opencode only on a V1
+runtime), and a refusal lists the runtimes eligible in the probing
+environment. Verified against the 3.7.0 binary:
+
+```text
+$ gentle-ai review status --cwd . --contract gentle-ai.review-integration/v2 --agent hermes --next-transition
+schema gentle-ai.review-integration.failure/v2, phase preflight,
+code immutable_review_transport_unsupported, mutation_outcome not_started,
+next_action stop, cause "... supported immutable review runtimes: ..."
+```
+
+hermes-odd never passes another runtime's identity to gentle-ai: posing as
+`pi` (or any runtime) would break the review contract and make receipts
+meaningless. The native review facade (T8) waits on upstream eligibility.
+
+### Availability probe
+
+`Prober.native_review` runs exactly that command, always with `--agent
+hermes` (`probes.AGENT_ID`; a test scans the package for any other
+`--agent` value). It runs only when `--cwd` is inside an existing git
+repository, because `review status` may initialize Git in a genuinely
+unversioned directory once a runtime is accepted: the command's own
+repository, else the most recent known project with `.git`. The result is
+cached 60 s per binary (eligibility does not depend on the repository) and
+classified as `unavailable` (failure schema + `immutable_review_transport_unsupported`),
+`available` (exit 0 with a non-failure JSON object: a future gentle-ai that
+accepts Hermes; hermes-odd then says "available (detected)", points out that
+the facade is pending and starts nothing), or `unknown` (another code,
+garbage, timeout). The wording names the compiled set from the lock
+(`review-contract.immutable_review_runtimes`) unless gentle-ai reports a
+runtime outside it; `/odd_review_mode` also shows the runtimes eligible in
+the probing environment.
+
+### The command
+
+`/odd_review_mode [status|enable|disable] [global|clone] [project]`:
+
+- the target is a known project (exact name, then prefix; ambiguous and
+  not-found answers name the candidates) among the recorded `/odd_tasks`
+  projects and the process directories that are git repositories, else the
+  process repository;
+- `status` (default) runs `review mode status --cwd <root> --json` (without
+  `--cwd` when the process is in no git repository: gentle-ai then reports
+  the global source only) plus the availability probe;
+- `enable`/`disable` run `gentle-ai review mode <action> --scope
+  <global|clone> [--cwd <root>] --json` once (5 s timeout, never cached,
+  cached modes dropped). The scope must be typed explicitly; `clone` without
+  a resolvable git repository is refused before anything runs. These are the
+  only writes hermes-odd makes to gentle-ai state, and only for the user's
+  own typed command. Errors show gentle-ai's message on one line with the
+  home as `~` and other absolute paths shortened.
+
+Output is plain text under 3,500 characters.
+
+### Skills
+
+`hermes-odd:rdd-review` is the protocol: RDD concepts (frozen candidate,
+risk-scoped lenses, bounded correction, outcome derived from Git; a review
+outcome never authorizes delivery), the candidate (one work-unit commit or PR
+slice), and on Hermes: when RDD is on, report "native review unavailable on
+Hermes (gentle-ai runtime eligibility)" once per candidate, record it in the
+feature document, and continue under ordinary repository policy. The
+optional advisory 4R review (on request, or an accepted offer for a medium or
+high risk candidate) runs one read-only `delegate_task` child per lens over
+`git show <sha>`, with the charters of `hermes-odd:rdd-review-lenses`
+(condensed from gentle-shell `assets/agents/review-*.md` and
+`assets/chains/4r-review.chain.md`, without the Pi ledger envelope,
+`gentle_review_scope` tool or controller authority). Only candidate-caused
+BLOCKER/CRITICAL findings block, and the result is labeled "advisory review —
+no receipt". The skills are split so the charters load only when a review
+actually runs.
 
 ## Install layouts and skill discovery
 
@@ -517,3 +606,5 @@ aesthetics and Pi runtime plumbing are recorded as not portable.
 - Pi-only runtime plumbing (dev binary, telemetry, Pi model profiles).
 - Running `gentle-ai install` or `gentle-ai sync` for Hermes; RDD uses only the
   `gentle-ai` binary's `review` CLI.
+- Impersonating another review runtime or producing receipts outside
+  gentle-ai.

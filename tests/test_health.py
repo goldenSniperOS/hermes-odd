@@ -58,14 +58,31 @@ REVIEW_JSON = (
     '"effective": "on", "source": "global"}}'
 )
 
+UNSUPPORTED_JSON = (
+    '{"schema": "gentle-ai.review-integration.failure/v2", "contract": '
+    '"gentle-ai.review-integration/v2", "operation": "review.status", "phase": "preflight", '
+    '"code": "immutable_review_transport_unsupported", "next_action": "stop", "cause": '
+    '"the active runtime is not eligible for immutable receipt review; exit receipt-driven '
+    "review with `gentle-ai review mode disable --scope clone --cwd \\u003crepo\\u003e`; "
+    'supported immutable review runtimes: claude-code, opencode, codex, pi"}'
+)
+NATIVE_LINE = (
+    "Native review on Hermes: unavailable — gentle-ai 3.7.0 advertises immutable review "
+    "only for claude-code, opencode, codex, pi"
+)
+
 
 class FakeRunner:
     """Maps a binary path to its ``version`` stdout; records every command."""
 
-    def __init__(self, versions=None, review=REVIEW_JSON, review_state="ok"):
+    def __init__(
+        self, versions=None, review=REVIEW_JSON, review_state="ok", native=None, native_state=None
+    ):
         self.versions = versions or {}
         self.review = review
         self.review_state = review_state
+        self.native = UNSUPPORTED_JSON if native is None else native
+        self.native_state = native_state or "failed"
         self.commands: list[list[str]] = []
 
     def __call__(self, command, timeout):
@@ -77,6 +94,9 @@ class FakeRunner:
             return ProbeResult("ok", value or "", 0) if value is not None else ProbeResult("failed")
         if command[1:4] == ["review", "mode", "status"]:
             return ProbeResult(self.review_state, self.review, 0)
+        if command[1:3] == ["review", "status"]:
+            assert command[command.index("--agent") + 1] == "hermes", command
+            return ProbeResult(self.native_state, self.native, 1)
         raise AssertionError(f"unexpected command {command}")
 
 
@@ -419,7 +439,7 @@ class PluginCheckTests(unittest.TestCase):
         self.assertEqual(check.level, OK, check.finding)
         self.assertIn("section hermes-odd-workflow", check.finding)
         self.assertIn("(all plugins share 8000)", check.finding)
-        self.assertIn("skills 3 (clone)", check.finding)
+        self.assertIn("skills 5 (clone)", check.finding)
         self.assertIn("hooks 5/5", check.finding)
         self.assertIn("state ok", check.finding)
 
@@ -510,10 +530,13 @@ class DoctorReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             ctx = FakeContext()
             register(ctx)
+            repo = Path(tmp) / "proj"
+            (repo / ".git").mkdir(parents=True)
             doctor = make_doctor(
                 Path(tmp),
                 _runtime_of(ctx),
-                repo=Path("/work/proj"),
+                versions={f"{HOME}/go/bin/gentle-ai": "gentle-ai 3.7.0"},
+                repo=repo,
                 soul=synthetic_soul({"persona": 1_000, "sdd-thing": 60_000}),
             )
             text = doctor.render()
@@ -523,11 +546,14 @@ class DoctorReportTests(unittest.TestCase):
             "RDD mode",
             "SOUL.md",
             "plugin surface",
+            "Native review on Hermes",
             "upstream lock",
             "Hermes",
         ):
             self.assertIn(f"  {name}: ", text)
-        self.assertIn("✗  gentle-ai binary: 3.3.0", text)
+        self.assertIn("✓  gentle-ai binary: 3.7.0", text)
+        self.assertIn(f"⚠  {NATIVE_LINE} (immutable_review_transport_unsupported)", text)
+        self.assertIn("hermes-odd:rdd-review", text)
         self.assertIn("✓  RDD mode: receipt-driven development on (decided by global) · proj", text)
         self.assertIn("   fix: ", text)
         self.assertLessEqual(len(text), OUTPUT_MAX_CHARS)
@@ -607,6 +633,30 @@ class StatusTests(unittest.TestCase):
         # Only the cached version probe ran (one run for status twice).
         self.assertEqual(prober.runs, 2)  # version once + the explicit review probe
 
+    def test_status_shows_native_review_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp) / "proj"
+            (repo / ".git").mkdir(parents=True)
+            go = f"{HOME}/go/bin/gentle-ai"
+            prober = prober_for([go], {go: "gentle-ai 3.7.0"})
+            status = Status(None, prober, cwd_candidates=[], repo=lambda: repo)
+            text = status.render()
+            again = status.render()
+        self.assertIn(NATIVE_LINE, text)
+        self.assertEqual(text, again)
+        self.assertEqual(prober.runs, 2)  # version + native probe, both cached
+        self.assertLessEqual(len(text), STATUS_MAX_CHARS)
+        self.assertNotIn(tmp, text)
+
+    def test_status_native_line_without_repo(self) -> None:
+        go = f"{HOME}/go/bin/gentle-ai"
+        status = Status(
+            None, prober_for([go], {go: "gentle-ai 3.7.0"}), cwd_candidates=[], repo=lambda: None
+        )
+        self.assertIn(
+            "Native review on Hermes: unknown (the probe needs a git repository", status.render()
+        )
+
     def test_status_without_stores_or_binary(self) -> None:
         status = Status(None, prober_for([], {}), cwd_candidates=[], repo=lambda: None)
         text = status.render()
@@ -630,10 +680,21 @@ class CommandsListingTests(unittest.TestCase):
         self.assertLess(text.index("Viewers:"), text.index("Health:"))
         for spec in registry:
             self.assertIn(f"/{spec.name}", text)
-            self.assertIn(spec.group, ("Viewers", "Health"))
+            self.assertIn(spec.group, ("Viewers", "Review", "Health"))
+        self.assertLess(text.index("Review:"), text.index("Health:"))
+        self.assertIn("/odd_review_mode [status|enable|disable] [global|clone] [project]", text)
+        self.assertEqual(registry.get("odd_review_mode").group, "Review")
         self.assertEqual(
             [s.name for s in registry],
-            ["odd_agents", "odd_tasks", "odd_changes", "odd_status", "odd_doctor", "odd_commands"],
+            [
+                "odd_agents",
+                "odd_tasks",
+                "odd_changes",
+                "odd_review_mode",
+                "odd_status",
+                "odd_doctor",
+                "odd_commands",
+            ],
         )
 
     def test_registered_handlers_never_raise(self) -> None:
@@ -641,7 +702,7 @@ class CommandsListingTests(unittest.TestCase):
         register(ctx)
         with tempfile.TemporaryDirectory() as tmp:
             env = {"HERMES_HOME": tmp, "PATH": tmp}
-            for key in ("odd-status", "odd-doctor", "odd-commands"):
+            for key in ("odd-status", "odd-doctor", "odd-commands", "odd-review-mode"):
                 with (
                     mock.patch.dict(os.environ, env),
                     mock.patch.dict("sys.modules", {"hermes_constants": None}),

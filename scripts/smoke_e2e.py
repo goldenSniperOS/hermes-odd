@@ -7,7 +7,8 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
 * ``odd-commands`` is registered and its handler lists itself as plain text;
 * the ``hermes-odd-workflow`` prompt section is registered, renders, and fits
   in 4000 characters;
-* the three ``hermes-odd:*`` ODD skills are registered;
+* the ``hermes-odd:*`` skills (three ODD skills plus ``rdd-review`` and
+  ``rdd-review-lenses``) are registered;
 * the subagent observer hooks are registered, and a synthetic
   ``subagent_start`` / ``post_tool_call`` / ``subagent_stop`` lifecycle
   dispatched through Hermes' own ``PluginManager.invoke_hook`` shows up in
@@ -33,7 +34,12 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
   every check, finds the synthetic blocks (not the real ``~/.hermes`` SOUL),
   never prints SOUL content or full home paths, and stays under 3,500
   characters. The doctor runs the real ``gentle-ai version`` and read-only
-  ``gentle-ai review mode status`` from ``PATH``.
+  ``gentle-ai review mode status`` from ``PATH``;
+* ``/odd-review-mode`` (status only, read-only) from inside a throwaway git
+  repository: it reports the RDD mode and the native review availability line
+  from the real ``gentle-ai`` on ``PATH`` (``gentle-ai review status ...
+  --agent hermes``, refused in preflight by gentle-ai 3.7.0). ``enable`` and
+  ``disable`` are never run by the smoke.
 
 Isolation: the temporary home holds only a ``config.yaml`` that enables
 ``hermes-odd`` and a ``plugins/hermes-odd`` symlink to this checkout. Nothing
@@ -64,7 +70,13 @@ PLUGIN = "hermes-odd"
 COMMAND_KEY = "odd-commands"
 SECTION_ID = "hermes-odd-workflow"
 SECTION_LIMIT = 4000
-EXPECTED_SKILLS = ["odd-delegation", "odd-feature-tracking", "odd-workflow"]
+EXPECTED_SKILLS = [
+    "odd-delegation",
+    "odd-feature-tracking",
+    "odd-workflow",
+    "rdd-review",
+    "rdd-review-lenses",
+]
 AGENT_HOOKS = ["on_session_start", "subagent_start", "post_tool_call", "subagent_stop"]
 FAKE_SECRET = "sk-smoke-FAKE-SECRET-not-real"
 
@@ -137,6 +149,7 @@ def run(temp_home: Path) -> None:
     run_tasks_viewer(manager, temp_home, rendered[SECTION_ID].content)
     run_changes_viewer(manager, temp_home)
     run_health(manager, temp_home)
+    run_review_mode(manager, temp_home)
 
 
 def run_agents_lifecycle(manager, temp_home: Path) -> None:
@@ -412,13 +425,21 @@ def run_health(manager, temp_home: Path) -> None:
     status = status_cmd["handler"]("")
     check(status.startswith("hermes-odd "), "/odd-status starts with the plugin version")
     check(f"Prompt: {SECTION_ID} " in status, "/odd-status shows the prompt section")
-    check("Skills: 3 (" in status, "/odd-status counts the skills")
+    check("Skills: 5 (" in status, "/odd-status counts the skills")
+    check("Native review on Hermes: " in status, "/odd-status shows native review availability")
     check("Subagents: " in status and "Changes (24 h): 2 files" in status, "status reads stores")
     check("ODD features: " in status, "/odd-status counts feature documents")
     check("gentle-ai: " in status and "Upstream: gentle-ai v" in status, "binary + lock lines")
     check(len(status) < 1500, f"/odd-status is {len(status)} chars (< 1500)")
     doctor = doctor_cmd["handler"]("")
-    for name in ("gentle-ai binary", "RDD mode", "SOUL.md", "plugin surface", "upstream lock"):
+    for name in (
+        "gentle-ai binary",
+        "RDD mode",
+        "Native review on Hermes",
+        "SOUL.md",
+        "plugin surface",
+        "upstream lock",
+    ):
         check(f"  {name}: " in doctor, f"/odd-doctor reports {name}")
     check(
         "3 gentle-ai blocks" not in doctor and "2 gentle-ai blocks" in doctor,
@@ -437,6 +458,41 @@ def run_health(manager, temp_home: Path) -> None:
     print("---- /odd-doctor output ----")
     print(doctor)
     print("----------------------------")
+
+
+def run_review_mode(manager, temp_home: Path) -> None:
+    command = manager._plugin_commands.get("odd-review-mode")
+    check(command is not None, "/odd-review-mode is registered")
+    listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
+    check("Review:\n- /odd_review_mode" in listing, "/odd-commands lists it under Review")
+    if shutil.which("gentle-ai") is None:
+        print("skip: gentle-ai not on PATH; /odd-review-mode status not exercised")
+        return
+    repo = temp_home / "review-repo"
+    repo.mkdir()
+    _git(repo, "init", "-q")
+    previous = os.getcwd()
+    saved_cwd = os.environ.pop("TERMINAL_CWD", None)
+    try:
+        os.chdir(repo)
+        output = command["handler"]("status")
+    finally:
+        os.chdir(previous)
+        if saved_cwd is not None:
+            os.environ["TERMINAL_CWD"] = saved_cwd
+    check(output.startswith("RDD review mode · review-repo"), "status targets the process repo")
+    check("receipt-driven development: " in output, "status reports the RDD mode")
+    check(
+        "Native review on Hermes: unavailable — gentle-ai " in output
+        and "advertises immutable review only for" in output,
+        "status reports native review unavailable on Hermes (real gentle-ai)",
+    )
+    check("immutable_review_transport_unsupported" in output, "status shows the failure code")
+    check(len(output) < 3500, f"/odd-review-mode is {len(output)} chars (< 3500)")
+    check(str(Path.home()) + "/" not in output, "no full home paths in the output")
+    print("---- /odd-review-mode status output ----")
+    print(output)
+    print("----------------------------------------")
 
 
 def main() -> int:

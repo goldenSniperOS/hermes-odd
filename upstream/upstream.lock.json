@@ -81,12 +81,18 @@
       ]
     },
     "rdd": {
-      "status": "pending",
+      "status": "partial",
       "tasks": ["T7", "T8"],
-      "description": "Receipt-driven development for Hermes: rdd-review skill (orchestration contract) and the odd_review tool facade over the gentle-ai review CLI (opaque bindings, consent relay).",
-      "local_files": [],
-      "planned_files": [
+      "description": "Receipt-driven development for Hermes: /odd_review_mode over the real gentle-ai review mode CLI, the honest rdd-review protocol skill and the receipt-less 4R advisory review (rdd-review-lenses); the native odd_review facade over the gentle-ai review CLI is blocked on upstream runtime eligibility.",
+      "port_notes": "T7 ported: /odd_review_mode status|enable|disable wraps `gentle-ai review mode` (schema gentle-ai.review-mode/v1; enable/disable need an explicit --scope global|clone and are explicit user-typed writes of gentle-ai's own switch); the native review availability is probed read-only with `gentle-ai review status --cwd <git repo> --contract gentle-ai.review-integration/v2 --agent hermes --next-transition` (always --agent hermes, never another runtime's identity) and shown by /odd_review_mode, /odd_status and /odd_doctor. skills/rdd-review is an honest Hermes protocol (candidate = one work-unit commit or PR slice; with RDD on, report 'native review unavailable on Hermes' once per candidate, record it in the feature document and continue under ordinary repository policy; no impersonation, no fake receipts). The optional advisory 4R review runs the lens charters of skills/rdd-review-lenses (condensed from gentle-shell assets/agents/review-*.md and assets/chains/4r-review.chain.md, without the Pi ledger/JSON envelope and controller authority) as read-only delegate_task children over `git show <sha>`, labeled 'advisory review — no receipt'. T8 blocked: gentle-ai 3.7.0 refuses --agent hermes with immutable_review_transport_unsupported; the rdd-defect-workflow skills are not derived (their frontmatter declares Apache-2.0).",
+      "local_files": [
+        "hermes_odd/rdd.py",
+        "hermes_odd/probes.py",
+        "hermes_odd/commands/review_mode.py",
         "skills/rdd-review/SKILL.md",
+        "skills/rdd-review-lenses/SKILL.md"
+      ],
+      "planned_files": [
         "hermes_odd/review.py"
       ],
       "sources": [
@@ -119,6 +125,41 @@
           "upstream": "gentle-shell",
           "path": "lib/native-review-cli.ts",
           "sha256": "f25aa1e680c13a5b495d65f3bebe0ce4c1851f5cc6e30d5f55d38be85f8b54d4"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/agents/review-risk.md",
+          "sha256": "c896e40fd706ce611e6f5fb803193259c23a4471ca1ecac3857c1ddf3a70a432"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/agents/review-resilience.md",
+          "sha256": "dd6e5d971dbd7d90269a61ea2d7f597dfa3ad96677e901efa127ac52c849a7d7"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/agents/review-readability.md",
+          "sha256": "9db1806ff9de8ecf825f0318406acfbb910dc5b12f7ceae73580ef5d24726c3c"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/agents/review-reliability.md",
+          "sha256": "cd23b095bafd470107ab03b21d25e171561708d3c9d122caf039f972e15a788c"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/chains/4r-review.chain.md",
+          "sha256": "7d96aabd1426a388d1bde371f141d0c3ba836cee93cd54971a28fe1204942b18"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/agents/capabilitymanifest/manifest.go",
+          "sha256": "b67e9f20a021caeb8556a15076a48a83aa56ee9132f5f8c39d794e51c95e3eef"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/cli/review_transport_capability.go",
+          "sha256": "546d757504c2019b0390520e4f0f671cc6af2723788340ae9920b9854a91ef67"
         }
       ]
     },
@@ -134,7 +175,10 @@
         "tree_sha256": "832f62d461249576f9b7e864c2d5adbb6e38a36f8a7103a28a9f2ca81f41de41",
         "runtimes": ["claude-code", "codex", "opencode", "pi"]
       },
-      "capability_note": "In gentle-ai v3.7.0 capabilitymanifest the hermes adapter's reviewTransportV1 and immutableReviewExecutorV1 exposures are dormant (advertised only for claude-code, opencode, codex, pi). T7/T8 must confirm which agent identity the review CLI accepts from Hermes.",
+      "capability_note": "In gentle-ai v3.7.0 capabilitymanifest the hermes adapter's reviewTransportV1 and immutableReviewExecutorV1 exposures are dormant (ContractReviewTransportV1 / ContractImmutableReviewExecutorV1 are advertised only for claude-code, opencode, codex, pi: runtimes that can launch a fresh, constrained reviewer and prove that boundary before review START). Verified against the gentle-ai 3.7.0 binary (2026-09-25): `gentle-ai review status --cwd <repo> --contract gentle-ai.review-integration/v2 --agent hermes --next-transition` fails in preflight with schema gentle-ai.review-integration.failure/v2, code immutable_review_transport_unsupported, next_action stop, mutation_outcome not_started. The cause lists the runtimes eligible in the probing environment (internal/cli/review_transport_capability.go: pi only with its host relay handshake, opencode only on a V1 runtime), a subset of the compiled set. hermes-odd never passes another runtime's identity; the facade (T8) is blocked on upstream eligibility.",
+      "immutable_review_runtimes": ["claude-code", "opencode", "codex", "pi"],
+      "failure_schema": "gentle-ai.review-integration.failure/v2",
+      "hermes_failure_code": "immutable_review_transport_unsupported",
       "local_files": [],
       "sources": [
         {

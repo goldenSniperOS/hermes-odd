@@ -26,6 +26,7 @@ Files in this repository derived from gentle-ai:
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`
+- `skills/rdd-review/SKILL.md`
 - `upstream/odd-routing-hermes.canonical.md` (verbatim render of
   `agentguidance.RenderRouting(model.AgentHermes)` from
   `internal/components/agentguidance/routing.go`, vendored for drift tracking)
@@ -72,6 +73,10 @@ Files in this repository derived from gentle-shell:
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`
+- `skills/rdd-review/SKILL.md`
+- `skills/rdd-review-lenses/SKILL.md` (4R lens charters condensed from
+  `assets/agents/review-{risk,resilience,readability,reliability}.md` and
+  `assets/chains/4r-review.chain.md`)
 
 License text:
 

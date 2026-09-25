@@ -45,7 +45,7 @@ class CommandSpec:
     description: str
     handler: Handler
     args_hint: str = ""
-    group: str = ""  # heading in /odd_commands ("Viewers", "Health")
+    group: str = ""  # heading in /odd_commands ("Viewers", "Review", "Health")
 
     @property
     def hermes_key(self) -> str:

@@ -6,6 +6,30 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `/odd_review_mode [status|enable|disable] [global|clone] [project]` (`/odd-review-mode`
+  in the CLI, group Review): the RDD switch over the real `gentle-ai review mode` CLI.
+  `status` (default, read-only) shows the effective mode and its source for a known
+  project (name or prefix) or the directory Hermes runs from, both sources, and native
+  review availability on Hermes; `enable`/`disable` require an explicit scope
+  (`clone` needs a git repository) and report gentle-ai's resulting JSON status.
+- Native review availability probe: read-only `gentle-ai review status --cwd <git repo>
+  --contract gentle-ai.review-integration/v2 --agent hermes --next-transition` (no
+  shell, minimal environment, 3 s timeout, cached 60 s, only inside a git repository).
+  gentle-ai 3.7.0 refuses Hermes with `immutable_review_transport_unsupported`;
+  `/odd_review_mode`, `/odd_status` and `/odd_doctor` report "Native review on Hermes:
+  unavailable" honestly. hermes-odd never passes another runtime's identity.
+- Skills `hermes-odd:rdd-review` (honest RDD protocol on Hermes: report "native review
+  unavailable on Hermes" once per candidate, record it, continue under ordinary
+  repository policy; never impersonate a runtime or fake a receipt) and
+  `hermes-odd:rdd-review-lenses` (4R lens charters condensed from gentle-shell for an
+  optional advisory review via `delegate_task`, labeled "advisory review — no receipt").
+
+### Changed
+- Upstream lock: component `rdd` is `partial` (T7 ported; native facade T8 blocked on
+  upstream runtime eligibility) and indexes the gentle-shell 4R sources;
+  `review-contract` records the verified failure schema and code.
+
 ## [0.2.0] - 2026-09-25
 
 Viewers and health: see what your Hermes subagents are doing, your ODD feature

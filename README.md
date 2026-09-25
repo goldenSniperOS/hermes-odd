@@ -27,9 +27,10 @@ preflight, or `gentle-sdd-*` commands.
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
 ships lazy ODD skills, and registers the viewers `/odd_agents`,
-`/odd_tasks`, `/odd_changes` and the health commands `/odd_status`,
-`/odd_doctor`, `/odd_commands` (unreleased). RDD integration and the persona
-command are planned (see [Planned commands](#planned-commands)).
+`/odd_tasks`, `/odd_changes`, the RDD switch `/odd_review_mode` and the
+health commands `/odd_status`, `/odd_doctor`, `/odd_commands`. Native RDD
+review is blocked upstream for Hermes (see [RDD on Hermes](#rdd-on-hermes));
+the persona command is planned (see [Planned commands](#planned-commands)).
 
 ## What gets injected
 
@@ -144,12 +145,18 @@ registered name exactly.
 | `/odd_tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
 | `/odd_changes [file\|project\|all\|clear]` | Shows which files the agent and its subagents changed in the last 24 h (`all`: 7 days), grouped by project: `+added −removed  path  (n edits · by main/sa-xxxx · age)`, newest first, with per-project totals. A file (path, name or prefix) shows its edit timeline and, inside a git repository, its current uncommitted `git diff --numstat`; a project name lists that project; `clear` forgets every recorded change |
 
+**Review**
+
+| Command | What it does |
+|---|---|
+| `/odd_review_mode [status\|enable\|disable] [global\|clone] [project]` | `status` (default, read-only): the effective RDD mode and its source for the repository (a known project by name or prefix, else the directory Hermes runs from), both sources (global, clone), and whether native review is available on Hermes. `enable`/`disable` run the real `gentle-ai review mode <enable\|disable> --scope <global\|clone> --json`; the scope is required, and `clone` needs a git repository |
+
 **Health**
 
 | Command | What it does |
 |---|---|
-| `/odd_status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the RDD mode when `/odd_doctor` checked it in the last minute, and the supported upstream versions |
-| `/odd_doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), the RDD mode of the current git repository (`gentle-ai review mode status`), `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
+| `/odd_status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the RDD mode when `/odd_doctor` or `/odd_review_mode` checked it in the last minute, native review availability on Hermes, and the supported upstream versions |
+| `/odd_doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), the RDD mode of the current git repository (`gentle-ai review mode status`), native review availability on Hermes, `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
 | `/odd_commands` | Lists hermes-odd commands, grouped |
 
 `/odd_agents` records only metadata, from Hermes' `subagent_start`,
@@ -178,10 +185,11 @@ session id and platform are kept; file content and diffs are never stored or
 shown. `write_file` replaces a whole file, so its removed lines are unknown
 and show as `−?`. Entries are kept for 7 days, at most 200 files.
 
-`/odd_status` runs no subprocess except a `gentle-ai version` probe cached
-for 60 s. `/odd_doctor` runs only `gentle-ai version` and `gentle-ai review
-mode status --json` (no shell, minimal environment, 3 s timeout each, about
-6 s in total, cached for 60 s); it never runs `gentle-ai install` or `sync`.
+`/odd_status` runs no subprocess except a `gentle-ai version` probe and the
+native review probe, both cached for 60 s. `/odd_doctor` runs only `gentle-ai
+version`, `gentle-ai review mode status --json` and the native review probe
+(no shell, minimal environment, 3 s timeout each, about 6 s in total, cached
+for 60 s); it never runs `gentle-ai install` or `sync`.
 It measures `SOUL.md` and reads only the model name, base URL and context
 length keys of `config.yaml` and `context_length_cache.yaml` to compute
 Hermes' truncation cap; `.env`, `auth.json` and other secrets are never
@@ -189,13 +197,51 @@ read, SOUL content is never printed, and paths under your home show as `~/…`.
 In a gateway the command runs from the gateway's directory, so the RDD mode
 of a repository is usually only known from the CLI.
 
+## RDD on Hermes
+
+Receipt-driven development (RDD) is Gentle AI's review discipline: a frozen
+candidate (one work-unit commit or PR slice), risk-scoped review lenses, at
+most one bounded correction, and an outcome derived from Git and bound to the
+candidate as a receipt. A review outcome never authorizes delivery.
+
+**Native RDD review does not run on Hermes today, and hermes-odd says so.**
+gentle-ai runs native immutable review only for runtimes that can launch a
+fresh, constrained reviewer and prove that boundary before the review starts.
+gentle-ai 3.7.0 advertises that for claude-code, opencode, codex and pi, not
+for hermes. Asked as Hermes, the review CLI refuses in preflight:
+
+```text
+gentle-ai review status --cwd . --contract gentle-ai.review-integration/v2 --agent hermes --next-transition
+schema: gentle-ai.review-integration.failure/v2
+code:   immutable_review_transport_unsupported
+next_action: stop
+```
+
+What hermes-odd does instead:
+
+- `/odd_review_mode` shows your RDD switch and the availability line
+  (`Native review on Hermes: unavailable — gentle-ai 3.7.0 advertises
+  immutable review only for claude-code, opencode, codex, pi`), detected live;
+  `/odd_status` and `/odd_doctor` show the same line.
+- The `hermes-odd:rdd-review` skill tells the agent, when RDD is on, to report
+  "native review unavailable on Hermes (gentle-ai runtime eligibility)" once
+  per candidate, record it in the ODD feature document, and continue under
+  your ordinary repository policy (tests, CI, human review).
+- On request, an **advisory 4R review** (Risk, Resilience, Readability,
+  Reliability; `hermes-odd:rdd-review-lenses`) runs as read-only
+  `delegate_task` children over the exact commit (`git show <sha>`), labeled
+  "advisory review — no receipt".
+
+hermes-odd never impersonates another runtime (it never passes `--agent pi`
+or any other identity to gentle-ai) and never fakes a receipt. The native
+review facade waits on upstream runtime eligibility for Hermes.
+
 ## Planned commands
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:review-mode` | `/odd_review_mode [status\|enable\|disable]` | wraps `gentle-ai review mode` |
 | `gentle:persona` | `/odd_persona [gentleman\|neutral]` | swaps compact persona section |
-| `gentle_review*` tools | review tool facade (+ RDD skill) | CLI facade over `gentle-ai review`, opaque bindings only |
+| `gentle_review*` tools | native review facade | blocked upstream: gentle-ai does not accept Hermes as an immutable review runtime yet |
 | `skill-registry:refresh` | Hermes native skill index | not needed |
 
 ## Development

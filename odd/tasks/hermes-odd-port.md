@@ -96,8 +96,14 @@ gateway.
 - [x] T4 `/odd_tasks` feature-task viewer.
 - [x] T5 `/odd_changes` viewer.
 - [x] T6 `/odd_status`, `/odd_doctor`, `/odd_commands`.
-- [ ] T7 `/odd_review_mode` + `rdd-review` skill (Hermes orchestration contract).
-- [ ] T8 `odd_review` tool facade over `gentle-ai review` (lifecycle, consent relay).
+- [x] T7 `/odd_review_mode [status|enable|disable]` over the real `gentle-ai review mode`
+      CLI + `rdd-review` skill: honest RDD on Hermes (native immutable review unavailable
+      for this runtime -> report per candidate, continue under ordinary policy) + optional
+      4R advisory review via `delegate_task`, clearly labeled as receipt-less.
+- [ ] T8 BLOCKED ON UPSTREAM: native `odd_review` facade. gentle-ai 3.7.0 rejects
+      `--agent hermes` (`immutable_review_transport_unsupported`; capability manifest
+      advertises review transport only for claude-code, opencode, codex, pi). Never
+      impersonate `--agent pi`. Ask upstream via the gentle-ai Discussion.
 - [ ] T9 `/odd_persona` + SOUL migration command (backup, dry-run).
 - [ ] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
       upstream sources per component and new upstream commands/skills to triage) +
@@ -129,6 +135,16 @@ gateway.
 
 ## Progress
 
+- 2026-09-25: T7 honest RDD: gentle-ai 3.7.0 refuses `--agent hermes`
+  (`immutable_review_transport_unsupported`; manifest advertises review transport and
+  immutable executor only for claude-code, opencode, codex, pi). /odd_review_mode wraps
+  the real mode switch and probes availability live (git repo only, always
+  `--agent hermes`); skills rdd-review + rdd-review-lenses (4R advisory, receipt-less).
+  T8 blocked on upstream; candidate fix to propose: host relay over Hermes `ctx.llm`
+  (tool-less completion) as the constrained reviewer (to verify).
+- 2026-09-25: **v0.2.0 released** (tag on c1e16c8): T6 5159ae1 (/odd_status, /odd_doctor,
+  Built with Gentle-AI badge). CI caught a Linux-only path leak in /odd_doctor (fixed
+  with regression test before tagging).
 - 2026-09-25: T3 01ac068 (/odd_agents), T4 277b771 (/odd_tasks; projects learned from
   the section callable cwd; Engram mirror not queried: call_mcp opt-in + blocks the
   gateway loop), T5 (/odd_changes; captures write_file/patch via a second post_tool_call
@@ -182,4 +198,4 @@ gateway.
 
 ## Next step
 
-Cut v0.2.0, then T7 `/odd_review_mode` + `rdd-review` skill.
+Cut v0.3.0 (honest RDD), then T9 persona + SOUL migration.

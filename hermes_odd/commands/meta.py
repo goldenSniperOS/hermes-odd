@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from .registry import CommandRegistry, CommandSpec
 
-GROUP_ORDER = ("Viewers", "Health")
+GROUP_ORDER = ("Viewers", "Review", "Health")
 
 
 def make_odd_commands(registry: CommandRegistry) -> CommandSpec:

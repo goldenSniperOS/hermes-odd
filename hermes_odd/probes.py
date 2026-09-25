@@ -2,13 +2,28 @@
 
 hermes-odd uses the user's installed ``gentle-ai`` binary only (RDD through
 ``gentle-ai review``); it never runs ``gentle-ai install`` or
-``gentle-ai sync`` for Hermes. The probes here run exactly two read-only
+``gentle-ai sync`` for Hermes. The probes here run exactly three read-only
 subcommands:
 
 * ``gentle-ai version`` (prints ``gentle-ai X.Y.Z``);
-* ``gentle-ai review mode status --cwd <repo> --json`` (schema
+* ``gentle-ai review mode status [--cwd <repo>] --json`` (schema
   ``gentle-ai.review-mode/v1``; ``status`` is documented as read-only in
-  ``gentle-ai review mode --help``).
+  ``gentle-ai review mode --help``);
+* ``gentle-ai review status --cwd <git repo> --contract
+  gentle-ai.review-integration/v2 --agent hermes --next-transition``: the
+  native review availability probe. gentle-ai 3.7.0 refuses it in preflight
+  with ``immutable_review_transport_unsupported`` (Hermes is not an eligible
+  immutable review runtime). It only runs with ``--cwd`` pointing at an
+  existing git repository, because ``review status`` may initialize Git in a
+  genuinely unversioned directory once a runtime is accepted.
+
+The identity is always :data:`AGENT_ID` (``hermes``). hermes-odd never
+passes another runtime's identity to gentle-ai (never ``--agent pi``): that
+would break the review contract and make receipts meaningless.
+
+The only writes are the explicit, user-typed ``/odd_review_mode
+enable|disable`` commands (:meth:`Prober.set_review_mode`), which change
+gentle-ai's own review switch and nothing else.
 
 Every call runs without a shell, with a minimal environment, stdin closed and
 a hard timeout (:data:`PROBE_TIMEOUT_SECONDS`). Results are cached for
@@ -36,7 +51,20 @@ PROBE_TIMEOUT_SECONDS = 3.0
 CACHE_TTL_SECONDS = 60.0
 MAX_BINARIES = 5
 MAX_OUTPUT_CHARS = 64 * 1024
+MUTATION_TIMEOUT_SECONDS = 5.0
+MAX_STDERR_CHARS = 4096
 REVIEW_MODE_SCHEMA = "gentle-ai.review-mode/v1"
+# The only runtime identity hermes-odd ever passes to ``gentle-ai review``.
+AGENT_ID = "hermes"
+REVIEW_CONTRACT = "gentle-ai.review-integration/v2"
+REVIEW_FAILURE_SCHEMA = "gentle-ai.review-integration.failure/v2"
+UNSUPPORTED_CODE = "immutable_review_transport_unsupported"
+REVIEW_MODE_ACTIONS = ("status", "enable", "disable")
+REVIEW_MODE_SCOPES = ("global", "clone")
+_RUNTIMES_RE = re.compile(r"supported immutable review runtimes:\s*([^;\n\"]*)")
+_RUNTIME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
+_CODE_RE = re.compile(r"^[a-z0-9_.-]{1,80}$")
+MAX_RUNTIMES = 10
 _VERSION_RE = re.compile(r"\bv?(\d+)\.(\d+)\.(\d+)(?:[-+][0-9A-Za-z.-]+)?\b")
 
 
@@ -47,6 +75,7 @@ class ProbeResult:
     state: str  # "ok" | "timeout" | "failed" | "missing"
     stdout: str = ""
     returncode: int | None = None
+    stderr: str = ""
 
 
 @dataclass(frozen=True)
@@ -62,6 +91,52 @@ class ReviewMode:
     effective: str = ""  # "on" | "off"
     source: str = ""  # "global" | "clone" | ...
     repo: str = ""
+    global_mode: str = ""  # "on" | "off" | "" (unset)
+    clone_local: str = ""  # "off" | "" (unset)
+
+
+@dataclass(frozen=True)
+class NativeReview:
+    """Whether ``gentle-ai review`` accepts Hermes as an immutable review runtime."""
+
+    state: str  # "unavailable" | "available" | "unknown" | "timeout" | "no_binary" | "no_repo"
+    code: str = ""  # gentle-ai failure code, when one was reported
+    runtimes: tuple[str, ...] = ()  # runtimes gentle-ai names as eligible
+    detail: str = ""
+
+
+def review_mode_command(
+    binary: str, action: str, scope: str | None = None, repo: str | Path | None = None
+) -> list[str]:
+    """argv for ``gentle-ai review mode <action>``. ``enable``/``disable`` need an
+    explicit ``scope``; there is never an ``--agent`` flag."""
+    if action not in REVIEW_MODE_ACTIONS:
+        raise ValueError(f"unknown review mode action {action!r}")
+    command = [binary, "review", "mode", action]
+    if action != "status":
+        if scope not in REVIEW_MODE_SCOPES:
+            raise ValueError("enable/disable need an explicit scope: global or clone")
+        command += ["--scope", scope]
+    if repo is not None:
+        command += ["--cwd", str(repo)]
+    command.append("--json")
+    return command
+
+
+def native_review_command(binary: str, repo: str | Path) -> list[str]:
+    """argv of the read-only availability probe, always as ``--agent hermes``."""
+    return [
+        binary,
+        "review",
+        "status",
+        "--cwd",
+        str(repo),
+        "--contract",
+        REVIEW_CONTRACT,
+        "--agent",
+        AGENT_ID,
+        "--next-transition",
+    ]
 
 
 Runner = Callable[[list[str], float], ProbeResult]
@@ -118,8 +193,9 @@ def run_probe(command: list[str], timeout: float) -> ProbeResult:
     except (OSError, ValueError, subprocess.SubprocessError):
         return ProbeResult("failed")
     stdout = (completed.stdout or "")[:MAX_OUTPUT_CHARS]
+    stderr = (completed.stderr or "")[:MAX_STDERR_CHARS]
     state = "ok" if completed.returncode == 0 else "failed"
-    return ProbeResult(state, stdout, completed.returncode)
+    return ProbeResult(state, stdout, completed.returncode, stderr)
 
 
 def find_binaries(
@@ -295,9 +371,87 @@ class Prober:
         hit = self._cached(key)
         if hit is not None:
             return hit
-        command = [binary, "review", "mode", "status", "--cwd", str(repo), "--json"]
+        command = review_mode_command(binary, "status", repo=repo)
         result = self._run(command, min(timeout, PROBE_TIMEOUT_SECONDS))
         return self._store(key, parse_review_mode(result, str(repo)))
+
+    def global_review_mode(
+        self, binary: str | None, timeout: float = PROBE_TIMEOUT_SECONDS
+    ) -> ReviewMode:
+        """``review mode status --json`` without ``--cwd``: only for a command
+        process that is not inside a git repository (gentle-ai then reports the
+        global source alone)."""
+        if not binary:
+            return ReviewMode("no_binary")
+        key = ("review_mode_global", binary)
+        hit = self._cached(key)
+        if hit is not None:
+            return hit
+        result = self._run(
+            review_mode_command(binary, "status"), min(timeout, PROBE_TIMEOUT_SECONDS)
+        )
+        return self._store(key, parse_review_mode(result, ""))
+
+    def native_review(
+        self,
+        binary: str | None,
+        repo: Path | None,
+        timeout: float = PROBE_TIMEOUT_SECONDS,
+    ) -> NativeReview:
+        """Probe whether gentle-ai accepts ``--agent hermes`` for native review.
+
+        Runtime eligibility does not depend on the repository, so the result
+        is cached per binary. ``repo`` must lie inside an existing git
+        repository (the probe is never run elsewhere)."""
+        if not binary:
+            return NativeReview("no_binary")
+        key = ("native_review", binary)
+        hit = self._cached(key)
+        if hit is not None:
+            return hit
+        if repo is None or git_repo_root(repo) is None:
+            return NativeReview("no_repo")
+        result = self._run(native_review_command(binary, repo), min(timeout, PROBE_TIMEOUT_SECONDS))
+        return self._store(key, parse_native_review(result))
+
+    def cached_native_review(self) -> NativeReview | None:
+        """Any fresh native review result (runtime eligibility is per binary)."""
+        with self._lock:
+            now = self._clock()
+            for key, (at, value) in self._cache.items():
+                if key[0] == "native_review" and now - at < self._ttl:
+                    return value
+        return None
+
+    def set_review_mode(
+        self,
+        binary: str,
+        action: str,
+        scope: str,
+        repo: Path | None,
+        timeout: float = MUTATION_TIMEOUT_SECONDS,
+    ) -> tuple[ReviewMode, ProbeResult]:
+        """Run ``gentle-ai review mode enable|disable --scope <scope> [--cwd
+        <repo>] --json`` once, never cached, and drop cached review modes.
+
+        Only called for an explicit user-typed ``/odd_review_mode`` command."""
+        if action not in ("enable", "disable"):
+            raise ValueError(f"not a review mode write: {action!r}")
+        command = review_mode_command(binary, action, scope, repo)
+        result = self._run(command, min(timeout, MUTATION_TIMEOUT_SECONDS))
+        self.invalidate("review_mode", "review_mode_global")
+        parsed = parse_review_mode(
+            ProbeResult("ok", result.stdout, result.returncode, result.stderr)
+            if result.state in ("ok", "failed")
+            else result,
+            str(repo) if repo is not None else "",
+        )
+        return parsed, result
+
+    def invalidate(self, *kinds: str) -> None:
+        with self._lock:
+            for key in [k for k in self._cache if k[0] in kinds]:
+                del self._cache[key]
 
     def cached_review_mode(self, repo: Path | None) -> ReviewMode | None:
         """A review-mode result cached by ``/odd_doctor`` for ``repo``, if fresh."""
@@ -329,4 +483,70 @@ def parse_review_mode(result: ProbeResult, repo: str) -> ReviewMode:
     if effective not in ("on", "off"):
         return ReviewMode("failed", repo=repo)
     source = status.get("source")
-    return ReviewMode("ok", effective, source if isinstance(source, str) else "", repo)
+
+    def text(value: Any) -> str:
+        return value if value in ("on", "off") else ""
+
+    return ReviewMode(
+        "ok",
+        effective,
+        source[:20] if isinstance(source, str) else "",
+        repo,
+        text(status.get("global")),
+        text(status.get("clone_local")),
+    )
+
+
+def _json_object(text: str) -> dict[str, Any] | None:
+    raw = str(text or "").strip()
+    if not raw:
+        return None
+    for candidate in (raw, raw[raw.find("{") : raw.rfind("}") + 1] if "{" in raw else ""):
+        if not candidate:
+            continue
+        try:
+            data = json.loads(candidate)
+        except ValueError:
+            continue
+        return data if isinstance(data, dict) else None
+    return None
+
+
+def parse_runtimes(cause: Any) -> tuple[str, ...]:
+    """Eligible runtimes named in a gentle-ai failure ``cause``."""
+    match = _RUNTIMES_RE.search(str(cause or ""))
+    if not match:
+        return ()
+    names = []
+    for item in match.group(1).split(","):
+        name = item.strip().lower()
+        if _RUNTIME_RE.fullmatch(name) and name not in names:
+            names.append(name)
+    return tuple(names[:MAX_RUNTIMES])
+
+
+def parse_native_review(result: ProbeResult) -> NativeReview:
+    """Classify the availability probe. Never raises.
+
+    * failure schema + ``immutable_review_transport_unsupported`` -> unavailable;
+    * exit 0 with a non-failure JSON object -> available (detected);
+    * any other failure code -> unknown, with that code;
+    * anything else (timeout, missing binary, garbage) -> unknown / timeout.
+    """
+    if result.state == "timeout":
+        return NativeReview("timeout")
+    if result.state == "missing":
+        return NativeReview("no_binary")
+    data = _json_object(result.stdout)
+    if data is None:
+        return NativeReview("unknown", detail="unreadable gentle-ai output")
+    schema = data.get("schema")
+    raw_code = data.get("code")
+    code = raw_code if isinstance(raw_code, str) and _CODE_RE.fullmatch(raw_code) else ""
+    if schema == REVIEW_FAILURE_SCHEMA:
+        if code == UNSUPPORTED_CODE:
+            return NativeReview("unavailable", code, parse_runtimes(data.get("cause")))
+        return NativeReview("unknown", code, detail="gentle-ai refused the probe")
+    if result.state == "ok" and isinstance(schema, str) and schema:
+        return NativeReview("available", detail=schema[:80])
+    return NativeReview("unknown", code, detail="unexpected gentle-ai output")

@@ -29,8 +29,8 @@ from hermes_odd.skills import (  # noqa: E402
 
 SDD_RE = re.compile(r"sdd|openspec", re.IGNORECASE)
 ALLOWED_SDD_SENTENCE = "Formal SDD is not provided by this plugin."
-# Skills the section may name before their task ships them.
-PENDING_SKILLS = {"rdd-review"}  # T7
+# Skills the section may name before their task ships them (none pending).
+PENDING_SKILLS: set = set()
 SKILL_REF_RE = re.compile(re.escape(SKILL_NAMESPACE) + r":([a-zA-Z0-9_-]+)")
 
 
@@ -79,6 +79,7 @@ class PromptSectionTests(unittest.TestCase):
         self.assertIn("odd-workflow", referenced)
         self.assertIn("odd-feature-tracking", referenced)
         self.assertIn("odd-delegation", referenced)
+        self.assertIn("rdd-review", referenced)
         missing = referenced - shipped_skill_names() - PENDING_SKILLS
         self.assertEqual(missing, set())
 

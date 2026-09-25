@@ -32,8 +32,8 @@ Notes:
 | Component | Status | hermes-odd surface | Upstream sources (pinned) |
 |---|---|---|---|
 | `odd` | ported | `hermes_odd/prompt.py` (section `hermes-odd-workflow`), `skills/odd-workflow`, `skills/odd-delegation`, `skills/odd-feature-tracking`, `upstream/odd-routing-hermes.canonical.md` | gentle-ai `internal/components/agentguidance/routing.go`, `internal/agents/capabilitymanifest/manifest.go`; gentle-shell `extensions/gentle-ai.ts`, `assets/orchestrator.md`, `assets/orchestrator-delegation.md`, `assets/orchestrator-skills.md`, `assets/orchestrator-memory.md` |
-| `rdd` | pending (T7, T8) | planned `skills/rdd-review`, `odd_review` tool, `/odd_review_mode` | gentle-ai `internal/assets/skills/rdd-defect-workflow/SKILL.md`; gentle-shell `skills/rdd-defect-workflow/SKILL.md`, `docs/review-integration.md`, `extensions/gentle-ai.ts`, `lib/review-integration-v2.ts`, `lib/native-review-cli.ts` |
-| `review-contract` | pending (T7, T8) | CLI contract `gentle-ai.review-integration/v2` (capabilities v2.6); provider contract mirror 1.2.0 | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
+| `rdd` | partial (T7 ported, T8 blocked upstream) | `/odd_review_mode` (`hermes_odd/commands/review_mode.py`, `hermes_odd/rdd.py`, probes in `hermes_odd/probes.py`), `skills/rdd-review`, `skills/rdd-review-lenses`; planned `odd_review` facade | gentle-ai `internal/assets/skills/rdd-defect-workflow/SKILL.md`, `internal/agents/capabilitymanifest/manifest.go`, `internal/cli/review_transport_capability.go`; gentle-shell `skills/rdd-defect-workflow/SKILL.md`, `docs/review-integration.md`, `extensions/gentle-ai.ts`, `lib/review-integration-v2.ts`, `lib/native-review-cli.ts`, `assets/agents/review-{risk,resilience,readability,reliability}.md`, `assets/chains/4r-review.chain.md` |
+| `review-contract` | pending (T8, blocked upstream) | CLI contract `gentle-ai.review-integration/v2` (capabilities v2.6); provider contract mirror 1.2.0; verified: `--agent hermes` fails with `gentle-ai.review-integration.failure/v2` `immutable_review_transport_unsupported` | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
 | `viewers` | ported | Viewers `/odd_agents`, `/odd_tasks`, `/odd_changes`; Health `/odd_status`, `/odd_doctor`, `/odd_commands` (all concept ports, no copied text) | gentle-shell `extensions/gentle-ai.ts`, `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts`, `docs/gentle-agents-activity.md`, `extensions/gentle-shell.ts`, `extensions/gentle-todo.ts`, `docs/gentle-shell.md`, `lib/shell-changes.ts`, `lib/shell-todo.ts`, `lib/review-sidebar-state.ts`, `lib/session-changes.ts`, `lib/shell-changes-view.ts`, `README.md` |
 
 Deliberately not ported (see `excluded` in the lock): SDD in every form; Pi
@@ -73,6 +73,31 @@ tooling.
 
 ## Triage log
 
+### 2026-09-25: T7 RDD on Hermes (gentle-ai 3.7.0 binary verified)
+
+Verified against the installed gentle-ai 3.7.0 binary. `gentle-ai review
+status --cwd <repo> --contract gentle-ai.review-integration/v2 --agent hermes
+--next-transition` fails in preflight (nothing started) with schema
+`gentle-ai.review-integration.failure/v2`, code
+`immutable_review_transport_unsupported`, `next_action: stop`. The eligible
+set is compiled into gentle-ai (`internal/agents/capabilitymanifest/manifest.go`,
+`ContractReviewTransportV1` / `ContractImmutableReviewExecutorV1`: claude-code,
+opencode, codex, pi) and narrowed per environment by
+`internal/cli/review_transport_capability.go` (pi only with its host relay
+handshake, opencode only on a V1 runtime); the refusal lists the runtimes
+eligible in the probing environment. `gentle-ai review mode
+status|enable|disable [--cwd] [--scope global|clone] [--json]` works for any
+caller.
+
+| Area | Decision |
+|---|---|
+| Review mode switch (gentle-pi review-mode view over `gentle-ai review mode`) | ported: `/odd_review_mode [status\|enable\|disable] [global\|clone] [project]`, concept port; `status` read-only, `enable`/`disable` need an explicit scope and are user-typed writes of gentle-ai's own switch |
+| Native review facade (`gentle_review*` over `gentle-ai review start/status/...`) | blocked upstream: runtime eligibility; Hermes is refused with `immutable_review_transport_unsupported`. hermes-odd never passes another runtime's identity (`--agent pi` or any other). Availability is probed read-only and shown by `/odd_review_mode`, `/odd_status` and `/odd_doctor`; T8 waits on upstream |
+| RDD protocol for a runtime without native review | ported as `skills/rdd-review`: candidate = one work-unit commit or PR slice; with RDD on, report "native review unavailable on Hermes" once per candidate, record it in the feature document and continue under ordinary repository policy; no fake receipts |
+| 4R lenses (gentle-shell `assets/agents/review-{risk,resilience,readability,reliability}.md`, `assets/chains/4r-review.chain.md`) | ported as a receipt-less skill: `skills/rdd-review-lenses`, condensed charters run as read-only `delegate_task` children over `git show <sha>`, labeled "advisory review — no receipt"; the Pi ledger/JSON envelope, `gentle_review_scope` tool and controller authority are not portable (they need the native facade) |
+| `rdd-defect-workflow` skill (gentle-ai and gentle-shell) | not derived: its frontmatter declares Apache-2.0 and it governs upstream issue/PR discipline; the RDD concepts are restated in hermes-odd's own words |
+| RDD sidebar lifecycle labels (`2ac9c68`, `8becfd8`) | not applicable until native review exists on Hermes |
+
 ### 2026-09-24: baseline gentle-ai v3.7.0 and gentle-shell v3.7.0
 
 Initial port at gentle-ai `f182ea2` (v3.7.0) and gentle-shell `4d702a4`
@@ -82,7 +107,7 @@ Initial port at gentle-ai `f182ea2` (v3.7.0) and gentle-shell `4d702a4`
 |---|---|
 | ODD protocol, delegation triggers, resume order, feature tracking (gentle-ai `routing.go`; gentle-shell `assets/orchestrator*.md`, `extensions/gentle-ai.ts`) | ported: compact section + `odd-*` skills, bound to `delegate_task`, `clarify`, `mcp__engram__*` |
 | Canonical `RenderRouting(model.AgentHermes)` | ported: vendored verbatim in `upstream/odd-routing-hermes.canonical.md` for drift comparison |
-| RDD review lifecycle (`gentle_review*` facade, `rdd-defect-workflow`, review CLI contract v2, provider contract mirror 1.2.0) | pending: T7, T8 |
+| RDD review lifecycle (`gentle_review*` facade, `rdd-defect-workflow`, review CLI contract v2, provider contract mirror 1.2.0) | T7 ported (review mode, honest protocol, advisory 4R); facade blocked upstream (T8), see the 2026-09-25 entry |
 | Pi agents view (gentle-shell `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts` `TaskRecord` model) | ported: `/odd_agents` (T3), concept port with no copied text, fed by Hermes `subagent_start`/`post_tool_call`/`subagent_stop` hooks |
 | Pi agents view: stopping a running subagent | not portable: Hermes offers no safe plugin path from a command (`ctx.subagent_lifecycle.cancel` only accepts handles minted by its own `launch`; `tools.delegate_tool.interrupt_subagent` is internal, unscoped and in-process); users ask the agent to run `delegate_task` `action=stop` |
 | Pi todo card + ODD feature document view (gentle-shell `extensions/gentle-todo.ts`, `lib/shell-todo.ts`) | ported: `/odd_tasks` (T4) as a plain-text viewer, concept port with no copied text; it reads `odd/tasks/*.md` of known projects (roots recorded from the prompt section's session `cwd`) and of the command process's own directory |
@@ -92,7 +117,7 @@ Initial port at gentle-ai `f182ea2` (v3.7.0) and gentle-shell `4d702a4`
 | Pi `gentle:status` (`extensions/gentle-ai.ts`) | ported: `/odd_status` (T6), concept port with no copied text: version, prompt section size, skills, subagents, changes, ODD features, gentle-ai binary against the lock minimum, cached RDD mode, supported upstreams |
 | Pi `gentle:doctor` (`extensions/gentle-ai.ts`) | ported: `/odd_doctor` (T6), concept port with no copied text: pass/warn/fail checks with remedies for the gentle-ai binaries on `PATH`, RDD mode (`gentle-ai review mode status --json`), `SOUL.md` size, managed blocks and Hermes truncation, the plugin surface and `ctx.state`, the upstream lock and Hermes |
 | Pi doctor/status checks for package assets, OpenSpec config, skill registry, model routing and the dev binary | not portable: Pi package and runtime plumbing (OpenSpec is SDD) |
-| Pi views: review mode, persona | pending: T7, T9 (`/odd_commands` ported) |
+| Pi views: review mode, persona | review mode ported: `/odd_review_mode` (T7); persona pending: T9 (`/odd_commands` ported) |
 | gentle-ai `internal/assets/skills/hermes-ephemeral-delegation` | pending: T10 review against `odd-delegation`; its frontmatter declares Apache-2.0, confirm licensing before deriving |
 | gentle-ai `internal/assets/hermes/persona-*.md` | pending: T9 (`/odd_persona`) |
 | SDD assets, agents, chains, skills, commands, preflight | not portable: hermes-odd ships no SDD |
@@ -106,8 +131,8 @@ Included in the pin; decisions below record what hermes-odd takes from each.
 
 | Commit | Subject | Decision |
 |---|---|---|
-| `2ac9c68` | feat(sidebar): add RDD status contract and renderer | partly ported (T6): `/odd_status` and `/odd_doctor` show the RDD mode in gentle-ai's own wording; the lineage labels (`Reviewing`, `Awaiting consent`, ...) are pending: T8 (they need the review facade); the sidebar widget is not portable (Pi TUI) |
-| `8becfd8` | fix(sidebar): distinguish pending reviews and accept replayed starts | pending: T8, pending vs replayed START semantics belong to the review facade; nothing to port for the review mode shown in T6 |
+| `2ac9c68` | feat(sidebar): add RDD status contract and renderer | partly ported (T6): `/odd_status` and `/odd_doctor` show the RDD mode in gentle-ai's own wording; the lineage labels (`Reviewing`, `Awaiting consent`, ...) are not applicable until native review exists on Hermes (T8, blocked upstream); the sidebar widget is not portable (Pi TUI) |
+| `8becfd8` | fix(sidebar): distinguish pending reviews and accept replayed starts | not applicable until native review exists on Hermes (T8, blocked upstream): pending vs replayed START semantics belong to the review facade; nothing to port for the review mode shown in T6 |
 | `b019517` | feat(agents): require user consent before cross-orchestrator communication (#1364) | not portable: gates Pi `orchestrator_send_message` between Pi sessions; hermes-odd adds no inter-session messaging tool |
 | `4210e56` | fix(agents): sanitize consent prompt, derive concrete reason, and handle prompt session change (#1364) | not portable: same Pi messaging consent as `b019517` |
 | `46abadb` | docs(odd): record Gentle Shell v3.7.0 publication | not applicable: upstream feature document |
