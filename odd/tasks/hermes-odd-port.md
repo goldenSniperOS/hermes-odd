@@ -112,7 +112,9 @@ gateway.
 - [x] T9b SOUL cleanup (explicit consent, dry-run + backup): remove gentle-ai SDD blocks
       (sdd-orchestrator, sdd-session-preflight) and agent-routing; move engram-protocol and
       codegraph-guidance to lazy skills; keep remote-authorization.
-- [ ] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
+- [x] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
+- [ ] T11 Re-port upstream test-first ODD policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell
+      a76e6f2/80375c6), decide the setup TDD question, re-render Hermes routing, re-pin.
       upstream sources per component and new upstream commands/skills to triage) +
       scheduled CI.
 
@@ -142,6 +144,10 @@ gateway.
 
 ## Progress
 
+- 2026-09-25: T10 judgment-day, work-unit-commits, chained-pr (own words; upstream skill
+  frontmatter says Apache-2.0 vs MIT repos). Drift run: gentle-ai 36 commits, gentle-shell 81;
+  13 indexed sources changed. T8 still blocked: manifest.go unchanged at head. Needs-port:
+  upstream made test-first the default ODD policy and dropped the strict TDD picker (T11).
 - 2026-09-25: Real SOUL cleanup applied with user consent (88,482 -> 9,862 chars; backup
   SOUL.md.hermes-odd-bak-20260925T210233Z). Repo made public; real `hermes plugins install
   goldenSniperOS/hermes-odd --enable` works after two fixes: manifest_version 1 (installer
@@ -220,4 +226,4 @@ gateway.
 
 ## Next step
 
-T10 portable skills + drift script + scheduled CI; then v0.4.0.
+Release v0.4.0; then T11 (test-first re-port + re-pin) and the gentle-ai Discussion.

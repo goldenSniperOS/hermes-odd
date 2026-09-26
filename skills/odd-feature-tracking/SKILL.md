@@ -74,7 +74,8 @@ One document per feature; no separate plan file or topic.
 ## Checks
 <TDD mode, source, runner; applicable check commands>
 ## Delivery
-<strategy, forecast of authored changed lines, running count, slice boundaries>
+<strategy, forecast of authored changed lines, running count, slice boundaries;
+see hermes-odd:chained-pr and hermes-odd:work-unit-commits>
 ## Progress
 <dated entries; concise rationale for meaningful accepted changes>
 ## Evidence

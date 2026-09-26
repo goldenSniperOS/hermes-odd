@@ -47,7 +47,7 @@ Native RDD review is blocked upstream for Hermes (see
   never enter the always-on skills index):
   - `hermes-odd:odd-workflow` — full ODD protocol, routing ladder and
     triggers, research depth, lossless blocking prompts over chat, checks
-    and TDD, commits and delivery strategy.
+    and TDD, and pointers to the commit, delivery and review skills.
   - `hermes-odd:odd-delegation` — `delegate_task` mechanics, mission
     template, allowed edit surfaces for writers.
   - `hermes-odd:odd-feature-tracking` — feature document template,
@@ -61,6 +61,24 @@ Native RDD review is blocked upstream for Hermes (see
   - `hermes-odd:codegraph` — CodeGraph before broad searches for structural
     questions, worktree placement, lazy `codegraph init` (moved here from
     `SOUL.md` by `/odd_soul`).
+  - `hermes-odd:work-unit-commits` — the ODD commit rules: every task closes
+    with a work-unit commit (behavior plus its tests and docs, Conventional
+    Commit message) recorded as evidence; the advisory ~400-line per-task
+    heuristic and the running line count.
+  - `hermes-odd:chained-pr` — PR slicing under a 400-line review budget: the
+    delivery strategies (`ask-on-risk`, `auto-chain`, `single-pr`,
+    `exception-ok`), stacked PRs vs a feature-branch chain with a tracker
+    PR, and the `gh` commands.
+  - `hermes-odd:judgment-day` — blind dual review on request: two read-only
+    `delegate_task` judges, one `clarify` before any fix, at most two fix and
+    re-judge rounds. Advisory: no receipt, no delivery authority.
+  - `hermes-odd:rdd-review`, `hermes-odd:rdd-review-lenses` — RDD on Hermes
+    and the receipt-less 4R lenses (see [RDD on Hermes](#rdd-on-hermes)).
+
+  The section and the skills name these by their qualified `hermes-odd:`
+  names on purpose: a same-named bare skill in `~/.hermes/skills` (for
+  example one installed by gentle-ai) may describe workflows hermes-odd does
+  not ship.
 - **Skill pointers:** one line pointing to `hermes-odd:engram-protocol`
   while the `engram_protocol` preference is `auto` (the default), and one
   pointing to `hermes-odd:codegraph` while `codegraph_guidance` is `auto` and
@@ -83,9 +101,31 @@ hermes-odd supports **gentle-ai v3.7.0** (binary >= 3.7.0) and **gentle-shell
 v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits in
 [`upstream/upstream.lock.json`](upstream/upstream.lock.json).
 [`upstream/SUPPORTED.md`](upstream/SUPPORTED.md) has the support matrix per
-component (ODD, RDD, review contract, viewers, persona), the upstream sync procedure and
-the triage log that records, for every upstream change, whether it was ported,
-is not portable (and why) or is pending.
+component (ODD, RDD, review contract, viewers, persona, SOUL cleanup,
+portable skills), the upstream sync procedure and the triage log that records,
+for every upstream change, whether it was ported, is not portable (and why) or
+is pending.
+
+Drift is checked by `scripts/check_upstream_drift.py` (standard library
+only). It clones or fetches both upstreams into a cache directory
+(`--cache`, or `HERMES_ODD_UPSTREAM_CACHE`), verifies that each pinned commit
+is an ancestor of the upstream default branch, re-hashes every indexed source
+at the pin (it must match the lock) and at the head, and reports changed and
+deleted sources per component with their commits, new upstream skills and
+guidance files to triage (SDD excluded), and whether the canonical routing
+needs a Go re-render:
+
+```bash
+python scripts/check_upstream_drift.py --format markdown   # or --format json
+# exit 0 clean, 1 drift (--exit-zero turns it into 0), 2 error
+```
+
+The **Upstream drift** workflow (`.github/workflows/upstream-drift.yml`) runs
+it every Monday and on demand. An error fails the job; drift opens, or
+updates, one issue titled `[upstream-drift] Upstream changes to triage`
+whose body follows the upstream port request template. The job creates the
+template's `upstream-port` and `needs-triage` labels itself
+(`gh label create --force`) before using them.
 
 ## Install
 
@@ -449,6 +489,7 @@ Layout:
   `SUPPORTED.md`) and vendored canonical sources for drift tracking.
 - `tests/` — `unittest` suite with a fake plugin context.
 - `scripts/smoke_e2e.py` — isolated load through Hermes' own plugin manager.
+- `scripts/check_upstream_drift.py` — upstream drift report over the lock.
 - `docs/design.md` — architecture, prompt budget and Hermes API facts.
 
 ## Credits and acknowledgements

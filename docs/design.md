@@ -44,7 +44,9 @@ contributes these surfaces:
    `ctx.register_skill` and exposed as `hermes-odd:<name>`. They never enter
    the always-on skills index; the agent loads them with `skill_view` when the
    section tells it to. Detail lives here: `odd-workflow`, `odd-delegation`,
-   `odd-feature-tracking`, `rdd-review`, `rdd-review-lenses` and `setup`.
+   `odd-feature-tracking`, `work-unit-commits`, `chained-pr`, `rdd-review`,
+   `rdd-review-lenses`, `judgment-day`, `setup`, `engram-protocol` and
+   `codegraph` (see [Portable skills](#portable-skills)).
 3. **Plain-text slash commands** (`/odd_*`) whose handlers never call the
    model, so the CLI, the TUI and every gateway get identical output.
 4. **One tool**, `odd_setup_apply`, the model's write path for the first-run
@@ -739,6 +741,42 @@ BLOCKER/CRITICAL findings block, and the result is labeled "advisory review —
 no receipt". The skills are split so the charters load only when a review
 actually runs.
 
+## Portable skills
+
+Three gentle-ai workflow skills are rebuilt for Hermes (T10):
+`hermes-odd:judgment-day`, `hermes-odd:work-unit-commits` and
+`hermes-odd:chained-pr`.
+
+- **Behavior only.** The upstream skill files declare `license: Apache-2.0`
+  in their frontmatter while both upstream repositories are MIT-licensed, so
+  no upstream skill text is copied; each skill restates the behavior in
+  hermes-odd's own words, carries `derived-from` markers, and is indexed in
+  the lock (component `portable-skills`) and in `THIRD_PARTY_NOTICES.md`.
+- **Qualified names.** Plugin skills are reachable only as
+  `hermes-odd:<name>` and never appear in `<available_skills>`. A user may
+  also have bare skills with the same names in `~/.hermes/skills` (for
+  example installed by gentle-ai, with workflows hermes-odd does not ship).
+  The prompt section's last line therefore names every skill it depends on
+  by qualified name and says "never a same-named bare skill"; the skills
+  themselves reference each other only qualified (tested). This costs about
+  60 characters; the largest section combination is 3,789 of 3,800.
+- **One home per rule.** Commit rules live in `work-unit-commits`; delivery
+  and chain strategies in `chained-pr`; `odd-workflow` section 7 only points
+  to them and `odd-feature-tracking` keeps the feature-document template.
+- **Judgment-day vs 4R.** Judgment-day is the adversarial method for a target
+  the user names: two blind read-only judges in one `delegate_task` call, a
+  frozen ledger merged by the parent (both judges = confirmed, one = suspect,
+  disagreement = the user decides), one `clarify` before the first fix, at
+  most two fix and re-judge rounds, `APPROVED` or `ESCALATED`. It reuses the
+  finding block of `rdd-review-lenses`, replaces the advisory 4R for that
+  target, and like the 4R issues no receipt and authorizes nothing.
+- **Not ported**, with reasons in `upstream/SUPPORTED.md`:
+  `hermes-ephemeral-delegation` (outdated `delegate_task` facts, conflicts
+  with `odd-delegation`), `branch-pr`, `issue-creation`, `comment-writer`,
+  `cognitive-doc-design`, the skill-creator/improver/registry family,
+  `go-testing`, `rdd-defect-workflow`, `systemic-issue-triage`,
+  `gentle-ai-bench` and the gentle-shell `gentle-ai` harness skill.
+
 ## Install layouts and skill discovery
 
 hermes-odd supports two install layouts:
@@ -770,15 +808,48 @@ hermes-odd tracks upstream by pinned commits, not by following branches:
 - `upstream/upstream.lock.json` (schema `hermes-odd.upstream-lock/v1`) pins
   the supported gentle-ai release, commit and minimum binary version and the
   gentle-shell release, commit and `gentle-pi` version, and indexes every
-  upstream source per component (`odd`, `rdd`, `review-contract`, `viewers`, `persona`)
+  upstream source per component (`odd`, `rdd`, `review-contract`, `viewers`,
+  `persona`, `soul-cleanup`, `portable-skills`)
   with its SHA-256 at the pin; `hermes_odd.upstream.load_lock()` reads it from
   `hermes_odd/_upstream` (wheel) or `upstream/` (git clone), the same order as
   the skills. `upstream/SUPPORTED.md` keeps the human support matrix, the sync
   procedure and a triage log per upstream release (ported / not portable and
   why / pending); tests cross-check lock, markers, notices and canonical
   render;
-- **pending (T10):** a drift script over the lockfile reports changed upstream
-  sources and new upstream commands or skills to triage, run by scheduled CI.
+- `scripts/check_upstream_drift.py` (standard library, reusing
+  `hermes_odd.upstream`) turns the lock into a drift report:
+  - it indexes the lock's `sources` by `(upstream, path)`, deduplicated, with
+    every component that uses each; a source with two hashes is an error;
+  - it keeps blobless clones (`git clone --filter=blob:none --no-checkout`)
+    in `--cache` or `HERMES_ODD_UPSTREAM_CACHE` (default: the maintainers'
+    existing cache directory under `~/.cache`), fetching when they exist, and
+    finds the default branch with `git ls-remote --symref origin HEAD`;
+  - errors (exit 2): a pin that does not exist or is not an ancestor of the
+    head (rewritten history), a source missing at the pin, or a lock hash
+    that does not match the file at the pin;
+  - drift (exit 1): an indexed source `changed` or `deleted` at the head
+    (with its commits from pin to head), or a new upstream file matching the
+    script's watch globs (skills, Hermes and generic assets, agent guidance,
+    capability manifest, review CLI and contracts; gentle-shell skills,
+    assets, extensions, agents/review/changes/todo libraries, docs), minus
+    SDD paths and tests; commits beyond the pin alone are reported but are
+    not drift;
+  - a change to `routing.go` or `manifest.go` flags a Go re-render of the
+    canonical routing;
+  - `--format json` (schema `hermes-odd.upstream-drift/v1`) or `markdown`,
+    whose headings are the upstream port request template's labels (tested),
+    so it doubles as the issue body; `--offline` skips network access and
+    `--exit-zero` turns drift into exit 0 (errors still exit 2);
+  - tests build throwaway git repositories; they need no network.
+- The **Upstream drift** workflow runs the script weekly (Monday) and on
+  demand with `contents: read` and `issues: write` and one concurrency group.
+  Exit 2 fails the job; exit 1 creates or edits the single open issue titled
+  `[upstream-drift] Upstream changes to triage`. Labels: the job runs
+  `gh label create --force` for the template's `upstream-port` and
+  `needs-triage` labels (the repository only had GitHub's defaults), so the
+  labels exist before `gh issue create`/`edit` use them. The issue stays open
+  while drift remains: pins only move after the changed sources are re-ported
+  (step 7 of the sync procedure).
 
 Port requests use the **Upstream port request** issue template. SDD, Pi-only
 aesthetics and Pi runtime plumbing are recorded as not portable.

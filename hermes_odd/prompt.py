@@ -54,15 +54,15 @@ Mandatory delegation triggers via `delegate_task` (not advisory; executing past 
 - Verification: running check commands beyond a 1-3 file read-only check -> a verifier child.
 Inline only for 1-3 known files or one mechanical edit. Children know nothing of this chat, cannot call clarify and run in the background: send self-contained missions, keep one writer per worktree, treat summaries as self-reports and verify them.
 
-Blocking questions: use `clarify` (one decision, closed choices, recommended first). Without it, send the complete question and every option as plain chat, then stop and wait.
+Blocking questions: use `clarify` (one decision, closed choices, recommended first). Without it, send the full question and every option as plain chat, then stop.
 
 Language: reply in the user's language; code, comments, commits, docs and task files in English.
 
-Review: native review runs only under the user-owned RDD switch; load hermes-odd:rdd-review.
+Review: native review only under the user-owned RDD switch; load hermes-odd:rdd-review.
 
 Formal SDD is not provided by this plugin.
 
-Before substantial work load with `skill_view`: hermes-odd:odd-workflow (routing, checks, delivery), hermes-odd:odd-feature-tracking (feature document, Engram mirror, resume, todo); before delegating: hermes-odd:odd-delegation (missions, edit surfaces).
+Load with `skill_view` by qualified name, never a same-named bare skill: substantial work hermes-odd:odd-workflow, hermes-odd:odd-feature-tracking; delegating hermes-odd:odd-delegation; commits, PRs hermes-odd:work-unit-commits, hermes-odd:chained-pr; dual review hermes-odd:judgment-day.
 """
 
 

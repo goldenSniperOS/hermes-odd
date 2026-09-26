@@ -114,7 +114,9 @@ class SkillFileTests(unittest.TestCase):
             with self.subTest(skill=path.parent.name):
                 text = path.read_text(encoding="utf-8").replace(ALLOWED_SDD_SENTENCE, "")
                 self.assertIsNone(SDD_RE.search(text), SDD_RE.findall(text))
-                self.assertNotIn("judgment day", text.lower())
+                # Only the SDD-free port may name its own trigger phrase.
+                if path.parent.name != "judgment-day":
+                    self.assertNotIn("judgment day", text.lower())
 
     def test_skills_stay_small(self) -> None:
         for path in SKILLS_DIR.glob("*/SKILL.md"):
@@ -140,6 +142,61 @@ class SkillFileTests(unittest.TestCase):
             text = path.read_text(encoding="utf-8").lower()
             for pattern in patterns:
                 self.assertNotIn(pattern, text, f"{path.parent.name}: {pattern}")
+
+
+PORTABLE_SKILLS = ("judgment-day", "work-unit-commits", "chained-pr")
+# A portable skill name without the ``hermes-odd:`` prefix points to a
+# same-named bare skill outside this plugin (for example in ~/.hermes/skills).
+BARE_REF_RE = re.compile(r"(?<![:\w-])(judgment-day|work-unit-commits|chained-pr)(?![\w-])")
+
+
+class PortableSkillTests(unittest.TestCase):
+    def test_section_points_to_portable_skills_by_qualified_name(self) -> None:
+        section = build_odd_section()
+        for name in PORTABLE_SKILLS:
+            self.assertIn(f"{SKILL_NAMESPACE}:{name}", section)
+        self.assertIn("never a same-named bare skill", section)
+
+    def test_skills_reference_portable_skills_only_qualified(self) -> None:
+        for path in SKILLS_DIR.glob("*/SKILL.md"):
+            _, body = parse_frontmatter(path.read_text(encoding="utf-8"))
+            body = re.sub(r"<!-- derived-from: .*? -->", "", body)
+            with self.subTest(skill=path.parent.name):
+                bare = [m.group(1) for m in BARE_REF_RE.finditer(body)]
+                self.assertEqual(bare, [], "reference hermes-odd:<name>, not a bare skill")
+
+    def test_judgment_day_is_advisory_and_bounded(self) -> None:
+        raw = (SKILLS_DIR / "judgment-day" / "SKILL.md").read_text(encoding="utf-8")
+        text = " ".join(raw.split())
+        for token in (
+            "no receipt",
+            "no delivery authority",
+            "delegate_task",
+            "exactly once with `clarify`",
+            "at most two",
+            "There is no third round",
+            "hermes-odd:rdd-review",
+            "hermes-odd:rdd-review-lenses",
+            "never run both",
+            "JUDGMENT: APPROVED",
+            "JUDGMENT: ESCALATED",
+        ):
+            self.assertIn(token, text)
+
+    def test_commit_rules_live_in_one_skill(self) -> None:
+        workflow = (SKILLS_DIR / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        commits = (SKILLS_DIR / "work-unit-commits" / "SKILL.md").read_text(encoding="utf-8")
+        chained = (SKILLS_DIR / "chained-pr" / "SKILL.md").read_text(encoding="utf-8")
+        # The advisory per-task heuristic and the delivery strategies each
+        # have one home; odd-workflow only points to them.
+        self.assertIn("Never shrink a diff cosmetically", commits)
+        self.assertNotIn("planning heuristic", workflow)
+        self.assertNotIn("planning heuristic", chained)
+        for token in ("`ask-on-risk` (default)", "`feature-branch-chain`", "400"):
+            self.assertIn(token, chained)
+        self.assertNotIn("`ask-on-risk` (default)", workflow)
+        self.assertIn("hermes-odd:work-unit-commits", workflow)
+        self.assertIn("hermes-odd:chained-pr", workflow)
 
 
 class FrontmatterParserTests(unittest.TestCase):

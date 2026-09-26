@@ -27,6 +27,9 @@ Files in this repository derived from gentle-ai:
   `internal/assets/hermes/persona-gentleman.md` and
   `internal/assets/hermes/persona-neutral.md`)
 - `hermes_odd/prompt.py`
+- `skills/chained-pr/SKILL.md` (the review-budget, delivery-strategy and
+  chain-strategy behavior of `internal/assets/skills/chained-pr/SKILL.md` and
+  its `references/chaining-details.md`, restated in hermes-odd's own words)
 - `skills/codegraph/SKILL.md` (the CodeGraph guidance of
   `CodeGraphGuidanceMarkdown` in
   `internal/components/communitytool/codegraph_guidance.go`, condensed in
@@ -34,13 +37,27 @@ Files in this repository derived from gentle-ai:
 - `skills/engram-protocol/SKILL.md` (the Engram™ memory protocol, full
   variant of `internal/assets/engram/protocol.md`, condensed in hermes-odd's
   own words and bound to Hermes' `mcp__engram__*` tool names)
+- `skills/judgment-day/SKILL.md` (the blind dual-review behavior of
+  `internal/assets/skills/judgment-day/SKILL.md` and its
+  `references/prompts-and-formats.md`, restated in hermes-odd's own words for
+  `delegate_task` and `clarify`)
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`
 - `skills/rdd-review/SKILL.md`
+- `skills/work-unit-commits/SKILL.md` (the commit-unit behavior of
+  `internal/assets/skills/work-unit-commits/SKILL.md` and the ODD commit
+  closure of `internal/components/agentguidance/routing.go`, restated in
+  hermes-odd's own words)
 - `upstream/odd-routing-hermes.canonical.md` (verbatim render of
   `agentguidance.RenderRouting(model.AgentHermes)` from
   `internal/components/agentguidance/routing.go`, vendored for drift tracking)
+
+License note: the upstream skill files above declare `license: Apache-2.0`
+in their frontmatter, while the gentle-ai repository is MIT-licensed (its
+`LICENSE`, reproduced below). hermes-odd copies no upstream skill text; the
+three skill ports carry over behavior only, in hermes-odd's own words, and
+are credited under this MIT notice. See `upstream/SUPPORTED.md` (T10 entry).
 
 License text:
 

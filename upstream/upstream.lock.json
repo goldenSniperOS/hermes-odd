@@ -391,6 +391,49 @@
           "sha256": "9c2fde4551cb25e5dddd39188553be3ed545714997796e453281f8a3290e9b81"
         }
       ]
+    },
+    "portable-skills": {
+      "status": "ported",
+      "tasks": ["T10"],
+      "description": "Portable gentle-ai workflow skills rebuilt for Hermes: hermes-odd:judgment-day (blind dual review, advisory), hermes-odd:work-unit-commits (ODD commit closure) and hermes-odd:chained-pr (400-line review budget, delivery and chain strategies).",
+      "port_notes": "T10: behavior-only ports in hermes-odd's own words; no upstream skill text is copied. The upstream skill files declare `license: Apache-2.0` in their frontmatter while both upstream repositories are MIT-licensed (LICENSE), so hermes-odd carries over behavior only and credits the MIT notices (THIRD_PARTY_NOTICES.md). Bound to Hermes: delegate_task (two blind read-only judges, one bounded fixer), clarify (one question before any fix; the chain strategy), terminal (git, gh), skill_view with qualified hermes-odd:<name> names (bare same-named skills in ~/.hermes/skills may carry workflows hermes-odd does not ship). Judgment-day is advisory (no receipt, no delivery authority) and replaces the advisory 4R of rdd-review for its target; findings reuse the rdd-review-lenses block. The commit and delivery rules moved out of skills/odd-workflow section 7 so each rule lives in one skill (routing.go is the shared source). The gentle-shell copies (skills/judgment-day, skills/work-unit-commits, skills/chained-pr) are not indexed; the default-branch check of gentle-shell 4014403 is restated in chained-pr.",
+      "local_files": [
+        "skills/judgment-day/SKILL.md",
+        "skills/work-unit-commits/SKILL.md",
+        "skills/chained-pr/SKILL.md"
+      ],
+      "sources": [
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/skills/judgment-day/SKILL.md",
+          "sha256": "ac2a4fcfd762d8e3a873742f05a71287f96294f5063d740957f81b41ff8b8486"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/skills/judgment-day/references/prompts-and-formats.md",
+          "sha256": "583f50d14a7d6229056c2df49868f12cb2d44c8da0c4bf331e61973d79620de5"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/skills/work-unit-commits/SKILL.md",
+          "sha256": "5c2d94572eec8ae15de5340500cea7f3500aacc668475bf47dc4a9275928409e"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/skills/chained-pr/SKILL.md",
+          "sha256": "3307bfceb9a0f40d0ddd885e00cfd3851eabc9c9126f82caaa2c3e54fa68b3f8"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/assets/skills/chained-pr/references/chaining-details.md",
+          "sha256": "09534b2a10a6819721cbb4b08a59bcb859b2859e65bb2977c7b979a2307e10f3"
+        },
+        {
+          "upstream": "gentle-ai",
+          "path": "internal/components/agentguidance/routing.go",
+          "sha256": "d00d1942ee623660707e7296dd6f66a37b87aa56e940c325a2f111efad864ea6"
+        }
+      ]
     }
   },
   "excluded": [

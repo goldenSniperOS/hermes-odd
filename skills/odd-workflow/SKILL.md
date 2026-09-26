@@ -8,7 +8,7 @@ metadata:
   hermes:
     tags: [workflow, odd, delegation, orchestration, gentle-ai-compatible]
     category: workflow
-    related_skills: [odd-feature-tracking]
+    related_skills: [odd-feature-tracking, odd-delegation, work-unit-commits, chained-pr]
 ---
 <!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/components/agentguidance/routing.go -->
 <!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/orchestrator-delegation.md -->
@@ -151,27 +151,22 @@ When you or a tool must block on the human (including a child's
 
 ## 7. Commits, delivery and review workload
 
-- Every task closes with at least one work-unit commit on the feature branch
-  (branch first when on the default branch), Conventional Commit message,
-  tests and docs with the behavior; record the commit id as evidence.
-- Push, pull request creation and merge are the user's decisions.
-- About 400 authored changed lines (additions plus deletions) per task is a
-  planning heuristic only — not a cap, stop, split or review trigger. If the
-  clear solution exceeds it, say why and continue. Never strip whitespace or
-  comments, omit tests or split artificially to fit. Forward this same
-  advisory note to children.
-- At feature-document creation forecast authored changed lines and keep a
-  running count from commits. Pick one delivery strategy per feature:
-  `ask-on-risk` (default), `auto-chain`, `single-pr` or `exception-ok`. When
-  the forecast or count exceeds about 400 lines, apply it before the next
-  commit: `ask-on-risk` asks once for `stacked-to-main` or
-  `feature-branch-chain`; `auto-chain` asks only for a missing chain
-  strategy. Cache the choices and record slice boundaries (which commits each
-  PR holds) in the feature document. Resolve the `work-unit-commits` and
-  `chained-pr` skills by name with `skills_list`; report if missing.
-- The review candidate is a work-unit commit or a PR slice, never a TODO
-  checkbox or the accumulated branch. Native review runs only under the
-  user-owned RDD switch; load `hermes-odd:rdd-review` for it.
+Each rule lives in one skill; load it by its qualified name, never a
+same-named bare skill (those may carry workflows this plugin does not ship):
+
+- `hermes-odd:work-unit-commits`: closing every task with a work-unit
+  commit, Conventional Commit messages, the commit id as evidence, the
+  advisory ~400-line per-task heuristic and the running line count.
+- `hermes-odd:chained-pr`: the per-feature delivery strategy (`ask-on-risk`,
+  `auto-chain`, `single-pr`, `exception-ok`), the chain strategy
+  (`stacked-to-main`, `feature-branch-chain`), slice boundaries and the `gh`
+  commands.
+- `hermes-odd:rdd-review`: the review candidate (a work-unit commit or a PR
+  slice) and native review under the user-owned RDD switch.
+- `hermes-odd:judgment-day`: only when the user asks for a dual or
+  adversarial review; advisory, no receipt.
+
+Push, pull request creation and merge are the user's decisions.
 
 ## 8. Skills for children
 

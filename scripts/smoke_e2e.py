@@ -7,8 +7,9 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
 * ``odd-commands`` is registered and its handler lists itself as plain text;
 * the ``hermes-odd-workflow`` prompt section is registered, renders, and fits
   in 4000 characters;
-* the ``hermes-odd:*`` skills (three ODD skills, ``rdd-review``,
-  ``rdd-review-lenses`` and ``setup``) are registered;
+* the ``hermes-odd:*`` skills (``EXPECTED_SKILLS``: the ODD, RDD, setup,
+  memory and CodeGraph skills plus the portable ``judgment-day``,
+  ``work-unit-commits`` and ``chained-pr``) are registered;
 * first-run setup: the fresh home renders the section with the
   setup-pending line; with a synthetic ``SOUL.md`` (user text plus a gentle-ai
   block) the ``odd_setup_apply`` tool is registered in Hermes' tool registry
@@ -89,14 +90,17 @@ COMMAND_KEY = "odd-commands"
 SECTION_ID = "hermes-odd-workflow"
 SECTION_LIMIT = 4000
 EXPECTED_SKILLS = [
+    "chained-pr",
     "codegraph",
     "engram-protocol",
+    "judgment-day",
     "odd-delegation",
     "odd-feature-tracking",
     "odd-workflow",
     "rdd-review",
     "rdd-review-lenses",
     "setup",
+    "work-unit-commits",
 ]
 SETUP_PENDING_LINE = (
     "hermes-odd setup is pending: when the user is not mid-task, offer it once "
@@ -589,7 +593,7 @@ def run_health(manager, temp_home: Path) -> None:
     status = status_cmd["handler"]("")
     check(status.startswith("hermes-odd "), "/odd-status starts with the plugin version")
     check(f"Prompt: {SECTION_ID} " in status, "/odd-status shows the prompt section")
-    check("Skills: 8 (" in status, "/odd-status counts the skills")
+    check(f"Skills: {len(EXPECTED_SKILLS)} (" in status, "/odd-status counts the skills")
     check("Native review on Hermes: " in status, "/odd-status shows native review availability")
     check("Subagents: " in status and "Changes (24 h): 2 files" in status, "status reads stores")
     check("ODD features: " in status, "/odd-status counts feature documents")

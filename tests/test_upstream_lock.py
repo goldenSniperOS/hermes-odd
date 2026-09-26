@@ -25,7 +25,16 @@ NOTICES = REPO_ROOT / "THIRD_PARTY_NOTICES.md"
 MARKER_RE = re.compile(r"<!-- derived-from: (gentle-ai|gentle-shell)@([0-9a-f]{40}) (\S+) -->")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 UPSTREAMS = ("gentle-ai", "gentle-shell")
-COMPONENTS = ("odd", "rdd", "review-contract", "viewers", "persona", "soul-cleanup")
+COMPONENTS = (
+    "odd",
+    "rdd",
+    "review-contract",
+    "viewers",
+    "persona",
+    "soul-cleanup",
+    "portable-skills",
+)
+PORTABLE_SKILLS = ("judgment-day", "work-unit-commits", "chained-pr")
 STATUSES = {"ported", "partial", "pending"}
 # Local read-only upstream checkouts (developer machines only; CI has none).
 # The directory name is built from parts so the old-name test never matches it.
@@ -200,6 +209,37 @@ class LockConsistencyTests(unittest.TestCase):
         self.assertIn("hermes_odd/personas.py", self.lock["components"]["persona"]["local_files"])
         supported = SUPPORTED.read_text(encoding="utf-8")
         self.assertIn("ported as the first-run setup", supported)
+
+    def test_portable_skill_markers_are_indexed_under_portable_skills(self) -> None:
+        component = self.lock["components"]["portable-skills"]
+        self.assertEqual(component["status"], "ported")
+        indexed = {(s["upstream"], s["path"]) for s in component["sources"]}
+        for name in PORTABLE_SKILLS:
+            with self.subTest(skill=name):
+                rel = f"skills/{name}/SKILL.md"
+                self.assertIn(rel, component["local_files"])
+                text = (REPO_ROOT / rel).read_text(encoding="utf-8")
+                markers = {(u, p) for u, _c, p in MARKER_RE.findall(text)}
+                self.assertIn(("gentle-ai", f"internal/assets/skills/{name}/SKILL.md"), markers)
+                self.assertLessEqual(markers, indexed)
+        # Behavior-only ports: the Apache-2.0 frontmatter conflict is recorded.
+        self.assertIn("Apache-2.0", component["port_notes"])
+        supported = SUPPORTED.read_text(encoding="utf-8")
+        for skipped in (
+            "hermes-ephemeral-delegation",
+            "branch-pr",
+            "issue-creation",
+            "comment-writer",
+            "cognitive-doc-design",
+            "skill-creator",
+            "skill-improver",
+            "skill-registry",
+            "go-testing",
+            "rdd-defect-workflow",
+            "systemic-issue-triage",
+            "gentle-ai-bench",
+        ):
+            self.assertIn(f"`{skipped}`", supported)
 
     def test_odd_indexes_routing_and_capability_manifest(self) -> None:
         sources = {(s["upstream"], s["path"]) for s in self.lock["components"]["odd"]["sources"]}

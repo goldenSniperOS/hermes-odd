@@ -72,8 +72,40 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `engram_protocol`, `soul_cleanup` (`unset`, `yes`, `later`, `no`) and
   `codegraph_guidance` (`auto`, `off`); `/odd_setup codegraph <auto|off>`. A chosen TDD mode adds one `TDD mode:` line
   to the prompt section, which `hermes-odd:odd-workflow` reads.
+- Portable skills, rebuilt for Hermes in hermes-odd's own words (behavior only; the
+  upstream skill files declare Apache-2.0 in their frontmatter while the upstream
+  repositories are MIT): `hermes-odd:judgment-day` (blind dual review by two read-only
+  `delegate_task` judges, the parent merges one frozen ledger, one `clarify` before any
+  fix, at most two fix and re-judge rounds; advisory, no receipt, no delivery
+  authority), `hermes-odd:work-unit-commits` (the ODD commit closure rules) and
+  `hermes-odd:chained-pr` (400-line review budget, delivery and chain strategies, `gh`
+  through `terminal`).
+- `scripts/check_upstream_drift.py` (standard library only): clones or fetches both
+  upstreams into `--cache` / `HERMES_ODD_UPSTREAM_CACHE`, checks that each pin exists and
+  is an ancestor of the default branch, re-hashes every indexed source at the pin
+  against the lock and at the head (changed, deleted, unchanged, with the commits per
+  source), lists new upstream skills and guidance files to triage (SDD excluded) and
+  flags a Go re-render when `routing.go` or `manifest.go` change. `--format json`
+  (schema `hermes-odd.upstream-drift/v1`) or `markdown`, `--output`, `--offline`,
+  `--exit-zero`; exit 0 clean, 1 drift, 2 error.
+- Scheduled workflow **Upstream drift** (weekly and on demand, `contents: read`,
+  `issues: write`): an error fails the job; drift opens or updates one
+  `[upstream-drift] Upstream changes to triage` issue with the port request template
+  headings, creating the `upstream-port` and `needs-triage` labels idempotently.
 
 ### Changed
+- The prompt section names the portable skills by qualified name only
+  (`hermes-odd:work-unit-commits`, `hermes-odd:chained-pr`, `hermes-odd:judgment-day`),
+  never a same-named bare skill; the largest combination is 3,789 characters (cap 3,800).
+- `hermes-odd:odd-workflow` section 7 now points to the commit, delivery and review
+  skills instead of repeating their rules, so each rule lives in one skill;
+  `hermes-odd:rdd-review` points to `hermes-odd:judgment-day` for dual reviews.
+- Upstream lock: new component `portable-skills`; `upstream/SUPPORTED.md` records the
+  skill decisions (ported, and not ported with reasons) and the first drift triage of
+  every commit past the pins (gentle-ai up to `6c7f162f`, gentle-shell up to `5456811`).
+  Pins unchanged: the default applicable test-first policy (gentle-ai `55e3abf1`,
+  gentle-shell `a76e6f2`) needs a port and the canonical routing a re-render first.
+  The capability manifest is unchanged, so native review (T8) stays blocked.
 - `/odd_doctor`'s SOUL.md check recommends `/odd_soul plan` (with the blocks to remove
   and the characters saved) when the cleanup would help.
 - With the default preferences the prompt section now ends with the Engram skill pointer

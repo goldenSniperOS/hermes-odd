@@ -9,7 +9,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from fake_context import FakeContext, FakeState, ensure_repo_on_path
+from fake_context import REPO_ROOT, FakeContext, FakeState, ensure_repo_on_path
 
 ensure_repo_on_path()
 
@@ -439,7 +439,8 @@ class PluginCheckTests(unittest.TestCase):
         self.assertEqual(check.level, OK, check.finding)
         self.assertIn("section hermes-odd-workflow", check.finding)
         self.assertIn("(all plugins share 8000)", check.finding)
-        self.assertIn("skills 8 (clone)", check.finding)
+        shipped = len(list((REPO_ROOT / "skills").glob("*/SKILL.md")))
+        self.assertIn(f"skills {shipped} (clone)", check.finding)
         self.assertIn("hooks 5/5", check.finding)
         self.assertIn("state ok", check.finding)
 

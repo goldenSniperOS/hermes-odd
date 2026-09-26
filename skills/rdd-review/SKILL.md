@@ -8,7 +8,7 @@ metadata:
   hermes:
     tags: [workflow, rdd, review, 4r, gentle-ai-compatible]
     category: workflow
-    related_skills: [rdd-review-lenses, odd-workflow, odd-delegation]
+    related_skills: [rdd-review-lenses, judgment-day, odd-workflow, odd-delegation]
 ---
 <!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/agents/capabilitymanifest/manifest.go -->
 <!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/chains/4r-review.chain.md -->
@@ -75,7 +75,9 @@ Hard rules:
 Only when the user asks for a review, or accepts your offer for a medium or
 high risk candidate (auth, data, money, migrations, concurrency, public APIs,
 security-sensitive code). Offer it once with `clarify`, recommended choice
-first; do not offer it for small, low-risk work.
+first; do not offer it for small, low-risk work. When the user asks for a
+dual or adversarial review instead, load `hermes-odd:judgment-day` (two
+blind judges, also advisory); never run both on the same candidate.
 
 1. Freeze the candidate as a commit and note its sha. Review exactly
    `git show <sha>` (and `git show --stat <sha>`), never the live worktree.
