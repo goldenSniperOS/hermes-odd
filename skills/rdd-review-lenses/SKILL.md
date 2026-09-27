@@ -10,11 +10,11 @@ metadata:
     category: workflow
     related_skills: [rdd-review, odd-delegation]
 ---
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/agents/review-risk.md -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/agents/review-resilience.md -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/agents/review-readability.md -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/agents/review-reliability.md -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/chains/4r-review.chain.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-risk.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-resilience.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-readability.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-reliability.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/chains/4r-review.chain.md -->
 
 # 4R lens charters (advisory, no receipt)
 

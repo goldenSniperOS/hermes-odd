@@ -472,7 +472,7 @@ class LockAndHermesTests(unittest.TestCase):
         now = 1_790_000_000.0  # 2026-09-21T...
         check, data = check_lock(lambda: lock, now)
         self.assertIsNotNone(data)
-        self.assertIn("gentle-ai v3.7.0 @f182ea2 · gentle-shell v3.7.0 @4d702a4", check.finding)
+        self.assertIn("gentle-ai v3.7.0 @a9e36e9 · gentle-shell v3.7.0 @b756b4f", check.finding)
         check, _ = check_lock(lambda: lock, now + 90 * 86400)
         self.assertEqual(check.level, WARN)
         self.assertIn("upstream/SUPPORTED.md", check.hint)

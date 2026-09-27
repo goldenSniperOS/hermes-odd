@@ -10,8 +10,8 @@ metadata:
     category: workflow
     related_skills: [odd-workflow, odd-feature-tracking, chained-pr]
 ---
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/assets/skills/work-unit-commits/SKILL.md -->
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/work-unit-commits/SKILL.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/components/agentguidance/routing.go -->
 
 # Work-unit commits (ODD)
 
@@ -91,7 +91,9 @@ Checklist:
 
 - [ ] One clear purpose; the repository works with only this commit applied.
 - [ ] Tests and docs for this unit are included where they apply.
-- [ ] The focused check command and its observed result are recorded.
+- [ ] The focused check command and its observed result are recorded, with
+      the observed RED then GREEN when test-first applied, or the exception
+      and its reason (`hermes-odd:odd-workflow` section 6).
 - [ ] A runtime check (command or scenario) and its result are recorded, or
       `N/A` with the reason when no runtime boundary exists.
 - [ ] The rollback boundary names the files or behavior a revert removes.

@@ -50,7 +50,6 @@ from hermes_odd.setup import (  # noqa: E402
     PREF_VALUES,
     SCHEMA,
     STATE_KEY,
-    TDD_LINES,
     Setup,
 )
 from hermes_odd.setup_tool import (  # noqa: E402
@@ -148,7 +147,7 @@ class SectionTests(TempHermesHome):
     def test_default_text_is_byte_identical(self) -> None:
         self.assertEqual(build_odd_section(), ODD_SECTION.strip())
         self.assertEqual(
-            build_odd_section(setup_pending=False, tdd_line=None).encode("utf-8"),
+            build_odd_section(setup_pending=False, pointers=()).encode("utf-8"),
             ODD_SECTION.strip().encode("utf-8"),
         )
 
@@ -163,21 +162,18 @@ class SectionTests(TempHermesHome):
         self.assertEqual(text.count(SETUP_PENDING_LINE), 1)
 
     def test_every_combination_fits_the_budget(self) -> None:
-        lines = [None, *TDD_LINES.values()]
         pointer_sets = [(), (MEMORY_POINTER,), (CODEGRAPH_POINTER,), POINTER_LINES]
         sizes = []
-        for pending, tdd, pointers in itertools.product((False, True), lines, pointer_sets):
-            text = build_odd_section(setup_pending=pending, tdd_line=tdd, pointers=pointers)
+        for pending, pointers in itertools.product((False, True), pointer_sets):
+            text = build_odd_section(setup_pending=pending, pointers=pointers)
             sizes.append(len(text))
-            self.assertLessEqual(len(text), SECTION_BUDGET_CHARS, (pending, tdd, pointers))
+            self.assertLessEqual(len(text), SECTION_BUDGET_CHARS, (pending, pointers))
             self.assertEqual(text, text.strip())
-            if tdd:
-                self.assertEqual(text.count("TDD mode:"), 1)
+            self.assertNotIn("TDD mode:", text)
             for pointer in pointers:
                 self.assertEqual(text.count(pointer), 1)
-        # The largest combination: every pointer, the longest TDD line, pending.
-        longest = max(TDD_LINES.values(), key=len)
-        biggest = build_odd_section(setup_pending=True, tdd_line=longest, pointers=POINTER_LINES)
+        # The largest combination: every pointer and the pending line.
+        biggest = build_odd_section(setup_pending=True, pointers=POINTER_LINES)
         self.assertEqual(max(sizes), len(biggest))
         self.assertLessEqual(len(biggest), SECTION_BUDGET_CHARS)
 
@@ -205,13 +201,24 @@ class SectionTests(TempHermesHome):
             ctx.settings["codegraph_guidance"] = "off"
             self.assertEqual(section({}), default_section())
         # A bogus pointer from a broken input is dropped; the section still renders.
-        rendered = make_section_callable(None, lambda: (False, None, ["Injected line"]))({})
+        rendered = make_section_callable(None, lambda: (False, ["Injected line"]))({})
         self.assertEqual(rendered, ODD_SECTION.strip())
 
-    def test_tdd_line_only_when_set(self) -> None:
-        for mode in ("off", "strict", "project"):
-            self.assertTrue(TDD_LINES[mode].startswith("TDD mode: "))
-        self.assertNotIn("TDD mode:", build_odd_section())
+    def test_section_states_the_default_test_first_policy(self) -> None:
+        # Upstream gentle-ai 55e3abf1 / gentle-shell a76e6f2: one default
+        # applicable test-first policy, no TDD mode to choose.
+        text = build_odd_section()
+        for token in (
+            "test-first when a relevant runnable deterministic test",
+            "clear expected outcome",
+            "RED, GREEN, refactor",
+            "tests merely existing do not qualify",
+            "state the exception",
+            "Never invent RED/GREEN or a runner",
+        ):
+            self.assertIn(token, text)
+        self.assertNotIn("TDD mode", text)
+        self.assertNotIn("configured TDD", text)
 
     def test_failing_setup_inputs_never_skip_the_section(self) -> None:
         def boom():
@@ -229,21 +236,42 @@ class SectionTests(TempHermesHome):
         self.assertEqual(section({}), default_section())
         command("reset")
         self.assertTrue(section({}).endswith(SETUP_PENDING_LINE))
-        command("tdd strict")
+        command("verbosity detailed")
         rendered = section({})
         self.assertNotIn(SETUP_PENDING_LINE, rendered)
-        self.assertTrue(rendered.endswith(TDD_LINES["strict"]))
+        self.assertEqual(rendered, default_section())
         self.assertLessEqual(len(rendered), SECTION_BUDGET_CHARS)
 
-    def test_config_value_wins_for_the_tdd_line(self) -> None:
+    def test_legacy_tdd_values_load_and_are_ignored(self) -> None:
+        # Setup records and config.yaml written before the TDD choice was
+        # retired may still hold tdd_mode: they keep loading, add no line.
         ctx = ConfigContext()
-        register(ctx)
-        mark_setup_complete(ctx.state)
+        ctx.state.set(
+            STATE_KEY,
+            {
+                "schema": SCHEMA,
+                "version": 1,
+                "completed_at": "2026-09-25T00:00:00Z",
+                "skipped": False,
+                "answers": {"tdd_mode": "strict", "verbosity": "detailed"},
+                "custom_text": "",
+                "source": "tool",
+            },
+        )
         ctx.settings["tdd_mode"] = "off"
+        register(ctx)
         section = ctx.prompt_sections[0]["content"]
-        self.assertTrue(section({}).endswith(TDD_LINES["off"]))
-        ctx.settings["tdd_mode"] = "bogus"  # invalid config is ignored
         self.assertEqual(section({}), default_section())
+        setup = Setup(ctx, home=lambda: self.temp_home)
+        self.assertFalse(setup.pending())
+        self.assertEqual(setup.answers(), {"verbosity": "detailed"})
+        self.assertNotIn("tdd_mode", setup.effective())
+        status = ctx.commands["odd-setup"]["handler"]("status")
+        self.assertIn("hermes-odd setup: complete", status)
+        self.assertNotIn("TDD", status)
+        # The next save rewrites the record without the retired key.
+        setup.set_answers({"verbosity": "short"})
+        self.assertNotIn("tdd_mode", ctx.state.get(STATE_KEY)["answers"])
 
 
 class CodegraphDetectionTests(unittest.TestCase):
@@ -358,7 +386,6 @@ class ToolSchemaTests(unittest.TestCase):
                 "persona",
                 "persona_custom_text",
                 "verbosity",
-                "tdd_mode",
                 "engram_protocol",
                 "soul_cleanup",
                 "apply_persona_to_soul",
@@ -367,7 +394,7 @@ class ToolSchemaTests(unittest.TestCase):
         self.assertEqual(props["persona"]["enum"], ["rioplatense", "neutral", "custom", "none"])
         self.assertEqual(props["persona_custom_text"]["maxLength"], 1500)
         self.assertEqual(props["apply_persona_to_soul"]["type"], "boolean")
-        for key in ("verbosity", "tdd_mode", "engram_protocol", "soul_cleanup"):
+        for key in ("verbosity", "engram_protocol", "soul_cleanup"):
             self.assertTrue(set(props[key]["enum"]) <= set(PREF_VALUES[key]))
             self.assertNotIn("unset", props[key]["enum"])
         json.dumps(TOOL_SCHEMA)  # serializable
@@ -401,7 +428,7 @@ class ToolTests(HomeCase):
             {"apply_persona_to_soul": True, "persona": "gentleman"},
             {"apply_persona_to_soul": True, "persona": "unset"},
             {"apply_persona_to_soul": True, "verbosity": "long"},
-            {"apply_persona_to_soul": True, "tdd_mode": "unset"},
+            {"apply_persona_to_soul": True, "tdd_mode": "strict"},  # retired: unknown now
             {"apply_persona_to_soul": True, "engram_protocol": "on"},
             {"apply_persona_to_soul": True, "soul_cleanup": "now"},
             {"apply_persona_to_soul": True, "persona": 3},
@@ -431,7 +458,6 @@ class ToolTests(HomeCase):
             {
                 "persona": "rioplatense",
                 "verbosity": "detailed",
-                "tdd_mode": "strict",
                 "engram_protocol": "off",
                 "soul_cleanup": "later",
                 "apply_persona_to_soul": True,
@@ -460,7 +486,6 @@ class ToolTests(HomeCase):
             {
                 "persona": "rioplatense",
                 "verbosity": "detailed",
-                "tdd_mode": "strict",
                 "engram_protocol": "off",
                 "soul_cleanup": "later",
             },
@@ -471,14 +496,14 @@ class ToolTests(HomeCase):
         ctx = ConfigContext()
         setup = self.setup(ctx)
         result = self.call(
-            setup, {"persona": "neutral", "tdd_mode": "off", "apply_persona_to_soul": False}
+            setup, {"persona": "neutral", "engram_protocol": "off", "apply_persona_to_soul": False}
         )
         self.assertTrue(result["ok"])
         self.assertFalse(result["persona_applied"])
         self.assertIn("not applied (not confirmed)", result["summary"])
         self.assertEqual(self.read(), USER_SOUL)
         self.assertEqual(self.backups(), [])
-        self.assertEqual(setup.answers(), {"tdd_mode": "off"})
+        self.assertEqual(setup.answers(), {"engram_protocol": "off"})
         self.assertNotIn("persona", ctx.settings)
         self.assertFalse(setup.pending())
 
@@ -546,14 +571,14 @@ class ConfigWriteTests(HomeCase):
 
         refused = ConfigContext(PermissionError("Plugin settings cannot be changed in a managed"))
         setup = self.setup(refused)
-        outcome = setup.apply({"tdd_mode": "strict"}, apply_persona=False, source="t")
+        outcome = setup.apply({"verbosity": "detailed"}, apply_persona=False, source="t")
         self.assertEqual(outcome.config.state, "refused")
         self.assertIn("managed", outcome.text())
         self.assertIn("kept in plugin state", outcome.text())
-        self.assertEqual(setup.effective()["tdd_mode"], ("strict", "setup"))
+        self.assertEqual(setup.effective()["verbosity"], ("detailed", "setup"))
 
         failing = ConfigContext(ValueError("bad yaml"))
-        outcome = self.setup(failing).apply({"tdd_mode": "off"}, apply_persona=False, source="t")
+        outcome = self.setup(failing).apply({"verbosity": "short"}, apply_persona=False, source="t")
         self.assertEqual(outcome.config.state, "failed")
 
         bare = FakeContext()  # no set_config / get_config
@@ -576,10 +601,10 @@ class ConfigWriteTests(HomeCase):
     def test_reset_restores_config_defaults(self) -> None:
         ctx = ConfigContext()
         setup = self.setup(ctx)
-        setup.set_answers({"tdd_mode": "strict", "verbosity": "detailed"})
+        setup.set_answers({"engram_protocol": "off", "verbosity": "detailed"})
         setup.reset()
         self.assertTrue(setup.pending())
-        self.assertEqual(ctx.settings, {"tdd_mode": "unset", "verbosity": "short"})
+        self.assertEqual(ctx.settings, {"engram_protocol": "auto", "verbosity": "short"})
 
 
 # -- /odd_setup -------------------------------------------------------------
@@ -599,7 +624,6 @@ class CommandTests(HomeCase):
         for token in (
             "Persona: not chosen · default · SOUL.md",
             "Answer style: short · default · inside the SOUL.md persona block",
-            "TDD mode: unset · default · prompt section line",
             "Engram protocol: auto (when mcp__engram__* tools exist) · default · prompt section",
             "CodeGraph guidance: auto (when CodeGraph is on PATH or configured) · default",
             "/odd_soul",
@@ -608,6 +632,7 @@ class CommandTests(HomeCase):
         ):
             self.assertIn(token, text)
         self.assertNotIn(str(self.home), text)
+        self.assertNotIn("TDD", text)
         self.assertLess(len(text), 3500)
 
     def test_persona_preview_then_confirm(self) -> None:
@@ -647,13 +672,12 @@ class CommandTests(HomeCase):
     def test_setters_skip_reset(self) -> None:
         self.write(USER_SOUL)
         command, setup = self.make()
-        self.assertIn("TDD mode: strict", command.handle("tdd strict"))
         self.assertIn("Engram protocol: auto", command.handle("engram on"))
         self.assertIn("Engram protocol: off", command.handle("engram off"))
         self.assertIn("Answer style: detailed", command.handle("verbosity detailed"))
         self.assertEqual(
             setup.answers(),
-            {"tdd_mode": "strict", "engram_protocol": "off", "verbosity": "detailed"},
+            {"engram_protocol": "off", "verbosity": "detailed"},
         )
         command.handle("persona neutral confirm")
         skipped = command.handle("skip")
@@ -680,6 +704,7 @@ class CommandTests(HomeCase):
             "persona pirate",
             "tdd",
             "tdd on",
+            "tdd strict",  # the TDD choice is retired
             "engram maybe",
             "persona neutral yes",
             "skip now",
@@ -704,7 +729,6 @@ class CommandTests(HomeCase):
                 "persona rioplatense",
                 "persona rioplatense confirm",
                 "persona custom",
-                "tdd project",
                 "engram off",
                 "verbosity detailed",
                 "skip",
@@ -978,7 +1002,7 @@ class SkillTests(unittest.TestCase):
     def test_one_clarify_call_within_limits(self) -> None:
         questions = self.call["questions"]
         self.assertLessEqual(len(questions), 5)
-        self.assertEqual(len(questions), 5)
+        self.assertEqual(len(questions), 4)
         for q in questions:
             self.assertLessEqual(len(q.get("choices", [])), 4)
         self.assertIn("ONE clarify call", self.text)
@@ -1016,10 +1040,16 @@ class SkillTests(unittest.TestCase):
             self.assertIn(token, self.text)
         self.assertIn("odd_setup_apply", self.text)
 
-    def test_odd_workflow_references_the_tdd_line(self) -> None:
-        text = (REPO_ROOT / "skills" / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
-        self.assertIn("`TDD mode: <mode>`", text)
-        self.assertIn("hermes-odd:setup", text)
+    def test_setup_asks_no_tdd_question(self) -> None:
+        # Upstream removed its strict TDD picker (gentle-ai 55e3abf1): ODD
+        # applies one default test-first policy, so setup asks nothing about it.
+        questions = " ".join(q["question"] for q in self.call["questions"])
+        self.assertNotIn("TDD", questions)
+        self.assertNotIn("tdd_mode", self.text)
+        self.assertNotIn("/odd_setup tdd", self.text)
+        workflow = (REPO_ROOT / "skills" / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertNotIn("TDD mode:", workflow)
+        self.assertNotIn("/odd_setup tdd", workflow)
 
 
 def manifest_config_schema() -> dict:

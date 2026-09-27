@@ -287,6 +287,29 @@ class CanonicalProvenanceTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(body.encode("utf-8")).hexdigest(), fields["block_sha256"])
         self.assertTrue(body.startswith("## Implementation Routing"))
 
+    def test_hermes_render_is_odd_only_and_test_first(self) -> None:
+        # gentle-ai 5ffb65fc: Hermes is not an RDD runtime, so its render has
+        # no review clauses; 55e3abf1: one default applicable test-first policy.
+        raw = (REPO_ROOT / "upstream" / "odd-routing-hermes.canonical.md").read_text(
+            encoding="utf-8"
+        )
+        body = raw.partition("\n-->\n")[2]
+        for gone in ("gentle-ai review", "receipt", "RDD", "configured TDD", "SDD"):
+            self.assertNotIn(gone, body)
+        self.assertIn("the default applicable test-first policy", body)
+        self.assertIn("Verification covers a work-unit commit or a PR slice", body)
+        # hermes-odd carries the same policy in its own words, and no TDD mode.
+        section = build_odd_section()
+        workflow = (SKILLS_DIR / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        delegation = (SKILLS_DIR / "odd-delegation" / "SKILL.md").read_text(encoding="utf-8")
+        for text in (section, workflow, delegation):
+            self.assertNotIn("TDD mode", text)
+            self.assertNotIn("configured TDD", text)
+            self.assertIn("RED", text)
+        self.assertIn("Presence is not applicability", workflow)
+        self.assertIn("Test-first: applies, runner <exact command> | exception:", delegation)
+        self.assertIn("no native RDD review on Hermes", section)
+
 
 if __name__ == "__main__":
     unittest.main()

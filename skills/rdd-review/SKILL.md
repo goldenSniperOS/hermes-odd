@@ -10,8 +10,9 @@ metadata:
     category: workflow
     related_skills: [rdd-review-lenses, judgment-day, odd-workflow, odd-delegation]
 ---
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/agents/capabilitymanifest/manifest.go -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/chains/4r-review.chain.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/agents/capabilitymanifest/manifest.go -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/model/rdd.go -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/chains/4r-review.chain.md -->
 
 # RDD review on Hermes
 
@@ -43,8 +44,10 @@ The switch is the user's: `gentle-ai review mode status --json` (or the
 command `/odd_review_mode`) reports `status.effective` `on`/`off` and its
 source. gentle-ai runs native immutable review only for runtimes that can
 launch a fresh, constrained reviewer and prove that boundary before review
-starts. gentle-ai 3.7.0 advertises it for claude-code, opencode, codex and pi,
-not for hermes: the review CLI refuses Hermes with
+starts: claude-code, opencode, codex and pi. Upstream now gives receipt-driven
+development only to those runtimes (`SupportsReceiptDrivenDevelopment`);
+every other runtime, Hermes included, gets ODD only, with ordinary
+verification. The 3.7.0 review CLI refuses Hermes with
 `immutable_review_transport_unsupported`. The hermes-odd review facade waits
 on upstream eligibility.
 
@@ -54,8 +57,9 @@ So, when RDD is on, for each candidate:
    "native review unavailable on Hermes (gentle-ai runtime eligibility)".
 2. Record the same line against the task in the ODD feature document (and its
    Engram mirror), next to the commit id.
-3. Continue under ordinary repository policy: the configured tests and
-   checks, CI, and human review.
+3. Continue under ordinary repository policy: the applicable checks
+   (`hermes-odd:odd-workflow` section 6, `hermes-odd:odd-delegation`
+   section 3), CI, and human review.
 
 When RDD is off, say nothing about review unless asked.
 

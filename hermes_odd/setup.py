@@ -10,7 +10,6 @@ key                       values                                      default
 ========================  ==========================================  ============
 ``persona``               unset, rioplatense, neutral, custom, none  unset
 ``verbosity``             short, detailed                             short
-``tdd_mode``              unset, off, strict, project                 unset
 ``engram_protocol``       auto, off                                   auto
 ``soul_cleanup``          unset, yes, later, no                       unset
 ``codegraph_guidance``    auto, off                                   auto
@@ -28,13 +27,16 @@ Storage:
   writes it atomically under a lock). A managed install refuses the write
   (``PermissionError``) and older Hermes versions have no ``set_config``;
   both are reported and the answers stay in plugin state.
+* Retired keys: a ``tdd_mode`` answer in an older setup record or a
+  ``tdd_mode`` setting in ``config.yaml`` still loads and is ignored. ODD
+  applies one default test-first policy where it is applicable (upstream
+  gentle-ai removed its strict TDD picker), so there is no TDD choice.
 * The effective value of a key is ``ctx.get_config(key)`` when it holds a
   valid value (so an edited or administrator-managed ``config.yaml`` wins),
   else the setup record's answer, else the default.
 
 Where each answer is applied: ``persona`` and ``verbosity`` as the single
 hermes-odd block at the top of ``SOUL.md`` (:mod:`hermes_odd.soul_persona`);
-``tdd_mode`` as one ``TDD mode:`` line in the prompt section;
 ``engram_protocol`` (``auto``) as one prompt-section line pointing to the
 lazy skill ``hermes-odd:engram-protocol``; ``codegraph_guidance`` (``auto``)
 as one line pointing to ``hermes-odd:codegraph`` while CodeGraph is present
@@ -71,7 +73,6 @@ VERSION = 1
 PREF_VALUES: dict[str, tuple[str, ...]] = {
     "persona": (personas.UNSET, *personas.PERSONA_CHOICES),
     "verbosity": personas.VERBOSITY_CHOICES,
-    "tdd_mode": ("unset", "off", "strict", "project"),
     "engram_protocol": ("auto", "off"),
     "soul_cleanup": ("unset", "yes", "later", "no"),
     "codegraph_guidance": ("auto", "off"),
@@ -79,7 +80,6 @@ PREF_VALUES: dict[str, tuple[str, ...]] = {
 DEFAULTS: dict[str, str] = {
     "persona": personas.UNSET,
     "verbosity": "short",
-    "tdd_mode": "unset",
     "engram_protocol": "auto",
     "soul_cleanup": "unset",
     "codegraph_guidance": "auto",
@@ -89,7 +89,6 @@ PREF_KEYS = tuple(PREF_VALUES)
 APPLIED_WHERE = {
     "persona": "SOUL.md: one hermes-odd block at the top",
     "verbosity": "inside the SOUL.md persona block",
-    "tdd_mode": "prompt section line 'TDD mode: <mode>'",
     "engram_protocol": "prompt section line pointing to hermes-odd:engram-protocol",
     "soul_cleanup": "/odd_soul: dry-run plan first, written only after an explicit yes",
     "codegraph_guidance": (
@@ -101,18 +100,6 @@ NEXT_SESSION_NOTE = (
     "Takes effect in the next new session (/new or a new chat); the current "
     "session keeps the prompt it started with."
 )
-
-TDD_LINES = {
-    "off": "TDD mode: off (user setup): ordinary functional checks, never no checks.",
-    "strict": (
-        "TDD mode: strict (user setup): observed RED before implementation, then GREEN, "
-        "then REFACTOR; never invent evidence."
-    ),
-    "project": (
-        "TDD mode: per project (user setup): detect the project's TDD config and test "
-        "runner; if unclear, ask once."
-    ),
-}
 
 
 def utc_now() -> str:
@@ -263,15 +250,13 @@ class Setup:
 
     # -- section -------------------------------------------------------------
 
-    def section_inputs(self) -> tuple[bool, str | None, list[str]]:
-        """``(pending, TDD mode line or None, skill pointer lines)`` for the prompt
-        section. Never raises."""
+    def section_inputs(self) -> tuple[bool, list[str]]:
+        """``(pending, skill pointer lines)`` for the prompt section. Never raises."""
         try:
             pending = self.pending()
             effective = self.effective()
-            tdd, _source = effective["tdd_mode"]
         except Exception:  # noqa: BLE001
-            return False, None, []
+            return False, []
         pointers: list[str] = []
         try:
             from .prompt import CODEGRAPH_POINTER, MEMORY_POINTER
@@ -282,7 +267,7 @@ class Setup:
                 pointers.append(CODEGRAPH_POINTER)
         except Exception:  # noqa: BLE001
             logger.debug("hermes-odd: skill pointers failed", exc_info=True)
-        return pending, TDD_LINES.get(tdd), pointers
+        return pending, pointers
 
     # -- transitions ---------------------------------------------------------
 
@@ -459,7 +444,6 @@ class Setup:
 LABEL = {
     "persona": "Persona",
     "verbosity": "Answer style",
-    "tdd_mode": "TDD mode",
     "engram_protocol": "Engram protocol",
     "soul_cleanup": "SOUL cleanup of gentle-ai blocks",
     "codegraph_guidance": "CodeGraph guidance",
@@ -537,7 +521,6 @@ __all__ = [
     "STATE_KEY",
     "SOUL_CLEANUP_NEXT",
     "Setup",
-    "TDD_LINES",
     "codegraph_available",
     "valid",
 ]

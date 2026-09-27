@@ -13,17 +13,27 @@ triage decision for every upstream change.
 
 | Upstream | Supported release | Pinned commit | gentle-ai binary min |
 |---|---|---|---|
-| gentle-ai | v3.7.0 | `f182ea2018a6399f5d1b6557cf36d71a3df0f723` (2026-09-23) | 3.7.0 (tested 3.7.0) |
-| gentle-shell (npm `gentle-pi` 3.7.0) | v3.7.0 | `4d702a47a31eade9ea197d9280ba1d0afe8b93f4` (2026-09-24, `v3.7.0-16-g4d702a4`) | 3.7.0 (pinned by gentle-pi 3.7.0) |
+| gentle-ai | v3.7.0 (pinned to later `main`) | `a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b` (2026-09-27) | 3.7.0 (tested 3.7.0) |
+| gentle-shell (npm `gentle-pi` 3.7.0) | v3.7.0 (pinned to later `main`) | `b756b4f34193eeb566d670f90ffc1c85e4fda601` (2026-09-26, `v3.7.0-208-gb756b4f`) | 3.7.0 (pinned by gentle-pi 3.7.0) |
 
 Notes:
 
-- **gentle-ai tag vs pin.** The `v3.7.0` tag points at `6dee8f8`, which is not
-  on gentle-ai's current `main` (its history was rewritten to drop the
-  `.engram/` directory). The pin `f182ea2` is on `main`: its parent `204ccbd`
-  has the tag's tree minus `.engram/`, and `f182ea2` only adds a README badge.
-  Every indexed source hashes identically at the tag and at the pin.
-- **gentle-shell pin.** 16 commits after the `v3.7.0` tag; triaged below.
+- **No release after v3.7.0.** Neither upstream has tagged a release since
+  v3.7.0 (gentle-shell `package.json` and its bundled gentle-ai installer
+  still say 3.7.0), so both pins follow `main` (T11, 2026-09-27): gentle-ai
+  `a9e36e9`, 134 commits after the previous pin `f182ea2`; gentle-shell
+  `b756b4f`, 208 commits after the tag. Every commit is triaged below. The
+  binary minimum stays 3.7.0, the latest release.
+- **gentle-ai tag vs history.** The `v3.7.0` tag points at `6dee8f8`, which is
+  not on gentle-ai's current `main` (its history was rewritten to drop the
+  `.engram/` directory); `f182ea2` (the pin until T11) is its main-history
+  equivalent.
+- **RDD on Hermes, officially.** Since gentle-ai `5ffb65fc` upstream gives
+  receipt-driven development only to runtimes with a native review
+  transport (`internal/model/rdd.go`: claude-code, codex, opencode, pi);
+  Hermes, like every other runtime, receives ODD only. hermes-odd's stance
+  matches: native review is unavailable on Hermes, and its advisory reviews
+  (4R, judgment-day) say "no receipt".
 - The gentle-ai binary is used only through `gentle-ai review` (RDD). Never
   run `gentle-ai install` for Hermes or `gentle-ai sync --agent hermes`.
 
@@ -31,12 +41,12 @@ Notes:
 
 | Component | Status | hermes-odd surface | Upstream sources (pinned) |
 |---|---|---|---|
-| `odd` | ported | `hermes_odd/prompt.py` (section `hermes-odd-workflow`), `skills/odd-workflow`, `skills/odd-delegation`, `skills/odd-feature-tracking`, `upstream/odd-routing-hermes.canonical.md` | gentle-ai `internal/components/agentguidance/routing.go`, `internal/agents/capabilitymanifest/manifest.go`; gentle-shell `extensions/gentle-ai.ts`, `assets/orchestrator.md`, `assets/orchestrator-delegation.md`, `assets/orchestrator-skills.md`, `assets/orchestrator-memory.md` |
-| `rdd` | partial (T7 ported, T8 blocked upstream) | `/odd_review_mode` (`hermes_odd/commands/review_mode.py`, `hermes_odd/rdd.py`, probes in `hermes_odd/probes.py`), `skills/rdd-review`, `skills/rdd-review-lenses`; planned `odd_review` facade | gentle-ai `internal/assets/skills/rdd-defect-workflow/SKILL.md`, `internal/agents/capabilitymanifest/manifest.go`, `internal/cli/review_transport_capability.go`; gentle-shell `skills/rdd-defect-workflow/SKILL.md`, `docs/review-integration.md`, `extensions/gentle-ai.ts`, `lib/review-integration-v2.ts`, `lib/native-review-cli.ts`, `assets/agents/review-{risk,resilience,readability,reliability}.md`, `assets/chains/4r-review.chain.md` |
+| `odd` | ported (T11: default test-first policy, ODD-only orchestrator behavior) | `hermes_odd/prompt.py` (section `hermes-odd-workflow`), `skills/odd-workflow`, `skills/odd-delegation`, `skills/odd-feature-tracking`, `upstream/odd-routing-hermes.canonical.md` | gentle-ai `internal/components/agentguidance/routing.go`, `internal/agents/capabilitymanifest/manifest.go`, `internal/assets/skills/_shared/odd-orchestrator-sections.md`, `internal/assets/hermes/orchestrator.md`, `internal/model/rdd.go`; gentle-shell `extensions/gentle-ai.ts`, `assets/orchestrator.md`, `assets/orchestrator-delegation.md`, `assets/orchestrator-skills.md`, `assets/orchestrator-memory.md`, `assets/agents/gentle-ai-worker.md` |
+| `rdd` | partial (T7 ported, T8 blocked upstream; Hermes officially ODD-only upstream since `5ffb65fc`) | `/odd_review_mode` (`hermes_odd/commands/review_mode.py`, `hermes_odd/rdd.py`, probes in `hermes_odd/probes.py`), `skills/rdd-review`, `skills/rdd-review-lenses`; planned `odd_review` facade | gentle-ai `internal/assets/skills/rdd-defect-workflow/SKILL.md`, `internal/agents/capabilitymanifest/manifest.go`, `internal/cli/review_transport_capability.go`, `internal/model/rdd.go`; gentle-shell `skills/rdd-defect-workflow/SKILL.md`, `docs/review-integration.md`, `extensions/gentle-ai.ts`, `lib/review-integration-v2.ts`, `lib/native-review-cli.ts`, `assets/agents/review-{risk,resilience,readability,reliability}.md`, `assets/chains/4r-review.chain.md` |
 | `review-contract` | pending (T8, blocked upstream) | CLI contract `gentle-ai.review-integration/v2` (capabilities v2.6); provider contract mirror 1.2.0; verified: `--agent hermes` fails with `gentle-ai.review-integration.failure/v2` `immutable_review_transport_unsupported` | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
 | `viewers` | ported | Viewers `/odd_agents`, `/odd_tasks`, `/odd_changes`; Health `/odd_status`, `/odd_doctor`, `/odd_commands` (all concept ports, no copied text) | gentle-shell `extensions/gentle-ai.ts`, `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts`, `docs/gentle-agents-activity.md`, `extensions/gentle-shell.ts`, `extensions/gentle-todo.ts`, `docs/gentle-shell.md`, `lib/shell-changes.ts`, `lib/shell-todo.ts`, `lib/review-sidebar-state.ts`, `lib/session-changes.ts`, `lib/shell-changes-view.ts`, `README.md` |
 | `persona` | ported (T9a) | First-run setup: skill `skills/setup` (one `clarify` call), `/odd_setup` (`hermes_odd/commands/setup.py`), tool `odd_setup_apply` (`hermes_odd/setup_tool.py`), preferences and setup record (`hermes_odd/setup.py`), plugin `config_schema`, and one `<!-- hermes-odd:persona -->` block at the top of `SOUL.md` (`hermes_odd/soul_persona.py`, texts in `hermes_odd/personas.py`, own wording) | gentle-ai `internal/assets/hermes/persona-gentleman.md`, `internal/assets/hermes/persona-neutral.md`; gentle-shell `extensions/gentle-ai.ts` (`GENTLEMAN_PERSONA_PROMPT`, `NEUTRAL_PERSONA_PROMPT`) |
-| `soul-cleanup` | ported (T9b) | `/odd_soul` (`hermes_odd/commands/soul.py`), tool `odd_soul_apply` (`hermes_odd/soul_tool.py`), cleanup rules and verification (`hermes_odd/soul_cleanup.py`, concept port), lazy skills `skills/engram-protocol` and `skills/codegraph` (own wording), one pointer line each in the prompt section | gentle-ai `internal/assets/engram/protocol.md`, `internal/components/communitytool/codegraph_guidance.go`, `internal/components/agentguidance/inject.go`, `internal/components/agentguidance/remote_authorization.go`, `internal/assets/generic/remote-authorization-contract.md` |
+| `soul-cleanup` | ported (T9b) | `/odd_soul` (`hermes_odd/commands/soul.py`), tool `odd_soul_apply` (`hermes_odd/soul_tool.py`), cleanup rules and verification (`hermes_odd/soul_cleanup.py`, concept port), lazy skills `skills/engram-protocol` and `skills/codegraph` (own wording), one pointer line each in the prompt section | gentle-ai `internal/assets/engram/protocol.md`, `internal/components/communitytool/codegraph_guidance.go`, `internal/components/agentguidance/inject.go`, `internal/components/agentguidance/remote_authorization.go`, `internal/assets/generic/remote-authorization-contract.md`, `internal/components/agentguidance/orchestrator.go` |
 
 | `portable-skills` | ported (T10) | Skills `skills/judgment-day` (blind dual review, advisory), `skills/work-unit-commits` (ODD commit closure) and `skills/chained-pr` (400-line review budget, delivery and chain strategies); behavior only, in hermes-odd's own words; the prompt section and `hermes-odd:odd-workflow` point to them by qualified name | gentle-ai `internal/assets/skills/judgment-day/SKILL.md` (+ `references/prompts-and-formats.md`), `internal/assets/skills/work-unit-commits/SKILL.md`, `internal/assets/skills/chained-pr/SKILL.md` (+ `references/chaining-details.md`), `internal/components/agentguidance/routing.go` |
 
@@ -72,7 +82,14 @@ tooling.
 6. **Re-render the canonical ODD routing** for Hermes from gentle-ai
    (`RenderRouting(model.AgentHermes)`) into
    `upstream/odd-routing-hermes.canonical.md` with its new `source_commit` and
-   `block_sha256`, and diff it against the previous render.
+   `block_sha256`, and diff it against the previous render. The render is a
+   throwaway program in a temporary directory outside both repositories:
+   extract the pinned tree (`git archive <commit> | tar -x -C <tmp>`), add
+   `<tmp>/cmd/render/main.go` that prints
+   `agentguidance.RenderRouting(model.AgentHermes)` (Go only allows the
+   `internal/` import from inside the module), run `go run ./cmd/render` in
+   `<tmp>`, and use its exact stdout as the body after the header. Check the
+   method by rendering the previous pin too: it must equal the vendored body.
 7. **Bump the lock**: `supported_release`, `pinned_commit`, `commit_date`,
    binary `min_version`/`tested_version`, and every `sources` sha256.
 8. **CHANGELOG**: add a line under `## [Unreleased]` naming the new upstream
@@ -81,6 +98,103 @@ tooling.
    markers, `THIRD_PARTY_NOTICES.md`, the canonical render and this file.
 
 ## Triage log
+
+### 2026-09-27: T11 re-pin (gentle-ai `a9e36e9`, gentle-shell `b756b4f`)
+
+Both pins move to `main`: gentle-ai `f182ea2..a9e36e9` (134 commits: the 36
+of the 2026-09-25 entry, whose `needs-port` items are ported below, plus the
+98 listed at the end) and gentle-shell `4d702a4..b756b4f` (192 commits: the
+81 of the 2026-09-25 entry plus the 111 listed at the end). No new release
+tag on either side. After the bump `scripts/check_upstream_drift.py` reports
+clean.
+
+**Test-first policy (user decision: follow upstream exactly).**
+
+| Upstream | Decision |
+|---|---|
+| gentle-ai `55e3abf1`/`f2cecbae`, gentle-shell `a76e6f2`/`80375c6`: one default applicable test-first policy | ported in own words: RED -> GREEN -> refactor when a relevant runnable deterministic test and a clear expected outcome exist; test or framework presence alone is not applicability; otherwise state the exception and run proportionate checks; forward the runner and the evidence or exception to workers; never invent RED/GREEN or a runner. Prompt section step 6, `hermes-odd:odd-workflow` section 6, the `hermes-odd:odd-delegation` mission template (`Test-first:` line, rules, return field), `hermes-odd:odd-feature-tracking` Checks, `hermes-odd:work-unit-commits` checklist, `hermes-odd:judgment-day` fix round |
+| Installer strict TDD picker removed (`internal/tui/screens/strict_tdd.go`) | the hermes-odd setup TDD choice is retired: no `/odd_setup tdd`, no clarify question, no `tdd_mode` setting in `config_schema`, no `TDD mode:` prompt line. A `tdd_mode` value in an older setup record or in `config.yaml` still loads and is ignored (tested) |
+
+**RDD gating (`5ffb65fc`).** `internal/model/rdd.go` (lines 12–27) makes
+claude-code, codex, opencode and pi the only receipt-driven development
+runtimes (`SupportsReceiptDrivenDevelopment`), tied by
+`internal/components/agentguidance/rdd_gating_test.go` (line 81) to the
+runtimes whose capability manifest advertises the review transport.
+`RenderRouting` (`routing.go`) and `RenderOrchestratorWithSource`
+(`orchestrator.go` line 162) give every other runtime, Hermes included, ODD
+only: step 7 says verification covers a work-unit commit or PR slice, the
+verification bullet is risk-proportionate, and the review-mode section, the
+Provider Defect Handoff and every review wording are removed (a leak check
+fails the render otherwise). The assumption challenge stays. Upstream now
+officially excludes Hermes from RDD. hermes-odd's honest stance matches:
+native review unavailable on Hermes, reported once per candidate with RDD on;
+the 4R advisory ("advisory review — no receipt") and judgment-day ("advisory
+judgment — no receipt") issue no receipt. Aligned: the prompt Review line and
+step 7, `hermes-odd:odd-workflow` sections 1, 6 and 7, `hermes-odd:rdd-review`.
+T8 stays blocked: `manifest.go` and `review_transport_capability.go` are
+byte-identical to v3.7.0 (`reviewTransportExposureByAgent` and
+`immutableReviewExecutorExposureByAgent`, lines 149–187, advertise only the
+four runtimes; the Hermes feature claims, line 307, are skills, system prompt
+and MCP).
+
+**ODD-only Hermes orchestrator (`fb4b59a7`, `1ba7d888`).** gentle-ai now
+renders `internal/assets/hermes/orchestrator.md` with the `(ODD only)` shared
+sections of `internal/assets/skills/_shared/odd-orchestrator-sections.md`
+and writes it into `SOUL.md`.
+
+| Orchestrator behavior | Decision |
+|---|---|
+| Delegated Verification Gate (ODD only): passive readback, medium writer self-verification, high or unclear adds an independent verifier, small-model bias, parent spot check | ported: `hermes-odd:odd-delegation` section 3 (referenced by the verification trigger in `hermes-odd:odd-workflow`) |
+| Native Checking Contract (ODD only): normalize before checks, one quick check, one scoped correction, "needs your decision" | ported: `hermes-odd:odd-workflow` section 6 |
+| Sub-agent launch deduplication | ported: one launch per distinct task (`hermes-odd:odd-delegation`) |
+| Sub-agent context protocol (parent passes memory, children save with `mem_save`) | ported: `hermes-odd:odd-delegation` section 1 |
+| Coordinator role, work routing ladder, mandatory triggers, allowed edit surfaces, Key Learnings, language contract, safety | already ported (prompt section, `odd-*` skills) |
+| "ODD Implementation Context" still says "configured TDD mode" | not ported: stale upstream wording; the test-first policy above wins |
+| Lossless prompts "always use the plain chat fallback" on Hermes | not ported: hermes-odd uses `clarify` (verified), with the plain-chat fallback |
+| "Toolsets, MCP servers, and skills are NOT automatically inherited" | not ported: verified wrong for current Hermes (see the T10 entry) |
+| Skill paths from a `~/.hermes/skills/` scan, `hermes-ephemeral-delegation` pointer | not ported: hermes-odd passes qualified `skill_view` names; see the T10 skill decisions |
+| Provider Defect Handoff | not applicable: removed from non-RDD renders; hermes-odd's gentle-ai calls are the read-only review probes and the mode switch |
+
+**SOUL cleanup.** A current `gentle-ai install` selecting Hermes writes one
+new top-level block: `<!-- gentle-ai:orchestrator -->`
+(`OrchestratorSectionID`, `orchestrator.go` line 23), placed right before
+`agent-routing` by `injectOrchestratorSection` (lines 371–385) and converted
+from a v3.7.0 `sdd-orchestrator` block by
+`migrateLegacyOrchestratorSection` (lines 390–407); `InjectRoutingWithOptions`
+(`inject.go` lines 89–136) renders it for every runtime except Pi (line 115)
+and still nests `remote-authorization` in `agent-routing` (line 109). `/odd_soul`
+now removes `orchestrator` (hermes-odd supplies ODD); persona and
+remote-authorization keep their handling. `strict-tdd-mode`: written by v3.7.0
+(`internal/components/sdd/inject.go` line 538) when strict TDD was on, never
+by a current install (`internal/cli/run.go` line 1105 calls
+`InjectStrictTDDWithOptions` with `enabled=false`, which removes it); kept as
+an unknown block.
+
+**Every other changed indexed source.**
+
+| Source | Class | Reason |
+|---|---|---|
+| gentle-ai `internal/components/agentguidance/routing.go` | ported | test-first policy and RDD gating above; canonical re-render |
+| gentle-ai `internal/components/agentguidance/inject.go` | ported | orchestrator block (SOUL cleanup above); Codex worker assignments are not applicable |
+| gentle-ai `internal/assets/skills/work-unit-commits/SKILL.md` | informational | only its SDD section was removed (`e219644b`); the T10 port never had it |
+| gentle-shell `assets/orchestrator.md`, `assets/orchestrator-delegation.md` | ported | test-first policy (`a76e6f2`); SDD removal (`cc5fbd94`) needs nothing; the ODD phase signal (`50960b9`) is not applicable (Pi prompt widget) |
+| gentle-shell `assets/orchestrator-memory.md`, `assets/orchestrator-skills.md` | informational | SDD sections removed (`cc5fbd94`); the ODD parts are unchanged |
+| gentle-shell `extensions/gentle-ai.ts` | ported | the harness test-first bullet and step 6 (`a76e6f2`); the rest is Pi TUI (profiles, models panel, ODD phase, cards) and native review selectors (T8 reference) |
+| gentle-shell `extensions/gentle-agents.ts`, `lib/agents-view.ts` | informational | Pi agents RPC, polling and cost formatting; `/odd_agents` is a concept port with no shared code |
+| gentle-shell `extensions/gentle-shell.ts`, `README.md`, `docs/gentle-shell.md` | not-applicable | Pi TUI: visual customization, Vim mode, status bar, profiles, prompt history |
+| gentle-shell `lib/native-review-cli.ts` | informational | committed-range selector fixes of the Pi native review CLI; a T8 reference |
+
+New sources indexed: gentle-ai `internal/assets/skills/_shared/odd-orchestrator-sections.md`,
+`internal/assets/hermes/orchestrator.md`, `internal/model/rdd.go` (`odd`, `rdd`),
+`internal/components/agentguidance/orchestrator.go` (`soul-cleanup`);
+gentle-shell `assets/agents/gentle-ai-worker.md` (`odd`). The 2026-09-25
+candidates `strict_tdd.go`, `opencode_background.go`, `pi_cleanup.go`,
+`reviewassets/*.go`, `lib/odd-phase.ts` and
+`skills/issue-creation/references/delegated-workflow-actions.md` keep their
+classes; the Hermes orchestrator asset moves from informational to ported.
+New since then: gentle-shell `docs/prompt-history.md` (not-applicable: Pi
+prompt history) and `lib/agents-message-delivery.ts` (not-applicable: Pi
+cross-orchestrator messaging).
 
 ### 2026-09-25: T10 portable skills
 
@@ -109,7 +223,7 @@ notices. The gentle-shell copies of the same skills are not indexed.
 | gentle-shell `skills/gentle-ai` | not ported: the Pi harness skill (Pi subagents, OpenSpec artifacts, Pi TDD wiring); hermes-odd's prompt section and `odd-*` skills are its Hermes counterpart |
 | gentle-ai repository-development skills (`skills/gentle-ai-collab-perfect`, `skills/issue-root-resolution`, `skills/rdd-advisory-transport`, top-level copies of `branch-pr`, `chained-pr`, `work-unit-commits`, ...) | not ported: development tooling of the gentle-ai repository itself, not installed for users |
 
-### 2026-09-25: seen beyond the pins (T10 drift triage, not yet supported)
+### 2026-09-25: seen beyond the pins (T10 drift triage; supported since the T11 re-pin)
 
 Produced with `scripts/check_upstream_drift.py` against gentle-ai `main` at
 `6c7f162f` and gentle-shell `main` at `5456811`. Neither upstream has a new
@@ -314,7 +428,7 @@ preference Hermes can apply are ported, over chat (CLI/TUI and Telegram).
 |---|---|
 | Installer persona step (`internal/tui/screens/persona.go`: gentleman / neutral / custom) and the gentle-pi persona view (`GENTLEMAN_PERSONA_PROMPT`, `NEUTRAL_PERSONA_PROMPT` in `extensions/gentle-ai.ts`) | ported as the first-run setup: `hermes-odd:setup` asks once over `clarify` (Mentor rioplatense (voseo), Mentor neutral, My own text, None; no default and no recommended option), `/odd_setup persona <id>` previews and `confirm` writes; the persona is one `hermes-odd:persona` block at the top of `SOUL.md`, with a backup |
 | Persona texts (`internal/assets/hermes/persona-gentleman.md`, `persona-neutral.md`) | ported in hermes-odd's own words (`hermes_odd/personas.py`): the behavior rules only. Not ported: the `## Identity` product identity, branding, author biography, tool preferences, and the Hermes skill-loading and Engram memory sections (Hermes loads plugin skills itself; the Engram protocol became the lazy skill `hermes-odd:engram-protocol` in T9b) |
-| Installer strict TDD step (`internal/tui/screens/strict_tdd.go`) | ported as the setup's TDD question (off / strict / per project); it reaches ODD as one `TDD mode:` line in the prompt section, read by `hermes-odd:odd-workflow` |
+| Installer strict TDD step (`internal/tui/screens/strict_tdd.go`) | ported as the setup's TDD question (off / strict / per project); it reached ODD as one `TDD mode:` line in the prompt section. Retired in T11 with the upstream picker (see the 2026-09-27 entry) |
 | Engram setup and SOUL cleanup of gentle-ai blocks | preferences stored in T9a (`engram_protocol`, `soul_cleanup`); behavior shipped in T9b (see the T9b entry) |
 | Installer presets (`internal/tui/screens/preset.go`: Memory Only, Dev Stack, Dev Stack + Polish, Custom) | not portable: they choose which gentle-ai components (SDD, skills, themes, logo, GGA) get installed into agent configurations; hermes-odd installs as one plugin and ships no SDD, themes or logo |
 | Component selection and dependency tree (`skill_picker.go`, `community_tools.go`, `dependency_tree.go`, `opencode_plugins.go`) | not applicable: the plugin surface is fixed; Engram and CodeGraph are separate MCP servers the user installs in Hermes |

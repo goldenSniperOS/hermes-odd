@@ -10,9 +10,10 @@ metadata:
     category: workflow
     related_skills: [odd-feature-tracking, odd-delegation, work-unit-commits, chained-pr]
 ---
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/components/agentguidance/routing.go -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/orchestrator-delegation.md -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/orchestrator-skills.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/orchestrator-delegation.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/orchestrator-skills.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/_shared/odd-orchestrator-sections.md -->
 
 # ODD workflow for Hermes
 
@@ -32,9 +33,11 @@ Formal SDD is not provided by this plugin.
 4. **Classify.** Substantial = two or more meaningful implementation steps,
    or progress worth recovering after an interruption. Not a line count.
 5. **Track before the first write** — load `hermes-odd:odd-feature-tracking`.
-6. **Implement task by task** through the routing ladder (section 2).
+6. **Implement task by task** through the routing ladder (section 2), with
+   the default test-first policy and proportionate checks (section 6).
 7. **Close** with the verified outcome, every failed, skipped or pending
-   check, and the next step.
+   check, and the next step. Verification covers one work-unit commit or PR
+   slice, never a TODO checkbox and never the accumulated feature branch.
 
 Research findings and automatic pace never authorize a mutation.
 
@@ -74,8 +77,9 @@ permission to orchestrate.
    non-mechanical edits without delegation -> delegate the next unit.
 6. **Verification:** executing check commands beyond a 1–3 file read-only
    check goes to a verifier child, unless the writer already ran them under
-   `## Verification`; the parent still re-runs one reported command as a spot
-   check before claiming done.
+   `## Verification`; how much verification a change gets follows its risk
+   tier (`hermes-odd:odd-delegation` section 3). The parent still re-runs one
+   reported command as a spot check before claiming done.
 7. **Route declaration:** for substantial work record the route per task
    (inline or delegated) and the trigger evidence in the feature document.
 
@@ -131,22 +135,32 @@ When you or a tool must block on the human (including a child's
   Invalid or ambiguous input -> re-present the full envelope and stop again.
   Hand a valid answer back to the blocked actor exactly once.
 
-## 6. Checks and TDD
+## 6. Checks and test-first
 
-- Resolve TDD on/off from project or session configuration or an explicit
-  user choice; keep its source and exact runner and record them in the
-  feature document. Tests existing does not enable TDD.
-- A `TDD mode: <mode>` line in the always-on section is the user's explicit
-  choice from the hermes-odd setup (`hermes-odd:setup`, `/odd_setup tdd`);
-  record its source as "hermes-odd setup". `strict`: TDD on everywhere;
-  `off`: ordinary functional checks; `per project`: resolve from the
-  project's own configuration and detect its runner, asking once if unclear.
-  Without the line, resolve as above.
-- Forward mode, source and runner in every implementation mission. When on:
-  observed RED before implementation, then GREEN, then REFACTOR; never invent
-  evidence. When off: ordinary functional checks, not no checks.
-- Unknown or conflicting mode, or a missing runner: disclose and resolve only
-  what affects the next action; never invent a command.
+One default policy for every ODD behavior change; there is no TDD setting to
+choose or configure.
+
+- **Test-first when it applies:** a relevant test can run deterministically
+  and the expected outcome is clear. Then observe RED (the new or changed
+  test fails for the intended reason) before implementing, make it GREEN
+  with the smallest change, cover the relevant alternate cases, and refactor
+  while the focused tests stay green.
+- **Presence is not applicability.** A test suite or framework existing in
+  the repository does not by itself make the policy apply.
+- **Otherwise, an exception:** passive documentation, a change with no
+  meaningful runnable RED, or no available runner. Say which exception and
+  why in one line, then run proportionate functional or structural checks
+  (a readback for passive text). An exception never means no checks.
+- **Never invent evidence:** no RED or GREEN that was not observed, and no
+  guessed test command. A missing command is a reported limitation.
+- Record the runner and the observed RED/GREEN, or the exception and its
+  reason, in the feature document; forward the same in every implementation
+  mission (`hermes-odd:odd-delegation`) and refresh it on resume.
+- Source-changing normalizers (formatters, generators, fixers) run before
+  the final checks; if bytes change after the checks, re-run the affected
+  checks. A quick check runs once; proof that stays unavailable, partial or
+  declined becomes one "needs your decision" line, never a retry loop. One
+  verified change gets at most one scoped correction.
 - Focused checks while iterating, applicable full checks at task close.
 
 ## 7. Commits, delivery and review workload
@@ -162,7 +176,8 @@ same-named bare skill (those may carry workflows this plugin does not ship):
   (`stacked-to-main`, `feature-branch-chain`), slice boundaries and the `gh`
   commands.
 - `hermes-odd:rdd-review`: the review candidate (a work-unit commit or a PR
-  slice) and native review under the user-owned RDD switch.
+  slice), the user-owned RDD switch, and why native review is unavailable on
+  Hermes (the optional 4R advisory review carries no receipt).
 - `hermes-odd:judgment-day`: only when the user asks for a dual or
   adversarial review; advisory, no receipt.
 

@@ -78,7 +78,7 @@ def register_prompt_section(
 
     The content is a callable so ``observer`` (the ``/odd_tasks`` project
     recorder) sees each session's ``cwd`` without changing the text, and
-    ``setup_inputs`` adds the TDD mode and setup-pending lines.
+    ``setup_inputs`` adds the setup-pending line and the lazy-skill pointers.
     """
     register_section = getattr(ctx, "register_system_prompt_section", None)
     if not callable(register_section):

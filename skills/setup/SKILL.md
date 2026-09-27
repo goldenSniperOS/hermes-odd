@@ -1,6 +1,6 @@
 ---
 name: setup
-description: "First-run setup for hermes-odd over chat: ask persona, answer style, TDD mode, Engram protocol and SOUL cleanup in one clarify call, confirm, then apply with odd_setup_apply (and odd_soul_apply for the cleanup)."
+description: "First-run setup for hermes-odd over chat: ask persona, answer style, Engram protocol and SOUL cleanup in one clarify call, confirm, then apply with odd_setup_apply (and odd_soul_apply for the cleanup)."
 version: 0.1.0
 author: goldenSniperOS
 license: MIT
@@ -29,8 +29,10 @@ Records the user's preferences and applies them. The prompt section says
 
 ## Ask everything in ONE clarify call
 
-One `clarify` call, five questions, at most 4 choices each. Keep the order
-and labels below.
+One `clarify` call, four questions, at most 4 choices each. Keep the order
+and labels below. There is no TDD question: ODD applies one default
+test-first policy wherever it is applicable (`hermes-odd:odd-workflow`
+section 6), so there is nothing to choose.
 
 The persona question has **no default and no recommended option**: the four
 personas are equals and the user picks. Hermes' `clarify` always appends
@@ -41,7 +43,7 @@ text, the user answers with a number or with their own text, and nothing is
 marked. Never add "(Recommended)", "default" or "suggested" to any persona
 option, and never order them as a preference.
 
-The other four questions use `choices`. For three of them the first choice is
+The other three questions use `choices`. For two of them the first choice is
 the plugin's default, so clarify's marker on it is accurate. For the SOUL
 cleanup the first choice is hermes-odd's recommendation: it only shows a
 dry-run plan, and nothing is written without a second, explicit yes.
@@ -55,10 +57,6 @@ dry-run plan, and nothing is written without a second, explicit yes.
     {
       "question": "Answer style?",
       "choices": ["Short first", "Detailed"]
-    },
-    {
-      "question": "TDD mode for ODD work?",
-      "choices": ["Per project (detect the runner)", "Strict (RED→GREEN→REFACTOR)", "Off"]
     },
     {
       "question": "Engram memory protocol?",
@@ -82,7 +80,6 @@ Mapping to `odd_setup_apply` arguments:
 | 3 with text, or any other free text | `persona: "custom"`, `persona_custom_text`: the user's text verbatim (at most 1,500 characters) |
 | 4 / None (Hermes default) | `persona: "none"` |
 | Short first / Detailed | `verbosity: "short"` / `"detailed"` |
-| Per project / Strict / Off | `tdd_mode: "project"` / `"strict"` / `"off"` |
 | Auto / Off | `engram_protocol: "auto"` / `"off"` |
 | Yes, show me the plan / Later (/odd_soul) / No | `soul_cleanup: "yes"` / `"later"` / `"no"` |
 
@@ -93,7 +90,7 @@ that argument.
 **Fallback when `clarify` is unavailable** (non-interactive session, or the
 tool is missing): send the complete list above as one plain chat message,
 each question with its numbered options and the answer syntax (for example
-"Reply like: 1, Short first, Strict, Auto, No"), then **stop and wait**. Never
+"Reply like: 1, Short first, Auto, No"), then **stop and wait**. Never
 choose, default or infer an answer.
 
 ## Confirm, then apply
@@ -142,15 +139,13 @@ yourself with file tools.
 - CodeGraph guidance is not asked: it defaults to `auto` (a pointer to
   `hermes-odd:codegraph` while CodeGraph is present); `/odd_setup codegraph
   off` turns it off.
-- The TDD mode appears in the prompt section as a `TDD mode:` line from the
-  next new session; `hermes-odd:odd-workflow` section 6 explains it.
+- An older setup that stored a TDD mode still loads; that answer is ignored.
 
 ## Commands the user can type
 
 `/odd_setup` (status), `/odd_setup skip`, `/odd_setup reset`,
 `/odd_setup persona <rioplatense|neutral|custom|none>` (dry-run preview;
-add `confirm` to write), `/odd_setup tdd <off|strict|project>`,
-`/odd_setup engram <on|off>`, `/odd_setup codegraph <auto|off>`,
+add `confirm` to write), `/odd_setup engram <on|off>`, `/odd_setup codegraph <auto|off>`,
 `/odd_setup verbosity <short|detailed>`, and for the cleanup
 `/odd_soul [status|plan|apply confirm|restore]`.
 In the CLI the hyphen form: `/odd-setup`, `/odd-soul`.

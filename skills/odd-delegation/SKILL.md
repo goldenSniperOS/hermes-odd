@@ -1,6 +1,6 @@
 ---
 name: odd-delegation
-description: "ODD delegation for Hermes: delegate_task mechanics, self-contained mission template, allowed edit surfaces."
+description: "ODD delegation for Hermes: delegate_task mechanics, self-contained mission template, allowed edit surfaces, risk-proportionate verification."
 version: 0.1.0
 author: goldenSniperOS
 license: MIT
@@ -10,8 +10,11 @@ metadata:
     category: workflow
     related_skills: [odd-workflow, odd-feature-tracking]
 ---
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/components/agentguidance/routing.go -->
-<!-- derived-from: gentle-shell@4d702a47a31eade9ea197d9280ba1d0afe8b93f4 assets/orchestrator-delegation.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/orchestrator-delegation.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/_shared/odd-orchestrator-sections.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/hermes/orchestrator.md -->
+<!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/gentle-ai-worker.md -->
 
 # ODD delegation for Hermes
 
@@ -39,6 +42,12 @@ bounded unit and never orchestrate.
   results yourself before telling the user.
 - Never run two writers in the same worktree. Parallel read-only mappers on
   non-overlapping topics are fine.
+- One launch per distinct task: before calling `delegate_task`, check that
+  the same role and mission were not already launched this turn.
+- The parent searches memory and passes what matters in `context`; children
+  do not search it. When `mcp__engram__*` tools reach the child, ask it to
+  save significant discoveries, decisions or fixes with
+  `mcp__engram__mem_save` (project `<name>`) before returning.
 
 ### Mission template
 
@@ -53,7 +62,7 @@ Feature document: odd/tasks/<feature>.md, task <ID> (read it before edits)
 Intent and acceptance criteria: <from the feature document>
 Relevant context: <paths, findings, errors>
 Skills to load before work: <exact skill_view names>
-TDD: mode <on|off>, source <config|user>, runner <exact command>
+Test-first: applies, runner <exact command> | exception: <which and why>
 
 ## Allowed edit surfaces        (writers only; see section 2)
 path/to/file.py
@@ -67,8 +76,12 @@ src/module/**
 Rules: do not commit, push, stage or run destructive git; do not edit
 outside the allowed surfaces; stop with status interaction_required when a
 human decision is needed, including a derived candidate list.
+Test-first: when it applies, observe RED before implementing, then GREEN,
+then refactor with the focused tests green; for an exception, run the
+proportionate checks. Report only observed RED/GREEN; never invent a runner.
 Return: status completed|partial|blocked|interaction_required, summary,
-files_changed, validation (<command>: <observed result>), risks.
+files_changed, test-first (RED/GREEN observed, or the exception),
+validation (<command>: <observed result>), risks.
 Close with a "## Key Learnings" block of 1-5 numbered standalone facts,
 or omit it when there is nothing reusable.
 ```
@@ -94,3 +107,20 @@ change must touch plus directories where new files are authorized.
   approve/decline choice using the lossless blocking prompt rules in
   `hermes-odd:odd-workflow`. Relay a writer's `interaction_required`
   about surfaces the same way.
+
+## 3. Verifying a writer (risk-proportionate)
+
+Judge the tier from what the change touches; an unclear tier is high.
+
+| Tier | What it covers | Verification |
+|---|---|---|
+| Passive | documentation, images, comments with no executable effect | structural readback only |
+| Medium | an ordinary behavior change covered by focused tests | the writer runs `## Verification` in the foreground and reports `<command>: <observed result>`; add a verifier child only when the writer ran on a small or low-effort model |
+| High or unclear | security, credentials, data loss, concurrency, migrations, installers, public contracts, anything unclear | writer self-verification plus an independent read-only verifier child that re-runs the commands and reads the diff without the writer's context |
+
+- A small or low-effort writer model raises the tier by one.
+- The parent spot check (re-run one reported command before delivery) stays
+  in every tier.
+- Record per task the tier applied and the checks observed. Never assume low
+  risk without evidence; a verifier that cannot run is reported as
+  unavailable, never as a pass.

@@ -54,7 +54,7 @@ def default_section(pending: bool = False) -> str:
 
 def mark_setup_complete(state: FakeState) -> None:
     """Store a completed first-run setup record (no answers): the section then
-    renders :func:`default_section` (no pending or TDD line)."""
+    renders :func:`default_section` (no pending line)."""
     state.set(
         "setup",
         {

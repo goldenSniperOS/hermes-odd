@@ -10,8 +10,8 @@ metadata:
     category: workflow
     related_skills: [rdd-review, rdd-review-lenses, odd-delegation, work-unit-commits]
 ---
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/assets/skills/judgment-day/SKILL.md -->
-<!-- derived-from: gentle-ai@f182ea2018a6399f5d1b6557cf36d71a3df0f723 internal/assets/skills/judgment-day/references/prompts-and-formats.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/judgment-day/SKILL.md -->
+<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/judgment-day/references/prompts-and-formats.md -->
 
 # Judgment-Day: blind dual review (advisory)
 
@@ -118,6 +118,9 @@ fix needs files outside the approved scope.
 - One bounded writer child (`delegate_task`) for the approved confirmed ids
   only, with `## Allowed edit surfaces` derived from the ledger locations and
   `## Verification` with the focused checks (see `hermes-odd:odd-delegation`).
+  Test-first where it applies: a test that reproduces the finding fails
+  (RED) before the fix and passes (GREEN) after; otherwise the stated
+  exception and proportionate checks.
   It must not review, add findings, refactor unrelated code or delegate.
 - Verify the child's report yourself, then commit the fix as its own
   work-unit commit (`fix(<scope>): ...`, tests included); record the sha.

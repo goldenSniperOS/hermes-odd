@@ -25,10 +25,6 @@ config_schema:
     type: str
     default: short
     description: "Answer style inside the persona block: short (short first) or detailed."
-  tdd_mode:
-    type: str
-    default: unset
-    description: "TDD mode for ODD work, shown as one 'TDD mode:' line in the prompt section: unset (no line), off, strict or project."
   engram_protocol:
     type: str
     default: auto

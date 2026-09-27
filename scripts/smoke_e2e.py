@@ -103,7 +103,7 @@ EXPECTED_SKILLS = [
     "work-unit-commits",
 ]
 SETUP_PENDING_LINE = (
-    "hermes-odd setup is pending: when the user is not mid-task, offer it once "
+    "hermes-odd setup is pending: offer it once when the user is not mid-task "
     "(load hermes-odd:setup); never interrupt work."
 )
 SETUP_SOUL = (
@@ -286,7 +286,6 @@ def run_setup(manager, temp_home: Path, loaded) -> str:
             "engram_protocol",
             "persona",
             "soul_cleanup",
-            "tdd_mode",
             "verbosity",
         ],
         f"Hermes parsed config_schema keys {sorted(schema)}",

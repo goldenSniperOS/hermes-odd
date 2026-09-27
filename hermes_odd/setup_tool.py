@@ -33,7 +33,6 @@ EMOJI = "🧭"
 INPUT_VALUES: dict[str, tuple[str, ...]] = {
     "persona": personas.PERSONA_CHOICES,
     "verbosity": PREF_VALUES["verbosity"],
-    "tdd_mode": ("off", "strict", "project"),
     "engram_protocol": PREF_VALUES["engram_protocol"],
     "soul_cleanup": ("yes", "later", "no"),
 }
@@ -71,13 +70,6 @@ SCHEMA: dict[str, Any] = {
                 "type": "string",
                 "enum": list(INPUT_VALUES["verbosity"]),
                 "description": "Answer style: short first, or detailed.",
-            },
-            "tdd_mode": {
-                "type": "string",
-                "enum": list(INPUT_VALUES["tdd_mode"]),
-                "description": (
-                    "off, strict (RED, GREEN, REFACTOR) or project (detect the runner)."
-                ),
             },
             "engram_protocol": {
                 "type": "string",

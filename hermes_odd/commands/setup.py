@@ -11,8 +11,11 @@ Deterministic plain text; never calls the model. Subcommands:
   ``confirm`` a dry-run preview of the SOUL.md change; only the ``confirm``
   form writes (backup first). ``custom`` reuses the own text given to the
   agent during setup;
-* ``tdd <off|strict|project>``, ``engram <on|off>``,
-  ``codegraph <auto|off>``, ``verbosity <short|detailed>``: store one answer.
+* ``engram <on|off>``, ``codegraph <auto|off>``, ``verbosity <short|detailed>``:
+  store one answer.
+
+There is no TDD answer: ODD applies one default test-first policy where it
+is applicable (``hermes-odd:odd-workflow`` section 6).
 
 The gentle-ai block cleanup of ``SOUL.md`` is ``/odd_soul``.
 
@@ -30,9 +33,8 @@ from .registry import CommandSpec
 OUTPUT_MAX_CHARS = 3500
 USAGE = (
     "/odd_setup [status|skip|reset|persona <rioplatense|neutral|custom|none> [confirm]|"
-    "tdd <off|strict|project>|engram <on|off>|codegraph <auto|off>|verbosity <short|detailed>]"
+    "engram <on|off>|codegraph <auto|off>|verbosity <short|detailed>]"
 )
-TDD_VALUES = ("off", "strict", "project")
 ENGRAM_VALUES = {"on": "auto", "auto": "auto", "off": "off"}
 CODEGRAPH_VALUES = ("auto", "off")
 
@@ -54,8 +56,6 @@ def _value_label(key: str, value: str) -> str:
         return "auto (when mcp__engram__* tools exist)"
     if key == "codegraph_guidance" and value == "auto":
         return "auto (when CodeGraph is on PATH or configured)"
-    if key == "tdd_mode" and value == "project":
-        return "per project"
     return value
 
 
@@ -95,16 +95,14 @@ class SetupCommand:
         for key in PREF_KEYS:
             value, source = effective[key]
             where = APPLIED_WHERE[key]
-            if key == "tdd_mode" and value == "unset":
-                where += " (no line while unset)"
             lines.append(f"- {LABEL[key]}: {_value_label(key, value)} · {source} · {where}")
         lines.append("")
         lines.append(self.soul_line())
         lines.append("")
         lines.append(
             "Set up: ask the agent (it loads hermes-odd:setup), or directly: "
-            "/odd_setup persona <rioplatense|neutral|custom|none> · tdd <off|strict|project> · "
-            "engram <on|off> · codegraph <auto|off> · verbosity <short|detailed> · skip · "
+            "/odd_setup persona <rioplatense|neutral|custom|none> · engram <on|off> · "
+            "codegraph <auto|off> · verbosity <short|detailed> · skip · "
             "reset. SOUL cleanup of gentle-ai blocks: /odd_soul"
         )
         lines.append(NEXT_SESSION_NOTE)
@@ -206,8 +204,6 @@ class SetupCommand:
                 return self.persona(rest[0], confirm=False)
             if len(rest) == 2 and rest[1] == "confirm":
                 return self.persona(rest[0], confirm=True)
-        if head == "tdd" and len(rest) == 1 and rest[0] in TDD_VALUES:
-            return self.set_one("tdd_mode", rest[0])
         if head == "engram" and len(rest) == 1 and rest[0] in ENGRAM_VALUES:
             return self.set_one("engram_protocol", ENGRAM_VALUES[rest[0]])
         if head == "codegraph" and len(rest) == 1 and rest[0] in CODEGRAPH_VALUES:
@@ -220,10 +216,10 @@ class SetupCommand:
 def make_odd_setup(command: SetupCommand) -> CommandSpec:
     return CommandSpec(
         name="odd_setup",
-        description="First-run setup: persona, answer style, TDD mode, Engram, SOUL cleanup",
+        description="First-run setup: persona, answer style, Engram, SOUL cleanup",
         handler=command.handle,
         args_hint=(
-            "[status|skip|reset|persona ID [confirm]|tdd off/strict/project|"
+            "[status|skip|reset|persona ID [confirm]|"
             "engram on/off|codegraph auto/off|verbosity short/detailed]"
         ),
         group="Setup",
