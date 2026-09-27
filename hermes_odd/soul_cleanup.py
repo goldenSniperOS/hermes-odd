@@ -15,6 +15,9 @@ top-level block                       action
 ``gentle-ai:sdd-orchestrator``        remove (with its nested ``sdd-session-preflight``;
                                       the v3.7.0 name of the same block)
 ``gentle-ai:sdd-session-preflight``   remove (when found on its own)
+``gentle-ai:strict-tdd-mode``         remove (a v3.7.0 strict TDD switch; current
+                                      gentle-ai retires it and ODD's test-first
+                                      policy replaces it)
 ``gentle-ai:agent-routing``           remove, but **lift** its nested
                                       ``gentle-ai:remote-authorization`` block into
                                       its place (a general safety rule)
@@ -78,6 +81,10 @@ RULES: dict[str, tuple[str, str]] = {
     "orchestrator": (REMOVE, ""),
     "sdd-orchestrator": (REMOVE, ""),
     "sdd-session-preflight": (REMOVE, ""),
+    # Written by gentle-ai v3.7.0 when strict TDD was on; a current gentle-ai
+    # run removes it (strict_tdd.go) and it contradicts the applicable
+    # test-first policy hermes-odd's prompt section states.
+    "strict-tdd-mode": (REMOVE, ""),
     "agent-routing": (REMOVE, ""),
     "engram-protocol": (MOVE, "hermes-odd:engram-protocol"),
     "codegraph-guidance": (MOVE, "hermes-odd:codegraph"),

@@ -167,8 +167,9 @@ now removes `orchestrator` (hermes-odd supplies ODD); persona and
 remote-authorization keep their handling. `strict-tdd-mode`: written by v3.7.0
 (`internal/components/sdd/inject.go` line 538) when strict TDD was on, never
 by a current install (`internal/cli/run.go` line 1105 calls
-`InjectStrictTDDWithOptions` with `enabled=false`, which removes it); kept as
-an unknown block.
+`InjectStrictTDDWithOptions` with `enabled=false`, which removes it);
+`/odd_soul` removes it too, since it contradicts the test-first policy
+(follow-up to the T11 review).
 
 **Every other changed indexed source.**
 
@@ -485,7 +486,7 @@ New upstream files reported by the drift script (candidates):
 |---|---|---|---|
 | gentle-ai | `internal/assets/hermes/orchestrator.md`, `internal/assets/generic/orchestrator.md` | informational | the former `sdd-orchestrator.md` assets without SDD (`e219644b`); no Go code injects the Hermes one at the new head, and hermes-odd's own section replaces it |
 | gentle-ai | `internal/assets/skills/_shared/odd-orchestrator-sections.md` | informational | renamed shared orchestrator sections (`e219644b`); covered by the `odd-*` skills |
-| gentle-ai | `internal/components/agentguidance/strict_tdd.go` | informational | manages the legacy `strict-tdd-mode` section of system-prompt files (`SOUL.md` for Hermes, markdown-sections strategy); `internal/cli/run.go` calls it with `enabled=false`, so a newer gentle-ai run retires that section. hermes-odd writes no such block (its TDD line lives in its own prompt section) and `/odd_soul` keeps unknown blocks |
+| gentle-ai | `internal/components/agentguidance/strict_tdd.go` | informational | manages the legacy `strict-tdd-mode` section of system-prompt files (`SOUL.md` for Hermes, markdown-sections strategy); `internal/cli/run.go` calls it with `enabled=false`, so a newer gentle-ai run retires that section. hermes-odd writes no such block; `/odd_soul` removes it (T11 follow-up) |
 | gentle-ai | `internal/components/agentguidance/opencode_background.go`, `pi_cleanup.go` | not-applicable | OpenCode background agents; Pi prompt cleanup |
 | gentle-ai | `internal/components/reviewassets/*.go` (`codegraph`, `contract`, `install`, `judgment`, `lens`, `ownership`, `render`) | informational | native review asset installer (judge contract and JSON result shape for runtimes with native review); a T8 reference, not needed by the advisory `hermes-odd:judgment-day` |
 | gentle-shell | `lib/odd-phase.ts` | not-applicable | Pi prompt phase label |

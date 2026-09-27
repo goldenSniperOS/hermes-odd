@@ -28,7 +28,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
   one scoped correction).
 - `/odd_soul` also removes the `gentle-ai:orchestrator` block, the ODD-only
   orchestrator that a current `gentle-ai install` writes for Hermes
-  (gentle-ai `fb4b59a7`).
+  (gentle-ai `fb4b59a7`), and the `gentle-ai:strict-tdd-mode` block gentle-ai
+  v3.7.0 wrote when strict TDD was on, which contradicts the test-first policy.
 - Upstream pins moved to gentle-ai `a9e36e9` and gentle-shell `b756b4f`
   (`main`; no release after v3.7.0), with every indexed source re-hashed, the
   canonical Hermes routing re-rendered and all commits triaged in

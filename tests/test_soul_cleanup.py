@@ -146,15 +146,13 @@ class PlanTests(HomeCase):
                 ("gentle-ai:codegraph-guidance", sc.MOVE),
                 ("gentle-ai:persona", sc.KEEP),
                 ("gentle-ai:engram-protocol", sc.MOVE),
-                # Legacy block a current gentle-ai run retires itself: kept as unknown.
-                ("gentle-ai:strict-tdd-mode", sc.KEEP),
+                # Legacy strict TDD switch: contradicts the test-first policy.
+                ("gentle-ai:strict-tdd-mode", sc.REMOVE),
                 ("gentle-ai:orchestrator", sc.REMOVE),
                 ("gentle-ai:agent-routing", sc.REMOVE),
             ],
         )
-        self.assertEqual(
-            plan.after, HEADER + PERSONA + "\n\n" + strict_tdd + "\n\n" + REMOTE + "\n"
-        )
+        self.assertEqual(plan.after, HEADER + PERSONA + "\n\n" + REMOTE + "\n")
         self.assertNotIn("gentle-ai:orchestrator", plan.after)
         self.assertEqual(plan.items[4].saved, len(odd_orchestrator))
 
