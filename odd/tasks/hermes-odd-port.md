@@ -113,7 +113,7 @@ gateway.
       (sdd-orchestrator, sdd-session-preflight) and agent-routing; move engram-protocol and
       codegraph-guidance to lazy skills; keep remote-authorization.
 - [x] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
-- [ ] T11 Re-port upstream test-first ODD policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell
+- [x] T11 Re-port upstream test-first ODD policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell
       a76e6f2/80375c6), decide the setup TDD question, re-render Hermes routing, re-pin.
       upstream sources per component and new upstream commands/skills to triage) +
       scheduled CI.
@@ -144,6 +144,11 @@ gateway.
 
 ## Progress
 
+- 2026-09-27: T11 done in four natively reviewed work units (Pi RDD, all approved and
+  acknowledged): ff4c100 soul orchestrator block (review-c850caf3c3284824), 3da8229 test-first
+  policy + re-pin to gentle-ai a9e36e9 / gentle-shell b756b4f (review-b6c149a1c3c2f967, 4 lenses,
+  non-blocking warnings on strict-tdd-mode), baea29c docs/triage (review-bcf69ffed62b712b, low),
+  d5143d3 strict-tdd-mode removal follow-up (review-7b35b6f7ba01b941). Drift clean at new pins.
 - 2026-09-26: v0.4.0 released (4118bca, tag v0.4.0). Drift workflow verified on GitHub:
   idempotent single issue #3. Upstream 5ffb65fc limits RDD to runtimes with a native
   review transport (not Hermes); fb4b59a7 installs an ODD-only orchestrator prompt on Hermes.
