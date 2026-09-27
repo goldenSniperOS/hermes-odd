@@ -144,6 +144,9 @@ gateway.
 
 ## Progress
 
+- 2026-09-26: v0.4.0 released (4118bca, tag v0.4.0). Drift workflow verified on GitHub:
+  idempotent single issue #3. Upstream 5ffb65fc limits RDD to runtimes with a native
+  review transport (not Hermes); fb4b59a7 installs an ODD-only orchestrator prompt on Hermes.
 - 2026-09-25: T10 judgment-day, work-unit-commits, chained-pr (own words; upstream skill
   frontmatter says Apache-2.0 vs MIT repos). Drift run: gentle-ai 36 commits, gentle-shell 81;
   13 indexed sources changed. T8 still blocked: manifest.go unchanged at head. Needs-port:
@@ -226,4 +229,4 @@ gateway.
 
 ## Next step
 
-Release v0.4.0; then T11 (test-first re-port + re-pin) and the gentle-ai Discussion.
+T11 (test-first re-port + upstream RDD gating 5ffb65fc + re-pin); draft the gentle-ai Discussion.
