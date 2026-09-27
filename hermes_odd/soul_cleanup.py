@@ -10,7 +10,10 @@ blocks are dead weight. The cleanup rules (user decisions):
 ====================================  ===================================================
 top-level block                       action
 ====================================  ===================================================
-``gentle-ai:sdd-orchestrator``        remove (with its nested ``sdd-session-preflight``)
+``gentle-ai:orchestrator``            remove (the ODD orchestrator a current
+                                      gentle-ai install writes for Hermes)
+``gentle-ai:sdd-orchestrator``        remove (with its nested ``sdd-session-preflight``;
+                                      the v3.7.0 name of the same block)
 ``gentle-ai:sdd-session-preflight``   remove (when found on its own)
 ``gentle-ai:agent-routing``           remove, but **lift** its nested
                                       ``gentle-ai:remote-authorization`` block into
@@ -67,6 +70,12 @@ MAX_MARKERS = 128
 
 # gentle-ai top-level block name -> (action, skill that now carries it).
 RULES: dict[str, tuple[str, str]] = {
+    # gentle-ai after v3.7.0 (fb4b59a7) writes its ODD-only Hermes orchestrator
+    # (internal/assets/hermes/orchestrator.md) as ``orchestrator``, ahead of
+    # agent-routing, and renames a v3.7.0 ``sdd-orchestrator`` block to it
+    # (agentguidance/orchestrator.go). hermes-odd's prompt section and skills
+    # supply the same ODD guidance.
+    "orchestrator": (REMOVE, ""),
     "sdd-orchestrator": (REMOVE, ""),
     "sdd-session-preflight": (REMOVE, ""),
     "agent-routing": (REMOVE, ""),

@@ -116,6 +116,48 @@ class PlanTests(HomeCase):
         self.assertEqual(self.read(), REAL_LIKE)  # planning never writes
         self.assertEqual(self.backups(), [])
 
+    def test_current_gentle_ai_layout_removes_the_odd_orchestrator_block(self) -> None:
+        # A gentle-ai install after v3.7.0 (fb4b59a7) writes the ODD-only Hermes
+        # orchestrator as gentle-ai:orchestrator right before agent-routing
+        # (agentguidance/inject.go, orchestrator.go); hermes-odd supplies it.
+        odd_orchestrator = block("orchestrator", f"## Agent Teams Orchestrator {CANARY}\n")
+        strict_tdd = block("strict-tdd-mode", "Strict TDD Mode: enabled\n")
+        text = (
+            HEADER
+            + CODEGRAPH
+            + "\n\n"
+            + PERSONA
+            + "\n\n"
+            + ENGRAM
+            + "\n\n"
+            + strict_tdd
+            + "\n\n"
+            + odd_orchestrator
+            + "\n\n"
+            + ROUTING
+            + "\n"
+        )
+        self.write(text)
+        plan = sc.plan_cleanup(self.home)
+        self.assertEqual(plan.error, "")
+        self.assertEqual(
+            [(i.label, i.action) for i in plan.items],
+            [
+                ("gentle-ai:codegraph-guidance", sc.MOVE),
+                ("gentle-ai:persona", sc.KEEP),
+                ("gentle-ai:engram-protocol", sc.MOVE),
+                # Legacy block a current gentle-ai run retires itself: kept as unknown.
+                ("gentle-ai:strict-tdd-mode", sc.KEEP),
+                ("gentle-ai:orchestrator", sc.REMOVE),
+                ("gentle-ai:agent-routing", sc.REMOVE),
+            ],
+        )
+        self.assertEqual(
+            plan.after, HEADER + PERSONA + "\n\n" + strict_tdd + "\n\n" + REMOTE + "\n"
+        )
+        self.assertNotIn("gentle-ai:orchestrator", plan.after)
+        self.assertEqual(plan.items[4].saved, len(odd_orchestrator))
+
     def test_plan_output_lists_actions_sizes_and_warning(self) -> None:
         self.write(REAL_LIKE)
         text = self.command().handle("plan")
