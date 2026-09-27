@@ -113,10 +113,13 @@ gateway.
       (sdd-orchestrator, sdd-session-preflight) and agent-routing; move engram-protocol and
       codegraph-guidance to lazy skills; keep remote-authorization.
 - [x] T10 Port portable skills + drift script over `upstream.lock.json` (reports changed
-- [x] T11 Re-port upstream test-first ODD policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell
-      a76e6f2/80375c6), decide the setup TDD question, re-render Hermes routing, re-pin.
       upstream sources per component and new upstream commands/skills to triage) +
       scheduled CI.
+- [x] T11 Re-port upstream test-first ODD policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell
+      a76e6f2/80375c6), decide the setup TDD question, re-render Hermes routing, re-pin.
+- [ ] T12 Real-install fix: the Hermes CLI resolves plugin commands by exact name
+      (`/odd-status`), only gateways map `_` to `-`; document and print the hyphenated
+      form everywhere, and add a smoke check that dispatches through the CLI path.
 
 ## Acceptance criteria
 
@@ -234,4 +237,4 @@ gateway.
 
 ## Next step
 
-T11 (test-first re-port + upstream RDD gating 5ffb65fc + re-pin); draft the gentle-ai Discussion.
+T12 (hyphenated command names), then v0.5.1 and a real CLI + Telegram check.
