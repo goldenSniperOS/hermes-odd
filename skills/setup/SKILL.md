@@ -148,4 +148,4 @@ yourself with file tools.
 add `confirm` to write), `/odd-setup engram <on|off>`, `/odd-setup codegraph <auto|off>`,
 `/odd-setup verbosity <short|detailed>`, and for the cleanup
 `/odd-soul [status|plan|apply confirm|restore]`.
-In the CLI the hyphen form: `/odd-setup`, `/odd-soul`.
+Always write the hyphen form: the CLI accepts only it, gateways accept both.

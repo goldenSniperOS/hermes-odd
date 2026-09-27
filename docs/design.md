@@ -151,10 +151,11 @@ A command spec name is the Telegram-safe form users type in gateways
 (`odd_commands`, `[a-z0-9_]`, at most 32 characters, no leading, trailing or
 doubled `_`). hermes-odd registers the hyphenated key (`odd-commands`):
 
-- gateways accept `/odd-commands` and `/odd-commands` (underscores are mapped
+- gateways accept `/odd_commands` and `/odd-commands` (underscores are mapped
   to hyphens before lookup);
-- the Telegram menu shows `/odd-commands` (Hermes shows `-` as `_`);
-- the CLI needs the exact key, `/odd-commands`.
+- the Telegram menu shows `/odd_commands` (Hermes shows `-` as `_`);
+- the CLI needs the exact key, `/odd-commands`, so docs, skills and command
+  output always print the hyphen form (checked by the smoke test).
 
 Optional arguments use `[...]` in `args_hint`; a hint starting with `<` marks
 the command as requiring an argument and hides it from the Telegram menu.
