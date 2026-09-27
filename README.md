@@ -38,18 +38,20 @@ Native RDD review is blocked upstream for Hermes (see
 ## What gets injected
 
 - **Always on:** one system prompt section, `hermes-odd-workflow` (about
-  3.3k characters; a test caps it at 3,800 of the 4,000 Hermes allows per
+  3.5k characters; a test caps it at 3,800 of the 4,000 Hermes allows per
   section and 8,000 across all plugins). It carries the ODD protocol, the
   mandatory `delegate_task` triggers, the feature-tracking and resume
-  rules, blocking-question and language rules, and pointers to the skills
-  below.
+  rules, the default test-first policy, blocking-question and language
+  rules, and pointers to the skills below.
 - **Lazy skills** (loaded only on demand with `skill_view`; plugin skills
   never enter the always-on skills index):
   - `hermes-odd:odd-workflow` — full ODD protocol, routing ladder and
     triggers, research depth, lossless blocking prompts over chat, checks
-    and TDD, and pointers to the commit, delivery and review skills.
+    and the test-first policy, and pointers to the commit, delivery and
+    review skills.
   - `hermes-odd:odd-delegation` — `delegate_task` mechanics, mission
-    template, allowed edit surfaces for writers.
+    template, allowed edit surfaces for writers, risk-proportionate
+    verification of a writer's work.
   - `hermes-odd:odd-feature-tracking` — feature document template,
     Engram™ mirror (`mcp__engram__*` tools), resume protocol, `todo`
     projection.
@@ -85,8 +87,7 @@ Native RDD review is blocked upstream for Hermes (see
   CodeGraph is present (a `codegraph` binary on `PATH` or an
   `mcp_servers.codegraph` entry in Hermes' `config.yaml`).
 - **Only while setup is pending:** one extra line in the section asking the
-  agent to offer the setup once, never mid-task. After setup, one
-  `TDD mode: <mode>` line when you chose a TDD mode. Every combination stays
+  agent to offer the setup once, never mid-task. Every combination stays
   under the 3,800-character cap (tested).
 - **Only if you choose a persona:** one `<!-- hermes-odd:persona -->` block at
   the top of `SOUL.md` (see below). Nothing else in `SOUL.md` changes unless
@@ -98,7 +99,8 @@ The canonical gentle-ai routing render for Hermes is vendored in
 ## Upstream compatibility
 
 hermes-odd supports **gentle-ai v3.7.0** (binary >= 3.7.0) and **gentle-shell
-v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits in
+v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits (both on
+`main` after v3.7.0, since neither has a newer release) in
 [`upstream/upstream.lock.json`](upstream/upstream.lock.json).
 [`upstream/SUPPORTED.md`](upstream/SUPPORTED.md) has the support matrix per
 component (ODD, RDD, review contract, viewers, persona, SOUL cleanup,
@@ -200,9 +202,12 @@ it yourself with `/odd_setup`. It asks about:
 
 - persona;
 - answer style;
-- TDD mode;
 - the Engram protocol;
 - the SOUL.md cleanup.
+
+There is no TDD question: like upstream Gentle AI, ODD applies one default
+test-first policy wherever a relevant runnable test and a clear expected
+outcome exist, and states the exception otherwise.
 
 The persona is written into `SOUL.md` only after you confirm it, with a
 backup. Details are in [First-run setup](#first-run-setup). Finish with:
@@ -261,7 +266,7 @@ registered name exactly.
 
 | Command | What it does |
 |---|---|
-| `/odd_setup [status\|skip\|reset\|persona ID [confirm]\|tdd MODE\|engram on\|off\|codegraph auto\|off\|verbosity short\|detailed]` | `status` (default): pending / complete / skipped, every answer with its value, where it came from (config, setup, default) and where it is applied, and the SOUL.md block. `skip` stops the agent from offering setup; `reset` clears the answers and makes setup pending again (it does not remove the SOUL.md block: use `persona none`). `persona <rioplatense\|neutral\|custom\|none>` shows a dry-run preview of the SOUL.md change; only `persona <id> confirm` writes it (backup first). `tdd <off\|strict\|project>`, `engram <on\|off>`, `codegraph <auto\|off>`, `verbosity <short\|detailed>` store one answer |
+| `/odd_setup [status\|skip\|reset\|persona ID [confirm]\|engram on\|off\|codegraph auto\|off\|verbosity short\|detailed]` | `status` (default): pending / complete / skipped, every answer with its value, where it came from (config, setup, default) and where it is applied, and the SOUL.md block. `skip` stops the agent from offering setup; `reset` clears the answers and makes setup pending again (it does not remove the SOUL.md block: use `persona none`). `persona <rioplatense\|neutral\|custom\|none>` shows a dry-run preview of the SOUL.md change; only `persona <id> confirm` writes it (backup first). `engram <on\|off>`, `codegraph <auto\|off>`, `verbosity <short\|detailed>` store one answer |
 | `/odd_soul [status\|plan [persona]\|apply [persona] confirm\|restore [N]]` | Cleans the gentle-ai blocks out of `SOUL.md` (see [SOUL.md cleanup](#soulmd-cleanup-of-gentle-ai-blocks)). `status` (default): each block, its size and what the cleanup would do, and the current truncation. `plan`: dry run with the action per block, characters saved, the new size and the truncation before → after. `apply confirm`: backup, atomic write, verification. `restore`: lists the backups; `restore N` restores one (backing up the current file first) |
 
 **Health**
@@ -323,11 +328,9 @@ form (buttons on Telegram):
    Hermes' `clarify` marks the first choice as "(Recommended)", so this
    question is asked as free text with the four options listed.
 2. **Answer style** — short first, or detailed.
-3. **TDD mode** — per project (detect the runner), strict (RED → GREEN →
-   REFACTOR) or off.
-4. **Engram memory protocol** — auto (a prompt line points to
+3. **Engram memory protocol** — auto (a prompt line points to
    `hermes-odd:engram-protocol` when `mcp__engram__*` tools exist) or off.
-5. **SOUL cleanup of gentle-ai blocks** — yes (the agent shows the dry-run
+4. **SOUL cleanup of gentle-ai blocks** — yes (the agent shows the dry-run
    plan through the `odd_soul_apply` tool and applies it only after your
    explicit yes), later (`/odd_soul` whenever you want), or no.
 
@@ -348,14 +351,15 @@ Where each answer goes:
   `<!-- gentle-ai:... -->` blocks stay byte-identical; if a gentle-ai persona
   block exists, both personas coexist and the summary says so. `/odd_setup
   persona none` (then `confirm`) removes the block again.
-- **TDD mode**: one `TDD mode: <mode>` line in the prompt section.
 - **Engram protocol / CodeGraph guidance**: one pointer line each in the
   prompt section (`codegraph_guidance` is not asked; it defaults to `auto`,
   `/odd_setup codegraph off` removes the line).
 - **All answers**: `plugins.entries.hermes-odd.settings` in `config.yaml`
   (the plugin's `config_schema`), and the setup record in the plugin state.
   A valid value you edit in `config.yaml` wins. Managed installs refuse the
-  config write; the answers then stay in the plugin state.
+  config write; the answers then stay in the plugin state. A `tdd_mode`
+  answer or setting from an older version is still read and ignored: the
+  TDD choice is gone (see [First-run setup](#3-first-run-setup)).
 
 Everything takes effect in the **next new session** (`/new` or a new chat).
 The built-in personas are hermes-odd's own wording of the upstream behavior
@@ -372,7 +376,8 @@ are dead weight. `/odd_soul` removes them, only with your confirmation:
 
 | Block | What `/odd_soul` does |
 |---|---|
-| `sdd-orchestrator` (with its nested `sdd-session-preflight`) | removed |
+| `orchestrator` (the ODD orchestrator a current gentle-ai install writes) | removed |
+| `sdd-orchestrator` (with its nested `sdd-session-preflight`; the v3.7.0 name) | removed |
 | `agent-routing` | removed; its nested `remote-authorization` block is kept in its place |
 | `engram-protocol` | removed; now the lazy skill `hermes-odd:engram-protocol` |
 | `codegraph-guidance` | removed; now the lazy skill `hermes-odd:codegraph` |
@@ -418,7 +423,9 @@ candidate as a receipt. A review outcome never authorizes delivery.
 gentle-ai runs native immutable review only for runtimes that can launch a
 fresh, constrained reviewer and prove that boundary before the review starts.
 gentle-ai 3.7.0 advertises that for claude-code, opencode, codex and pi, not
-for hermes. Asked as Hermes, the review CLI refuses in preflight:
+for hermes, and upstream now gives receipt-driven development only to those
+runtimes: every other runtime, Hermes included, gets ODD only. Asked as
+Hermes, the review CLI refuses in preflight:
 
 ```text
 gentle-ai review status --cwd . --contract gentle-ai.review-integration/v2 --agent hermes --next-transition
@@ -436,7 +443,8 @@ What hermes-odd does instead:
 - The `hermes-odd:rdd-review` skill tells the agent, when RDD is on, to report
   "native review unavailable on Hermes (gentle-ai runtime eligibility)" once
   per candidate, record it in the ODD feature document, and continue under
-  your ordinary repository policy (tests, CI, human review).
+  your ordinary repository policy (the applicable checks, CI, human
+  review).
 - On request, an **advisory 4R review** (Risk, Resilience, Readability,
   Reliability; `hermes-odd:rdd-review-lenses`) runs as read-only
   `delegate_task` children over the exact commit (`git show <sha>`), labeled

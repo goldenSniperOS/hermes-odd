@@ -196,6 +196,225 @@ New since then: gentle-shell `docs/prompt-history.md` (not-applicable: Pi
 prompt history) and `lib/agents-message-delivery.ts` (not-applicable: Pi
 cross-orchestrator messaging).
 
+gentle-ai `6c7f162f..a9e36e9b` (98 commits):
+
+| Commit | Date | Subject | Class | Reason |
+|---|---|---|---|---|
+| `a9e36e9b` | 2026-09-27 | Merge pull request #5027 from Gentleman-Programming/fix/5026-codex-mcp-multiline | not-applicable | Codex MCP TOML handling |
+| `def54b8d` | 2026-09-27 | fix(filemerge): ignore Codex MCP headers inside TOML multiline strings | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `eb462d2a` | 2026-09-27 | Merge pull request #5024 from Gentleman-Programming/fix/5022-filemerge-edge-cases | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `109351c0` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/5022-filemerge-edge-cases | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `a23ee94e` | 2026-09-26 | fix(filemerge): skip chmod when the forced mode already matches | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `e0744c8c` | 2026-09-26 | Merge pull request #5016 from Gentleman-Programming/fix/opencode-settings-writer-consistency | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `bb6df49e` | 2026-09-26 | fix(filemerge): ignore TOML headers in multiline strings and report mode-only changes | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `b79dca8c` | 2026-09-26 | docs(odd): record bot review fixes | not-applicable | upstream feature document |
+| `e9926159` | 2026-09-26 | fix(opencode): keep new settings refusals off other agents | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `464fba4d` | 2026-09-26 | Merge pull request #5019 from Gentleman-Programming/fix/codex-toml-multiline | not-applicable | Codex MCP TOML handling |
+| `21116ab5` | 2026-09-26 | fix(engram): reuse the TOML scanner for multiline string detection | not-applicable | Codex MCP TOML handling |
+| `da3bcc8a` | 2026-09-26 | fix(engram): ignore MCP headers inside TOML multiline strings | not-applicable | Codex MCP TOML handling |
+| `a596d7b3` | 2026-09-26 | Merge pull request #4914 from danielgap/fix/4882-telemetry-increment-syncs | not-applicable | telemetry |
+| `091c25ad` | 2026-09-26 | docs(odd): record workspace settings regression fix | not-applicable | upstream feature document |
+| `52863e0c` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/opencode-settings-writer-consistency | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `3268e4ad` | 2026-09-26 | fix(opencode): keep workspace installs on the loaded settings file | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `533c3872` | 2026-09-26 | Merge pull request #5014 from Gentleman-Programming/fix/preserve-file-mode | not-applicable | merge of the file-mode fixes (`6c729f36`, `a3c139a6`) |
+| `44be4761` | 2026-09-26 | Merge pull request #5017 from Gentleman-Programming/fix/install-sync-convergence | not-applicable | merge of `ea0b6986` |
+| `64173bb2` | 2026-09-26 | Merge pull request #4760 from ardelperal/feat/1884-doctor-state-manifest | not-applicable | merge of the managed-assets manifest (`0da1ab73`) |
+| `ed90f1e2` | 2026-09-26 | Merge pull request #5012 from Gentleman-Programming/fix/hermetic-pi-tests-brew | not-applicable | Pi adapter and install tests, Homebrew |
+| `a3c139a6` | 2026-09-26 | fix(filemerge): never widen forced zero modes and repair launcher exec bits | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `ea0b6986` | 2026-09-26 | fix(sync): make install and sync converge on the same files | not-applicable | install/sync convergence (Codex TOML ordering, OpenCode) |
+| `4e66ab0a` | 2026-09-26 | test(opencode): isolate config tests from OPENCODE_CONFIG_DIR | not-applicable | upstream tests |
+| `bd196fde` | 2026-09-26 | docs(odd): record settings writer review corrections | not-applicable | upstream feature document |
+| `e03e405d` | 2026-09-26 | fix(opencode): scope settings refusals to OpenCode and port new tests | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `2564eaab` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/preserve-file-mode | not-applicable | merge of `main` into the file-mode branch |
+| `6c729f36` | 2026-09-26 | fix(filemerge): stop rewrites from widening existing file permissions | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `7585680f` | 2026-09-26 | fix(opencode): keep settings comments and refuse theme symlinks | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `90bbcd36` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/hermetic-e-ff | not-applicable | Pi adapter and install tests, Homebrew |
+| `f0b4215d` | 2026-09-26 | test(pi): isolate the Pi adapter tests from PI_CODING_AGENT_DIR | not-applicable | upstream tests |
+| `fc546c30` | 2026-09-26 | test(cli): isolate brew env assertion and copy the command environment | not-applicable | upstream tests |
+| `a67fd182` | 2026-09-26 | fix(install): keep Pi tests hermetic and brew free of auto-update | not-applicable | Pi adapter and install tests, Homebrew |
+| `dee8edd2` | 2026-09-26 | Merge pull request #4899 from danielgap/fix/2995-review-store-exit | informational | merge of the #2995 review store commits (T8 reference) |
+| `3603d96c` | 2026-09-26 | fix(opencode): route component settings through selected config | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `c9d6b0f7` | 2026-09-26 | Merge pull request #4965 from ardelperal/fix/4689-unix-installer-module-major | not-applicable | merge of the installer module-path fixes (`c2dc7129`) |
+| `171b36f2` | 2026-09-26 | Merge pull request #3731 from ardelperal/fix/3049-reviewer-plugin-path-skew | not-applicable | merge of the OpenCode reviewer plugin path fixes (#3049) |
+| `6ee5df7e` | 2026-09-26 | Merge pull request #5008 from Gentleman-Programming/fix/uninstall-opencode-agents | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `5dc4fffb` | 2026-09-26 | fix(opencode): route theme writes to selected settings | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `87826c1a` | 2026-09-26 | fix(uninstall): scope OpenCode-family cleanup by runtime and legacy ownership | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `f00df6a1` | 2026-09-26 | test(uninstall): pin XDG_CONFIG_HOME in OpenCode uninstall integration tests | not-applicable | upstream tests |
+| `f5b236e7` | 2026-09-26 | fix(uninstall): remove gentle-ai-managed OpenCode and Kilo agents | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `3a19dbf8` | 2026-09-26 | Merge pull request #5004 from pablon/pr-slice-1 | not-applicable | merge of the JSONC legacy marker cleanup (OpenCode settings) |
+| `da00e9b3` | 2026-09-26 | fix(opencode): explain non-regular settings resolution | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `fe4390b8` | 2026-09-26 | docs(odd): record OpenCode marker migration evidence | not-applicable | upstream feature document |
+| `0dc8cc60` | 2026-09-26 | fix(opencode): migrate legacy agent markers during sync | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `263a8f63` | 2026-09-26 | Merge pull request #5006 from Gentleman-Programming/fix/review-guidance-ownership | informational | merge of `535fd70e`, `b8f5d7b1` |
+| `befd337e` | 2026-09-26 | fix(opencode): record legacy migration writes even when publishing errors | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `b8f5d7b1` | 2026-09-26 | refactor(agentguidance): keep review-contract fallback helpers test-only | informational | `orchestrator.go`: review-contract fallback helpers made test-only; no Hermes behavior |
+| `d652462a` | 2026-09-26 | fix(filemerge): accept empty OpenCode settings during marker cleanup | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `535fd70e` | 2026-09-26 | fix(opencode): scope review cleanup and review-contract wiring | informational | `inject.go`/`orchestrator.go`: OpenCode review cleanup and review-contract wiring; the Hermes injection path is unchanged |
+| `6471b688` | 2026-09-26 | Merge pull request #5005 from Gentleman-Programming/fix/orchestrator-prompt-install | informational | merge of `fb4b59a7`, `1ba7d888`, `5ffb65fc` and their tests |
+| `3d5c5a4e` | 2026-09-26 | docs(odd): align orchestrator feature objective with RDD scoping | not-applicable | upstream feature document |
+| `81a4711a` | 2026-09-26 | test(e2e): expect the orchestrator section in theme-only installs | not-applicable | upstream tests |
+| `4d95d115` | 2026-09-26 | test(e2e): expect RDD routing guidance only on RDD runtimes | not-applicable | upstream tests (RDD routing only on RDD runtimes) |
+| `5ffb65fc` | 2026-09-26 | feat(rdd): limit receipt-driven development to Claude Code, Codex and OpenCode | ported | RDD only for runtimes with a native review transport (`model.SupportsReceiptDrivenDevelopment`: claude-code, codex, opencode, pi); Hermes gets ODD-only routing and orchestrator prompts. hermes-odd keeps its honest stance (native review unavailable on Hermes; the 4R advisory and judgment-day say "no receipt"), aligns the prompt Review line and step 7, `hermes-odd:rdd-review` and the canonical re-render |
+| `2372afd1` | 2026-09-26 | fix(filemerge): require json.Valid before MarshalJSONPreservingPermissions | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `96bed1cb` | 2026-09-26 | feat(filemerge): add JSONC-aware legacy marker cleanup with comment preservation | not-applicable | gentle-ai config file writer (TOML/JSON merge, file modes) |
+| `1ba7d888` | 2026-09-26 | feat(prompts): port Gentle Shell orchestration sections to every runtime | ported | shared orchestrator sections (`_shared/odd-orchestrator-sections.md`): the risk-proportionate Delegated Verification Gate and checking rules ported into `hermes-odd:odd-delegation` section 3 and `hermes-odd:odd-workflow` section 6 |
+| `fb4b59a7` | 2026-09-26 | fix(install): install the ODD and RDD orchestrator prompt for every runtime | ported | installs the ODD-only Hermes orchestrator (`internal/assets/hermes/orchestrator.md`) as a top-level `gentle-ai:orchestrator` block ahead of agent-routing in `SOUL.md`, renaming a v3.7.0 `sdd-orchestrator` block; `/odd_soul` now removes `orchestrator` too. Its ODD behavior is ported in own words (see the T11 table above) |
+| `c014fbe3` | 2026-09-26 | Merge pull request #4998 from Gentleman-Programming/fix/4471-opencode-agent-parity | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `45523842` | 2026-09-26 | fix(upgrade): back up OpenCode default-agent ownership at the effective path | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `209d8867` | 2026-09-26 | fix(opencode): preserve settings file mode on managed rewrites | not-applicable | OpenCode settings file mode (touches `inject.go` for OpenCode delivery only) |
+| `a0509694` | 2026-09-26 | docs(odd): record PR review fixes for opencode agent parity | not-applicable | upstream feature document |
+| `3f8df517` | 2026-09-26 | fix(skills): remove the legacy shared marker on Windows and uninstall | not-applicable | gentle-ai uninstall for OpenCode/Kilo |
+| `b51df813` | 2026-09-26 | docs(odd): record opencode agent parity verification evidence | not-applicable | upstream feature document |
+| `57871ec7` | 2026-09-26 | fix(kilo): restore managed agents and migrate v3.7.0 __managed_by | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `3d01b376` | 2026-09-26 | fix(install): restore non-SDD assets dropped by the SDD retirement | not-applicable | gentle-ai skill and OpenCode asset installer after the SDD retirement; hermes-odd ships its own skills |
+| `b674adf5` | 2026-09-25 | fix(opencode): migrate v3.7.0 managed agents off __managed_by | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `72519aca` | 2026-09-25 | fix(opencode): restore agent parity with Gentle Shell without __managed_by | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `84062a2e` | 2026-09-25 | fix(assets): probe the PATH binary on every relay and drop the mtime cache | not-applicable | OpenCode review transport plugin |
+| `9fdf84d7` | 2026-09-25 | test(state): merge the bundle-digest sensitivity tests into one | not-applicable | upstream tests |
+| `be20c940` | 2026-09-21 | chore(deadcode): baseline updated for #4760 manifest data model | not-applicable | upstream dead-code baseline |
+| `0da1ab73` | 2026-09-18 | feat(state): introduce managed-assets manifest model | not-applicable | gentle-ai managed-assets state manifest |
+| `bff0ddac` | 2026-09-25 | Merge remote-tracking branch 'upstream/main' into fix/2995-rebased | informational | merge of `main` into the #2995 review store branch |
+| `7ac249a4` | 2026-09-23 | docs(odd): reconcile ga-2995 edge-detachment checklist with completed evidence (#4899) | not-applicable | upstream feature document |
+| `ce97fa40` | 2026-09-23 | docs(odd): record re-confirmed size decision for #4899 | not-applicable | upstream feature document |
+| `cb6383f9` | 2026-09-23 | docs(odd): record increment review evidence for the edge-detachment follow-up (#2995) | not-applicable | upstream feature document |
+| `f4dea1e3` | 2026-09-23 | fix(review): hold edge-detachment across all historical disposition surfaces (#2995) | informational | review store and disposition logic inside the binary; no hermes-odd surface while native review is unavailable (T8) |
+| `26b363ba` | 2026-09-23 | fix(review): fail-closed edge-detachment guard and decoupled disposition derivation (#2995) | informational | review store and disposition logic inside the binary; no hermes-odd surface while native review is unavailable (T8) |
+| `bf41c6fb` | 2026-09-22 | style(bench): apply gofmt to the journey review-mode registration (#2995) | not-applicable | upstream tests |
+| `70dcf4e6` | 2026-09-22 | feat(review): selector-scoped historical disposition exit for multi-record stores (#2995) | informational | review store and disposition logic inside the binary; no hermes-odd surface while native review is unavailable (T8) |
+| `a8fc566f` | 2026-09-22 | fix(review): keep retired-seam refusals analyzable for the refusal ratchet (#2995) | informational | review store and disposition logic inside the binary; no hermes-odd surface while native review is unavailable (T8) |
+| `ca229e94` | 2026-09-22 | fix(review): classify released v2.2.x completed records as historical, not malformed (#2995) | informational | review store and disposition logic inside the binary; no hermes-odd surface while native review is unavailable (T8) |
+| `a14592cb` | 2026-09-23 | docs(odd): scope ga-4882 Windows-suite status to the PR lane, keep main pending | not-applicable | upstream feature document |
+| `b8fca0cf` | 2026-09-23 | docs(odd): mark ga-4882 task-3 checks done and record green Windows lane (#4914) | not-applicable | upstream feature document |
+| `ead893ec` | 2026-09-23 | docs(odd): record CI flake triage for the ga-4882 unit job | not-applicable | upstream feature document |
+| `2fa7fe15` | 2026-09-23 | docs(odd): record ga-4882 review evidence and PR linkage | not-applicable | upstream feature document |
+| `d66e7214` | 2026-09-23 | fix(telemetry): carry same-process exclusion with a path mutex, not byte-range semantics (#4882) | not-applicable | telemetry |
+| `2d320b83` | 2026-09-24 | test(install): tighten the module-path suite to fit the 400-line budget | not-applicable | upstream tests |
+| `fb1786ef` | 2026-09-24 | test(update): guard the derived installer module path instead of the hard-coded /v3 | not-applicable | upstream tests |
+| `c2dc7129` | 2026-09-24 | fix(install): derive unix installer module path from the resolved source revision | not-applicable | gentle-ai self-install and update |
+| `047c81f5` | 2026-09-21 | fix(test): match runOpenCodeTransportPluginHarness 3-value return at assets_test.go:90 | not-applicable | upstream tests |
+| `5fe328ca` | 2026-09-18 | chore(opencode): tighten comments around the #3049 binary-handshake module | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `7ad964a5` | 2026-09-18 | chore(opencode): tighten comments around the #3049 binary-handshake module | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `e273773c` | 2026-09-09 | fix(opencode): lower MIN_GENTLE_AI_VERSION to 2.0.0 for E2E binary compatibility | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `72c492e8` | 2026-09-03 | fix(opencode): resolve gentle-ai.exe on Windows in resolveGentleAiPath | not-applicable | OpenCode/Kilo adapter, settings and agents |
+| `8559320f` | 2026-09-03 | fix(test): pin TestOpenCodeReviewTransportPluginBinaryHandshakeRefusesUnavailable to a controlled PATH | not-applicable | upstream tests |
+| `5e9498b0` | 2026-08-25 | fix(opencode): probe PATH gentle-ai before relay, refuse on binary skew or absent binary | not-applicable | OpenCode/Kilo adapter, settings and agents |
+
+gentle-shell `5456811..b756b4f` (111 commits):
+
+| Commit | Date | Subject | Class | Reason |
+|---|---|---|---|---|
+| `b756b4f` | 2026-09-26 | Merge pull request #1482 from Gentleman-Programming/fix/history-review-advisories | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `13e1407` | 2026-09-26 | fix(history): resolve review advisories on carry, notices and layout | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `50b2af7` | 2026-09-26 | Merge pull request #1480 from Gentleman-Programming/feat/history-responsive-header | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `4c89734` | 2026-09-26 | feat(history): restore responsive selector header and sidebar-aware margin | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `5167c5c` | 2026-09-26 | Merge pull request #1477 from Gentleman-Programming/fix/history-reliability-followups | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `7f2d968` | 2026-09-26 | fix(history): harden GC and delete follow-ups, query-aware Home/End | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `d615b2e` | 2026-09-26 | Merge pull request #1475 from Gentleman-Programming/feat/history-customize-toggle | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `9eaa2ea` | 2026-09-26 | feat(history): add persisted capture toggle to Customize | not-applicable | prompt-history capture toggle in the Pi Customize panel (`extensions/gentle-shell.ts`, `README.md`) |
+| `45240bc` | 2026-09-26 | Merge pull request #1472 from Gentleman-Programming/fix/test-isolation-local-state | not-applicable | merge of Pi TUI work listed in this table |
+| `002ac99` | 2026-09-26 | test: isolate presence and vim tests from local machine state | not-applicable | upstream tests |
+| `b322392` | 2026-09-26 | Merge pull request #1394 from carolitascl/feat/history-slice-06-gc | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `d50e80e` | 2026-09-26 | Merge pull request #1470 from Gentleman-Programming/fix/profiles-name-input | not-applicable | Pi model profiles |
+| `8b341d1` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/history-pr1394-adaptation | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `117398e` | 2026-09-26 | fix(profiles): make create, duplicate, and rename name input visible | not-applicable | `/gentle:profiles` name input (Pi TUI); touches `extensions/gentle-ai.ts` only for that panel |
+| `a3d063f` | 2026-09-26 | Merge pull request #1441 from rjoleinik/fix/subagent-empty-root-selector | not-applicable | Pi agents widget and RPC |
+| `d71eec3` | 2026-09-26 | Merge pull request #1393 from carolitascl/feat/history-slice-05-delete | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `779bdb7` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/history-pr1393-adaptation | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `3561ee3` | 2026-09-26 | Merge pull request #1468 from Gentleman-Programming/fix/hide-running-agent-polls | not-applicable | merge of Pi TUI work listed in this table |
+| `1d128c9` | 2026-09-26 | Merge pull request #1391 from carolitascl/feat/history-slice-04-seed | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `f0ac446` | 2026-09-26 | feat(agents): hide running result polls from the transcript | not-applicable | hides running subagent result polls from the Pi transcript (`extensions/gentle-agents.ts`); Hermes renders its own transcript |
+| `6b38444` | 2026-09-26 | docs(odd): record history migration verification evidence | not-applicable | upstream feature document |
+| `cc6ecca` | 2026-09-26 | fix(history): preserve concurrent legacy migration data | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `15249c5` | 2026-09-26 | Merge remote-tracking branch 'origin/main' into fix/history-pr1391-adaptation | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `f6a832f` | 2026-09-26 | fix(history): preserve migration retry and tombstones | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `06c9915` | 2026-09-26 | Merge pull request #1435 from danielgap/fix/1011-thread-item-identity | informational | merge of `65466d5` |
+| `1dd58f2` | 2026-09-26 | Merge pull request #1406 from carlosmoradev/fix/1403-profile-effort-key-tolerance | not-applicable | Pi model profiles |
+| `565b3b6` | 2026-09-26 | Merge pull request #1465 from carlosmoradev/fix/1434-subagent-format-cost | informational | merge of `e57db24`, `a1c6777` |
+| `9e6cdc8` | 2026-09-26 | Merge pull request #1464 from carlosmoradev/fix/1458-windows-vim-path-separator | not-applicable | Vim mode (Pi TUI) |
+| `678016f` | 2026-09-26 | Merge pull request #1423 from AutanaSoft/fix/1176-shell-effective-profile | not-applicable | Pi model profiles |
+| `fd050ad` | 2026-09-26 | Merge pull request #1455 from carolitascl/feat/history-slice-03-selector-v2 | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a23de44` | 2026-09-26 | Merge pull request #1454 from carolitascl/feat/history-slice-03-searchlist | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `12e6215` | 2026-09-26 | Merge pull request #1453 from carolitascl/feat/history-slice-03-openflow | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `91aea7c` | 2026-09-26 | Merge pull request #1392 from carolitascl/feat/history-slice-02-read | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `86500ee` | 2026-09-26 | Merge pull request #1390 from carolitascl/feat/history-slice-01-store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a1c6777` | 2026-09-26 | test(agents): update subagent cost fixture assertion to 3 decimals | not-applicable | upstream tests |
+| `e57db24` | 2026-09-26 | fix(agents): format subagent cost with shared formatCost helper (#1434) | informational | `lib/agents-view.ts`: subagent cost formatted with the shared helper; `/odd_agents` shows no cost (Hermes hooks report none) |
+| `df1cbbe` | 2026-09-26 | fix(vim): match Windows path separators in resolveVimRuntime (#1458) | not-applicable | Vim runtime path on Windows (Pi TUI) |
+| `4d581c6` | 2026-09-26 | fix(shell): show only the selected status bar on narrow screens (#1462) | not-applicable | Pi status bar on narrow screens (`extensions/gentle-shell.ts`, `README.md`) |
+| `9f05dff` | 2026-09-26 | Merge branch 'main' into fix/1176-shell-effective-profile | not-applicable | Pi model profiles |
+| `32c1978` | 2026-09-26 | Merge pull request #1461 from decode2/fix/1162-subagent-message-staleness | not-applicable | Pi agents widget and RPC |
+| `1eeca21` | 2026-09-26 | fix(agents): defer query consumption until reply acceptance (#1162) | not-applicable | Pi cross-orchestrator message queries (`extensions/gentle-agents.ts`); not ported (see the baseline entry) |
+| `5981153` | 2026-09-25 | fix(history): strip-types-safe constructors for the node test runner | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `e29fb43` | 2026-09-25 | Merge commit 'a225102f' into feat/history-slice-06-gc | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `e95d63e` | 2026-09-25 | fix(agents): invalidate subagent messages and queries on task settlement (#1162) | not-applicable | Pi cross-orchestrator message and query invalidation (`extensions/gentle-agents.ts`) |
+| `e302337` | 2026-09-25 | fix(history): modal delete confirm, read-only session rows, GENTLE_PI_HISTORY_ENABLE, hidden.json cap | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `7232863` | 2026-09-25 | fix(agents): treat a blank root selector as absent | not-applicable | Pi agents RPC root selector (`extensions/gentle-agents.ts`) |
+| `146db16` | 2026-09-25 | Merge commit '89ac348' into feat/history-slice-05-delete | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `65466d5` | 2026-09-25 | perf(agents): reuse unchanged remote thread items across polls | informational | `lib/agents-view.ts`: reuses unchanged remote thread items across polls (Pi rendering cache); `/odd_agents` is a concept port that re-reads Hermes hooks and needs no cache |
+| `78c7535` | 2026-09-25 | fix(shell): use lowercase profile source suffixes | not-applicable | Pi profile source labels (`extensions/gentle-shell.ts`) |
+| `f32f132` | 2026-09-25 | docs(odd): record verified main integration | not-applicable | upstream feature document |
+| `5d88e33` | 2026-09-25 | Merge remote-tracking branch 'upstream/main' into fix/1176-shell-effective-profile | not-applicable | Pi model profiles |
+| `4f0178f` | 2026-09-25 | docs(odd): record verified profile fix | not-applicable | upstream feature document |
+| `b5e0751` | 2026-09-25 | fix(shell): show repository-effective agent profile | not-applicable | Pi repository-effective agent profile (`extensions/gentle-shell.ts`) |
+| `649711c` | 2026-09-25 | Merge commit '417b9fd' into feat/history-slice-04-seed | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `6ad6191` | 2026-09-24 | feat(history): add selector preview and mouse handling | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `8745414` | 2026-09-24 | feat(history): add selector search and list windowing | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `7f3aed8` | 2026-09-24 | feat(history): add the selector open flow | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a225102` | 2026-09-24 | docs(history): compaction is not a retention limit | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `e2cca1f` | 2026-09-24 | fix(history): scope the gc slice to lifecycle work | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a500f39` | 2026-09-24 | Merge branch 'feat/history-slice-05-delete' into feat/history-slice-06-gc | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `417b9fd` | 2026-09-24 | fix(history): port fail-closed tombstones to the seed slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `89ac348` | 2026-09-24 | fix(history): restore fail-closed tombstones and honest delete UX | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `c4f20d5` | 2026-09-24 | Merge branch 'feat/history-slice-04-seed' into feat/history-slice-05-delete | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `f4b7a33` | 2026-09-24 | fix(history): gate legacy seeding/migration behind capture opt-in | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `2fcacf7` | 2026-09-24 | Merge branch 'feat/history-slice-05-delete' into feat/history-slice-06-gc | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `1f91268` | 2026-09-24 | Merge branch 'feat/history-slice-04-seed' into feat/history-slice-05-delete | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `653c01d` | 2026-09-24 | Merge branch 'feat/history-slice-03-selector' into feat/history-slice-04-seed | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `aae5d7d` | 2026-09-24 | Merge branch 'feat/history-slice-02-read' into feat/history-slice-03-selector | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `d50702d` | 2026-09-24 | Merge branch 'feat/history-slice-01-store' into feat/history-slice-02-read | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `ccbd4f6` | 2026-09-24 | Merge remote-tracking branch 'upstream/main' into feat/history-slice-06-gc | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `9fb1bd5` | 2026-09-24 | Merge remote-tracking branch 'upstream/main' into feat/history-slice-05-delete | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `674a160` | 2026-09-24 | Merge remote-tracking branch 'upstream/main' into feat/history-slice-04-seed | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `f11fdba` | 2026-09-24 | Merge remote-tracking branch 'upstream/main' into feat/history-slice-02-read | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `6786efd` | 2026-09-24 | chore(ci): re-trigger checks | not-applicable | upstream tests and CI |
+| `6e27038` | 2026-09-24 | Merge remote-tracking branch 'upstream/main' into feat/history-slice-01-store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a663195` | 2026-09-24 | chore(readme): remove README delta from history slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `3cc57c7` | 2026-09-24 | chore(readme): remove README delta from history slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `e81e194` | 2026-09-24 | chore(readme): remove README delta from history slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `aae37cb` | 2026-09-24 | chore(readme): remove README delta from history slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `892da55` | 2026-09-24 | chore(readme): remove README delta from history slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `e787ce4` | 2026-09-24 | chore(readme): remove README delta from history slice | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a6b4722` | 2026-09-24 | Merge remote-tracking branch 'upstream/main' into feat/history-slice-03-selector | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `831bbe9` | 2026-09-24 | fix(history): make prompt capture opt-in and document the store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `5d85a8f` | 2026-09-24 | fix(history): make prompt capture opt-in and document the store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `041973d` | 2026-09-24 | fix(history): make prompt capture opt-in and document the store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `25a1dd1` | 2026-09-24 | fix(history): make prompt capture opt-in and document the store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `ecf148b` | 2026-09-24 | merge: sync slice-02 stack with slice-01 tip | not-applicable | merge of Pi TUI work listed in this table |
+| `559cc7a` | 2026-09-24 | fix(models): accept effort as alias for thinking in profile routing entries (#1403) | not-applicable | Pi model profile routing (`effort` alias) |
+| `5501d12` | 2026-09-24 | fix(history): fail closed on untrustworthy hidden.json tombstones | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `31e7d50` | 2026-09-24 | Merge upstream/main into feat/history-slice-01-store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `84c1232` | 2026-09-24 | fix(history): make prompt capture opt-in and document the store | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `ea7e33b` | 2026-09-23 | fix(history): satisfy upstream typecheck gate | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `353a99f` | 2026-09-23 | fix(history): satisfy upstream typecheck gate | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a22588f` | 2026-09-23 | fix(history): satisfy upstream typecheck gate | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `1c59b11` | 2026-09-23 | fix(history): restore review fixes clobbered by the upstream sync | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `c18271f` | 2026-09-21 | fix(test): match node:test TestFn callback type in skip wrappers | not-applicable | upstream tests and CI |
+| `26bd9b5` | 2026-09-21 | test(history): remove machine-specific fixed paths from test fixtures | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `fdef2fc` | 2026-09-21 | fix(history): satisfy upstream typecheck gate | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `e5746ec` | 2026-09-21 | refactor(history): extract shared header counts helper | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `72b5adf` | 2026-09-21 | feat(history): sync extension with pi-history latest | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `c9c1c51` | 2026-09-18 | fix(history): pid-scoped compact filename; accurate GC threshold comment | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `7cc79b2` | 2026-09-18 | feat(history): tombstones, deletion, and privacy semantics | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `96443ee` | 2026-09-18 | feat(history): GC/compaction with active-writer and failure-path tests | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `6b61c98` | 2026-09-18 | fix(history): migration renames only after the seed write; init off the first-prompt path | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `c63caa5` | 2026-09-18 | feat(history): transcript migration and seeding | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `d354c8a` | 2026-09-18 | fix(history): intact astral characters, correct row padding, honest comments | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `366b179` | 2026-09-18 | feat(history): history selector TUI and command/shortcut wiring | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `73c55ff` | 2026-09-18 | docs(history): correct drainGlobal seed-ordering docblock | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `a5ff13d` | 2026-09-18 | feat(history): read, ordering, deduplication, and project/global query APIs | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `2b90751` | 2026-09-18 | fix(history): stable registry collision mappings | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+| `9b56e0b` | 2026-09-18 | feat(history): per-instance JSONL store, project identity, storage tests | not-applicable | Pi prompt history store and selector (`/gentle:history`, `docs/prompt-history.md`); Hermes keeps its own session history |
+
 ### 2026-09-25: T10 portable skills
 
 Upstream skill files declare `license: Apache-2.0` in their frontmatter,

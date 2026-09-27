@@ -63,7 +63,7 @@ hermes-odd instead of breaking Hermes startup.
 | Hermes max per section | 4,000 chars | `MAX_SYSTEM_PROMPT_SECTION_CHARS`; longer sections are **skipped**, not truncated |
 | Hermes max across all plugins | 8,000 chars | `MAX_SYSTEM_PROMPT_SECTIONS_TOTAL_CHARS`, checked in `render_system_prompt_sections` |
 | hermes-odd test budget | 3,800 chars | `SECTION_BUDGET_CHARS`, enforced by `tests/test_prompt_and_skills.py` |
-| Current section | ~3.3k chars (+ ~120 while setup is pending, + ~130 with a TDD mode) | measured by the smoke; every combination tested |
+| Current section | ~3.5k chars (+ ~120 while setup is pending, + ~95 and ~90 for the skill pointers; largest combination 3,791) | measured by the smoke; every combination tested |
 
 Because an oversized section disappears entirely, the test budget keeps 200
 characters of headroom, and anything that does not have to be read every turn
@@ -430,10 +430,13 @@ Plain text under 3,500 characters (`… N more` when cut):
 ## First-run setup
 
 `/odd_setup`, the tool `odd_setup_apply` and the skill `hermes-odd:setup`
-are a concept port of the gentle-ai installer's persona and strict TDD steps
-(`internal/tui/screens/persona.go`, `strict_tdd.go`) to chat. Installer
-presets, component selection and model pickers do not apply to one Hermes
-plugin (triage in `upstream/SUPPORTED.md`).
+are a concept port of the gentle-ai installer's persona step
+(`internal/tui/screens/persona.go`) to chat. Installer presets, component
+selection and model pickers do not apply to one Hermes plugin (triage in
+`upstream/SUPPORTED.md`). The installer's strict TDD step was ported as a
+setup TDD question until T11; upstream then removed its picker
+(gentle-ai `55e3abf1`) in favor of one default applicable test-first policy,
+and hermes-odd followed: no TDD question, setting or prompt line.
 
 ### Model
 
@@ -444,9 +447,11 @@ plugin (triage in `upstream/SUPPORTED.md`).
   apply writes a completed one, `reset` clears it.
 - **Preferences** are the plugin's `config_schema` keys: `persona`
   (`unset` default, `rioplatense`, `neutral`, `custom`, `none`), `verbosity`
-  (`short`, `detailed`), `tdd_mode` (`unset` default, `off`, `strict`,
-  `project`), `engram_protocol` (`auto`, `off`), `soul_cleanup` (`unset`,
-  `yes`, `later`, `no`), `codegraph_guidance` (`auto`, `off`; not asked). Answers are recorded in the setup record and mirrored with
+  (`short`, `detailed`), `engram_protocol` (`auto`, `off`), `soul_cleanup`
+  (`unset`, `yes`, `later`, `no`), `codegraph_guidance` (`auto`, `off`; not
+  asked). A retired `tdd_mode` answer in an older record, or a `tdd_mode`
+  setting in `config.yaml`, still loads and is ignored (only known keys are
+  read, and the next save drops it; tested). Answers are recorded in the setup record and mirrored with
   `ctx.set_config`; a refusal (managed install) or a Hermes without
   `set_config` is reported and the answers stay in state. The effective value
   is a valid `config.yaml` value first (hand edits and administrator values
@@ -455,11 +460,10 @@ plugin (triage in `upstream/SUPPORTED.md`).
   when present and in this order, the skill pointers (Engram while
   `engram_protocol` is `auto`; CodeGraph while `codegraph_guidance` is `auto`
   and `codegraph` is on `PATH` or `mcp_servers.codegraph` is in Hermes'
-  `config.yaml`, key names only), the TDD mode line and the setup-pending
-  line; without them the text is byte-identical to `ODD_SECTION`. With the
-  default preferences the Engram pointer is present. The largest combination
-  (both pointers, the longest TDD line, pending) is tested against the
-  3,800-character budget. The skill runs the
+  `config.yaml`, key names only) and the setup-pending line; without them
+  the text is byte-identical to `ODD_SECTION`. With the default preferences
+  the Engram pointer is present. The largest combination (both pointers,
+  pending) is tested against the 3,800-character budget. The skill runs the
   conversation; the tool is the model's only write path; `/odd_setup` is the
   deterministic user path (status, skip, reset, setters, persona dry-run and
   `confirm`). Everything takes effect in the next new session because Hermes
@@ -606,9 +610,12 @@ something.
 `hermes_odd/soul_cleanup.py` (rules, strict scan, verification),
 `hermes_odd/commands/soul.py` (text) and `hermes_odd/soul_tool.py` (tool).
 
-- **Rules (user decisions).** Top-level `gentle-ai:sdd-orchestrator` (its
-  nested `sdd-session-preflight` goes with it) and `gentle-ai:agent-routing`
-  are removed; `engram-protocol` and `codegraph-guidance` are removed and now
+- **Rules (user decisions).** Top-level `gentle-ai:orchestrator` (the
+  ODD-only orchestrator a gentle-ai install after `fb4b59a7` writes right
+  before agent-routing, converting a v3.7.0 block in place;
+  `agentguidance/orchestrator.go`), `gentle-ai:sdd-orchestrator` (its v3.7.0
+  name; its nested `sdd-session-preflight` goes with it) and
+  `gentle-ai:agent-routing` are removed; `engram-protocol` and `codegraph-guidance` are removed and now
   live in the lazy skills `hermes-odd:engram-protocol` and
   `hermes-odd:codegraph`; `persona` is kept unless the user asks
   (`plan persona`) and a hermes-odd persona block exists; everything else,
@@ -683,6 +690,16 @@ next_action stop, cause "... supported immutable review runtimes: ..."
 hermes-odd never passes another runtime's identity to gentle-ai: posing as
 `pi` (or any runtime) would break the review contract and make receipts
 meaningless. The native review facade (T8) waits on upstream eligibility.
+
+Since gentle-ai `5ffb65fc` this is also upstream policy, not just a missing
+capability: `internal/model/rdd.go` (`SupportsReceiptDrivenDevelopment`)
+limits receipt-driven development to claude-code, codex, opencode and pi, a
+parity test ties that list to the manifest, and every other runtime,
+Hermes included, receives ODD-only routing and orchestrator prompts
+(risk-proportionate verification, no review clauses; the assumption challenge
+stays). hermes-odd keeps its honest stance on top: the switch and the
+availability line, "native review unavailable on Hermes" once per candidate
+with RDD on, and advisory reviews labelled "no receipt".
 
 ### Availability probe
 
@@ -804,7 +821,14 @@ hermes-odd tracks upstream by pinned commits, not by following branches:
   40-character commit, source path), and `THIRD_PARTY_NOTICES.md` lists it;
   tests enforce both;
 - `upstream/odd-routing-hermes.canonical.md` is a verbatim render of gentle-ai's
-  `RenderRouting(model.AgentHermes)` with its SHA-256, for drift comparison;
+  `RenderRouting(model.AgentHermes)` with its SHA-256, for drift comparison.
+  It is produced by a throwaway `go run` program inside a `git archive`
+  extract of the pinned tree in a temporary directory outside both
+  repositories (the `internal/` import only works from inside the module);
+  re-rendering the previous pin must reproduce the vendored body byte for
+  byte. Since `5ffb65fc` the Hermes render is ODD-only; a test checks that it
+  has no review clauses and that hermes-odd states the same test-first
+  policy;
 - `upstream/upstream.lock.json` (schema `hermes-odd.upstream-lock/v1`) pins
   the supported gentle-ai release, commit and minimum binary version and the
   gentle-shell release, commit and `gentle-pi` version, and indexes every

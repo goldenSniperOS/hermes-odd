@@ -6,6 +6,41 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- ODD follows upstream's one default test-first policy (gentle-ai `55e3abf1`,
+  gentle-shell `a76e6f2`): RED -> GREEN -> refactor when a relevant runnable
+  deterministic test and a clear expected outcome exist; tests or a framework
+  merely existing do not qualify; otherwise the agent states the exception and
+  runs proportionate checks, and never invents RED/GREEN or a runner. Re-worded
+  in the prompt section (step 6), `hermes-odd:odd-workflow`, the
+  `hermes-odd:odd-delegation` mission template, `hermes-odd:odd-feature-tracking`,
+  `hermes-odd:work-unit-commits` and `hermes-odd:judgment-day`.
+- The prompt section says native RDD review is unavailable on Hermes and that
+  verification covers one work-unit commit or PR slice, matching upstream's
+  ODD-only Hermes routing (gentle-ai `5ffb65fc` gives receipt-driven
+  development only to claude-code, codex, opencode and pi). Every combination
+  still fits the 3,800-character budget (largest 3,791).
+- `hermes-odd:odd-delegation` adds upstream's risk-proportionate verification
+  of a writer's work (passive, medium, high or unclear), one launch per
+  distinct task and parent-selected memory context; `hermes-odd:odd-workflow`
+  adds the checking rules (normalize before checks, one quick check, at most
+  one scoped correction).
+- `/odd_soul` also removes the `gentle-ai:orchestrator` block, the ODD-only
+  orchestrator that a current `gentle-ai install` writes for Hermes
+  (gentle-ai `fb4b59a7`).
+- Upstream pins moved to gentle-ai `a9e36e9` and gentle-shell `b756b4f`
+  (`main`; no release after v3.7.0), with every indexed source re-hashed, the
+  canonical Hermes routing re-rendered and all commits triaged in
+  `upstream/SUPPORTED.md`.
+
+### Removed
+
+- The TDD choice of the first-run setup: the `/odd_setup tdd` subcommand, the
+  setup question, the `tdd_mode` setting in `config_schema` and the
+  `TDD mode:` prompt line. A `tdd_mode` value in an existing setup record or
+  in `config.yaml` still loads and is ignored.
+
 ## [0.4.0] - 2026-09-26
 
 ### Fixed
