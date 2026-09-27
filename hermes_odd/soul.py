@@ -1,4 +1,4 @@
-"""SOUL.md size, managed blocks and Hermes truncation math for ``/odd_doctor``.
+"""SOUL.md size, managed blocks and Hermes truncation math for ``/odd-doctor``.
 
 gentle-ai's Hermes writer puts its managed blocks into ``<HERMES_HOME>/SOUL.md``
 between ``<!-- gentle-ai:<name> -->`` and ``<!-- /gentle-ai:<name> -->``.

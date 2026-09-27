@@ -1,4 +1,4 @@
-"""Read ODD feature documents (``odd/tasks/<feature>.md``) for ``/odd_tasks``.
+"""Read ODD feature documents (``odd/tasks/<feature>.md``) for ``/odd-tasks``.
 
 A feature document is the durable authority for one ODD feature (see
 ``skills/odd-feature-tracking``). This module turns one into a small,

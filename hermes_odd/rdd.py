@@ -1,6 +1,6 @@
 """Receipt-driven development (RDD) on Hermes: shared wording and repository choice.
 
-Used by ``/odd_review_mode``, ``/odd_status`` and ``/odd_doctor``. gentle-ai
+Used by ``/odd-review-mode``, ``/odd-status`` and ``/odd-doctor``. gentle-ai
 advertises its native immutable review only for runtimes that can launch a
 fresh, constrained reviewer and prove that boundary before review START
 (``internal/agents/capabilitymanifest/manifest.go``,

@@ -1,6 +1,6 @@
 """Persona texts for the hermes-odd persona block in ``SOUL.md``.
 
-The first-run setup (``hermes-odd:setup``, ``/odd_setup``, ``odd_setup_apply``)
+The first-run setup (``hermes-odd:setup``, ``/odd-setup``, ``odd_setup_apply``)
 writes exactly one managed block into ``SOUL.md``::
 
     <!-- hermes-odd:persona -->

@@ -1,10 +1,10 @@
-"""Subagent tracking for ``/odd_agents`` (concept port of gentle-shell Gentle Agents).
+"""Subagent tracking for ``/odd-agents`` (concept port of gentle-shell Gentle Agents).
 
 gentle-shell keeps one ``TaskRecord`` per Pi subagent (id, agent, label,
 status, timestamps, last step, last activity, turns, tool calls, result or
 error) and renders it as a card. hermes-odd keeps the same idea for Hermes'
 ``delegate_task`` children, fed by observer hooks and rendered as plain text
-by ``/odd_agents`` (see :mod:`hermes_odd.commands.agents`). No Pi code or text
+by ``/odd-agents`` (see :mod:`hermes_odd.commands.agents`). No Pi code or text
 is copied.
 
 Hook facts (verified against hermes-agent):
@@ -481,7 +481,7 @@ def register_agent_hooks(ctx: Any, store: AgentStore) -> int:
     """Register the observer hooks; return how many succeeded. Never raises."""
     register_hook = getattr(ctx, "register_hook", None)
     if not callable(register_hook):
-        logger.warning("hermes-odd: ctx.register_hook is unavailable; /odd_agents stays empty")
+        logger.warning("hermes-odd: ctx.register_hook is unavailable; /odd-agents stays empty")
         return 0
     callbacks = {
         "on_session_start": store.on_session_start,

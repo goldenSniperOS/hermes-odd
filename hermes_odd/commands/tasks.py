@@ -1,4 +1,4 @@
-"""``/odd_tasks``: plain-text view of ODD feature documents (Pi todo card).
+"""``/odd-tasks``: plain-text view of ODD feature documents (Pi todo card).
 
 Concept port of gentle-shell's todo card (``extensions/gentle-todo.ts``) and
 the ODD feature document view: gentle-pi projects the feature tasks into a
@@ -156,7 +156,7 @@ def render_overview(projects: list[ProjectDocs], now: float) -> str:
             blocks.append(_feature_block(doc, now))
         if entry.skipped:
             blocks.append(f"  … {entry.skipped} older documents not read (limit {MAX_FILES})")
-    return _fit(header, blocks, "Details: /odd_tasks [feature] · filter: /odd_tasks [project]")
+    return _fit(header, blocks, "Details: /odd-tasks [feature] · filter: /odd-tasks [project]")
 
 
 def render_detail(entry: ProjectDocs, doc: FeatureDoc, now: float) -> str:
@@ -231,7 +231,7 @@ def render_lookup(projects: list[ProjectDocs], query: str, now: float) -> str:
         return EMPTY_TEXT
     available = ", ".join(d.feature for _, d in items[:10]) or "none"
     return (
-        f"No feature or project matches '{shown}'. Features: {available}. Run /odd_tasks to list."
+        f"No feature or project matches '{shown}'. Features: {available}. Run /odd-tasks to list."
     )
 
 

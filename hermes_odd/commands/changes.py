@@ -1,4 +1,4 @@
-"""``/odd_changes``: plain-text view of files the agent changed (Pi ``gentle:changes``).
+"""``/odd-changes``: plain-text view of files the agent changed (Pi ``gentle:changes``).
 
 Concept port of gentle-shell's Gentle Changes: files captured from
 successful ``write_file`` / ``patch`` calls of the main agent and its
@@ -34,7 +34,7 @@ SCOPE_NOTE = (
     "missing file does not mean a clean tree. −? = full overwrite, removed "
     "lines unknown."
 )
-LIST_HINT = "Details: /odd_changes [file] · 7 days: /odd_changes all · forget: /odd_changes clear"
+LIST_HINT = "Details: /odd-changes [file] · 7 days: /odd-changes all · forget: /odd-changes clear"
 
 
 def _one_line(text: Any, limit: int) -> str:
@@ -150,7 +150,7 @@ def render_list(files: list[dict[str, Any]], now: float, window: float = DEFAULT
             break
     more = len(recent) - shown
     if more:
-        text += f"\n… {more} more" + ("" if window >= ALL_WINDOW else " (/odd_changes all)")
+        text += f"\n… {more} more" + ("" if window >= ALL_WINDOW else " (/odd-changes all)")
     return f"{text}\n\n{footer}"
 
 
@@ -278,7 +278,7 @@ def render_lookup(
             "Use more of the path or project/path."
         )
     return (
-        f"No recorded change matches '{shown}'. Run /odd_changes all to list the "
+        f"No recorded change matches '{shown}'. Run /odd-changes all to list the "
         "last 7 days (changes are kept for 7 days)."
     )
 

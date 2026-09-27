@@ -1,4 +1,4 @@
-"""Changed-file capture (``post_tool_call``) and the ``/odd_changes`` viewer."""
+"""Changed-file capture (``post_tool_call``) and the ``/odd-changes`` viewer."""
 
 from __future__ import annotations
 
@@ -476,8 +476,8 @@ class ViewerTests(TempRepo):
             self.store.record("write_file", [FileOp(str(self.repo / f"file-{i:03}.txt"), 1, None)])
         text = self.command().handler("")
         self.assertLessEqual(len(text), OUTPUT_MAX_CHARS)
-        self.assertRegex(text, r"… \d+ more \(/odd_changes all\)")
-        self.assertIn("/odd_changes clear", text)
+        self.assertRegex(text, r"… \d+ more \(/odd-changes all\)")
+        self.assertIn("/odd-changes clear", text)
 
     def test_projects_grouped_newest_first(self) -> None:
         other = self.base / "other"
@@ -611,7 +611,7 @@ class RegistrationTests(unittest.TestCase):
         self.assertIn("odd-changes", ctx.commands)
         self.assertEqual(ctx.commands["odd-changes"]["args_hint"], "[file|project|all|clear]")
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("/odd_changes [file|project|all|clear]", listing)
+        self.assertIn("/odd-changes [file|project|all|clear]", listing)
         post = [cb for name, cb in ctx.hooks if name == "post_tool_call"]
         self.assertEqual(len(post), 2)  # subagent tracking + change capture
 

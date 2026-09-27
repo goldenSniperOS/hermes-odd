@@ -1,4 +1,4 @@
-"""``/odd_review_mode``: show or flip gentle-ai's RDD review switch (Pi ``gentle:review-mode``).
+"""``/odd-review-mode``: show or flip gentle-ai's RDD review switch (Pi ``gentle:review-mode``).
 
 Concept port of gentle-pi's review-mode view: it wraps the real ``gentle-ai
 review mode status|enable|disable`` CLI (schema ``gentle-ai.review-mode/v1``)
@@ -12,7 +12,7 @@ and adds what matters on Hermes, the native review availability (see
   ``clone`` needs a resolvable git repository.
 
 The target repository is an explicit project name (exact, then prefix) among
-the known projects (``/odd_tasks`` resolution), else the command process's own
+the known projects (``/odd-tasks`` resolution), else the command process's own
 git repository. hermes-odd never passes ``--agent pi`` or any other runtime's
 identity to gentle-ai. Output is plain text under :data:`OUTPUT_MAX_CHARS` and
 never carries a full home path.
@@ -42,7 +42,7 @@ from .tasks import path_tail
 
 OUTPUT_MAX_CHARS = 3500
 MESSAGE_MAX_CHARS = 400
-USAGE = "/odd_review_mode [status|enable|disable] [global|clone] [project]"
+USAGE = "/odd-review-mode [status|enable|disable] [global|clone] [project]"
 _ABS_PATH_RE = re.compile(r"(?<![\w~.])/[^\s'\"`,;:()]+")
 
 
@@ -203,17 +203,17 @@ class ReviewModeCommand:
         else:
             lines.append(f"receipt-driven development: {review_mode_text(mode)}")
         lines.extend(self._native_lines(info.path, info.version, root))
-        lines.append("Change: /odd_review_mode enable|disable global|clone [project]")
+        lines.append("Change: /odd-review-mode enable|disable global|clone [project]")
         return fit("\n".join(lines))
 
     def write(self, action: str, scope: str | None, root: Path | None, query: str | None) -> str:
         if scope is None:
             target = f" {query}" if query else ""
             return (
-                f"Refused: /odd_review_mode {action} needs an explicit scope. No change was made.\n"
-                f"- /odd_review_mode {action} global{target}: your global switch "
+                f"Refused: /odd-review-mode {action} needs an explicit scope. No change was made.\n"
+                f"- /odd-review-mode {action} global{target}: your global switch "
                 "(every repository of this user)\n"
-                f"- /odd_review_mode {action} clone{target}: only this clone of the repository"
+                f"- /odd-review-mode {action} clone{target}: only this clone of the repository"
             )
         if scope == "clone" and root is None:
             known = ", ".join(r.name for r in self.candidates()[:10]) or "none yet"
@@ -231,7 +231,7 @@ class ReviewModeCommand:
             return (
                 f"gentle-ai review mode {action} timed out after "
                 f"{MUTATION_TIMEOUT_SECONDS:.0f} s; the switch may or may not have changed. "
-                "Check with /odd_review_mode status."
+                "Check with /odd-review-mode status."
             )
         if result.state != "ok":
             reason = sanitize(result.stderr) or "no error message"
@@ -242,7 +242,7 @@ class ReviewModeCommand:
         if mode.state != "ok":
             return (
                 f"gentle-ai review mode {action} --scope {scope} ran{where}, but its JSON "
-                "result was unreadable. Check with /odd_review_mode status."
+                "result was unreadable. Check with /odd-review-mode status."
             )
         verb = "enabled" if action == "enable" else "disabled"
         lines = [
@@ -259,7 +259,7 @@ class ReviewModeCommand:
             lines.append("Still off: any off wins (the other source is off).")
         lines.append("Applies to future candidates only.")
         lines.append(
-            "Native review on Hermes is unaffected by this switch: /odd_review_mode status"
+            "Native review on Hermes is unaffected by this switch: /odd-review-mode status"
         )
         return fit("\n".join(lines))
 

@@ -1,6 +1,6 @@
 """First-run setup for hermes-odd: preferences, the setup record and applying them.
 
-Shared by the ``/odd_setup`` command, the ``odd_setup_apply`` tool and the
+Shared by the ``/odd-setup`` command, the ``odd_setup_apply`` tool and the
 prompt section. Nothing here calls the model.
 
 Preferences (plugin ``config_schema`` keys, see ``plugin.yaml``):
@@ -43,7 +43,7 @@ as one line pointing to ``hermes-odd:codegraph`` while CodeGraph is present
 (a ``codegraph`` binary on ``PATH`` or an ``mcp_servers.codegraph`` entry in
 Hermes' ``config.yaml``); ``soul_cleanup`` ``yes`` makes the setup skill
 show the ``odd_soul_apply`` dry run and apply it only after the user's
-explicit yes (``later``/``no`` change nothing; ``/odd_soul plan`` any time).
+explicit yes (``later``/``no`` change nothing; ``/odd-soul plan`` any time).
 Everything takes effect in the next new session, because Hermes builds
 ``SOUL.md`` and plugin sections into the prompt once per session.
 """
@@ -90,7 +90,7 @@ APPLIED_WHERE = {
     "persona": "SOUL.md: one hermes-odd block at the top",
     "verbosity": "inside the SOUL.md persona block",
     "engram_protocol": "prompt section line pointing to hermes-odd:engram-protocol",
-    "soul_cleanup": "/odd_soul: dry-run plan first, written only after an explicit yes",
+    "soul_cleanup": "/odd-soul: dry-run plan first, written only after an explicit yes",
     "codegraph_guidance": (
         "prompt section line pointing to hermes-odd:codegraph while CodeGraph is present"
     ),
@@ -423,7 +423,7 @@ class Setup:
             if status == "present":
                 lines.append(
                     "The SOUL.md block still has the previous answer style: re-apply the "
-                    "persona (/odd_setup persona <id> confirm) to rewrite it."
+                    "persona (/odd-setup persona <id> confirm) to rewrite it."
                 )
         if answers.get("soul_cleanup") == "yes":
             lines.append(SOUL_CLEANUP_NEXT)
@@ -451,12 +451,12 @@ LABEL = {
 
 COEXIST_WARNING = (
     "SOUL.md also has a gentle-ai persona block, so two personas now coexist. "
-    "It was left untouched; /odd_soul plan persona previews removing it (with backup)."
+    "It was left untouched; /odd-soul plan persona previews removing it (with backup)."
 )
 
 SOUL_CLEANUP_NEXT = (
     "SOUL cleanup: next, show the odd_soul_apply dry run (confirm=false) and apply it "
-    "only after the user's explicit yes; or type /odd_soul plan."
+    "only after the user's explicit yes; or type /odd-soul plan."
 )
 
 

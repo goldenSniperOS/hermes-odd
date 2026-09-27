@@ -47,7 +47,7 @@ contributes these surfaces:
    `odd-feature-tracking`, `work-unit-commits`, `chained-pr`, `rdd-review`,
    `rdd-review-lenses`, `judgment-day`, `setup`, `engram-protocol` and
    `codegraph` (see [Portable skills](#portable-skills)).
-3. **Plain-text slash commands** (`/odd_*`) whose handlers never call the
+3. **Plain-text slash commands** (`/odd-*`) whose handlers never call the
    model, so the CLI, the TUI and every gateway get identical output.
 4. **One tool**, `odd_setup_apply`, the model's write path for the first-run
    setup, and one optional managed block in `SOUL.md` (the persona).
@@ -140,7 +140,7 @@ Verified against the hermes-agent source; later tasks depend on them.
   the calling conversation's own spawn tree, and
   `tools.delegate_tool.interrupt_subagent` is an internal, unscoped,
   in-process function. Command handlers receive only `raw_args`, so a plugin
-  command cannot stop a child safely; `/odd_agents` does not offer stop.
+  command cannot stop a child safely; `/odd-agents` does not offer stop.
 - **Gateway replies**: plugin command text is returned as the reply; the
   Telegram adapter splits messages over 4,096 characters, but hermes-odd keeps
   command output under 3,500 characters so it never needs splitting.
@@ -151,9 +151,9 @@ A command spec name is the Telegram-safe form users type in gateways
 (`odd_commands`, `[a-z0-9_]`, at most 32 characters, no leading, trailing or
 doubled `_`). hermes-odd registers the hyphenated key (`odd-commands`):
 
-- gateways accept `/odd_commands` and `/odd-commands` (underscores are mapped
+- gateways accept `/odd-commands` and `/odd-commands` (underscores are mapped
   to hyphens before lookup);
-- the Telegram menu shows `/odd_commands` (Hermes shows `-` as `_`);
+- the Telegram menu shows `/odd-commands` (Hermes shows `-` as `_`);
 - the CLI needs the exact key, `/odd-commands`.
 
 Optional arguments use `[...]` in `args_hint`; a hint starting with `<` marks
@@ -165,11 +165,11 @@ Viewer state (subagent runs, changed files) is written by hooks into
 `ctx.state` and read by the commands. Because `ctx.state` is per profile,
 locked across processes and persistent, a subagent started from Telegram is
 visible to `/odd-agents` in the CLI of the same profile, and survives a
-gateway restart. Feature tasks are not duplicated in state: `/odd_tasks` reads
+gateway restart. Feature tasks are not duplicated in state: `/odd-tasks` reads
 the project's `odd/tasks/*.md` feature documents directly; state only holds
 the list of known project roots.
 
-### Subagent records (`/odd_agents`)
+### Subagent records (`/odd-agents`)
 
 `hermes_odd/agents.py` keeps one JSON document, schema
 `hermes-odd.agents/v1`, under the state key `agents.v1`: a list of records,
@@ -215,21 +215,21 @@ and time. `tool_call_history`'s `tool_input` summary is ignored. The goal is
 the parent's own delegation text, truncated to 200 characters; the summary is
 the child's own final summary, truncated to 1,500. Tests feed a fake secret
 through `args`, `result`, `error_message` and `tool_input` and assert it is
-absent from the stored state and from every `/odd_agents` output.
+absent from the stored state and from every `/odd-agents` output.
 
 ### Output
 
-`/odd_agents` answers in plain text (no Markdown tables) under 3,500
+`/odd-agents` answers in plain text (no Markdown tables) under 3,500
 characters: a count line, then up to 10 blocks (running first, newest
 first) of `<glyph> <short id> <role> · <elapsed>`, the goal on one line, and
 `last: <tool> <ok|error> · <n> tools`. Glyphs: `●` running, `✓` completed,
-`✗` failed, `⊘` interrupted, `⏱` timed out, `○` stale. `/odd_agents <id
+`✗` failed, `⊘` interrupted, `⏱` timed out, `○` stale. `/odd-agents <id
 prefix>` matches the full id or its 8-hex tail; `all` lists up to 50 one-line
 entries. Anything cut ends with `… N more`.
 
-### Feature documents (`/odd_tasks`)
+### Feature documents (`/odd-tasks`)
 
-`/odd_tasks` is a concept port of gentle-shell's todo card
+`/odd-tasks` is a concept port of gentle-shell's todo card
 (`extensions/gentle-todo.ts`, `lib/shell-todo.ts`) and the ODD feature
 document view. The interactive todo tool is not ported: Hermes' native
 `todo` is the session projection (see `skills/odd-feature-tracking`).
@@ -269,7 +269,7 @@ hermes-odd therefore combines:
    `os.getcwd()`, each mapped to its git top-level.
 
 Candidates are deduplicated by resolved path and only directories holding
-`odd/tasks/` are shown. This makes `/odd_tasks` in Telegram show the
+`odd/tasks/` are shown. This makes `/odd-tasks` in Telegram show the
 projects the agent actually worked in (any platform of the same profile),
 and the CLI show the current project even before a session was rendered.
 Limits: a project is only known after a session rendered its prompt there;
@@ -279,7 +279,7 @@ not exist on the host and is filtered out.
 #### Engram mirror: not read
 
 The Engram mirror (topic `odd/<feature>/tasks`) is deliberately not used by
-`/odd_tasks`. `PluginContext.call_mcp(server, tool, arguments, timeout)`
+`/odd-tasks`. `PluginContext.call_mcp(server, tool, arguments, timeout)`
 (`hermes_cli/plugins.py`) exists and is synchronous, but:
 
 - it is **default-off**: each server must be listed by the operator under
@@ -323,9 +323,9 @@ full home paths (only the last two path components):
   exact name wins over a prefix, then a project name (or prefix) lists that
   project; ambiguous and not-found answers name the candidates.
 
-### Changed files (`/odd_changes`)
+### Changed files (`/odd-changes`)
 
-`/odd_changes` is a concept port of gentle-shell's Gentle Changes
+`/odd-changes` is a concept port of gentle-shell's Gentle Changes
 (`lib/session-changes.ts`, `lib/shell-changes-view.ts`, the Gentle Changes
 sections of `README.md` and `docs/gentle-shell.md`): what the agent changed,
 attributed and counted, without repository scans or background polling. No
@@ -376,7 +376,7 @@ and shell commands, and scripts that write files directly, are not captured
 - **Attribution.** `task_id` is the subagent id (`sa-*`) for
   `delegate_task` children and a per-run UUID for the main agent, so
   `sa-*`/`sx-*` or an id the agent store saw start is a subagent, anything
-  else is `main`. The subagent's role comes from the `/odd_agents` record at
+  else is `main`. The subagent's role comes from the `/odd-agents` record at
   capture time; its goal is looked up when the detail is rendered. The
   platform is the parent session's (`on_session_start`) or the child record's.
 
@@ -429,7 +429,7 @@ Plain text under 3,500 characters (`… N more` when cut):
 
 ## First-run setup
 
-`/odd_setup`, the tool `odd_setup_apply` and the skill `hermes-odd:setup`
+`/odd-setup`, the tool `odd_setup_apply` and the skill `hermes-odd:setup`
 are a concept port of the gentle-ai installer's persona step
 (`internal/tui/screens/persona.go`) to chat. Installer presets, component
 selection and model pickers do not apply to one Hermes plugin (triage in
@@ -464,7 +464,7 @@ and hermes-odd followed: no TDD question, setting or prompt line.
   the text is byte-identical to `ODD_SECTION`. With the default preferences
   the Engram pointer is present. The largest combination (both pointers,
   pending) is tested against the 3,800-character budget. The skill runs the
-  conversation; the tool is the model's only write path; `/odd_setup` is the
+  conversation; the tool is the model's only write path; `/odd-setup` is the
   deterministic user path (status, skip, reset, setters, persona dry-run and
   `confirm`). Everything takes effect in the next new session because Hermes
   builds `SOUL.md` and plugin sections into the prompt once per session.
@@ -488,7 +488,7 @@ persona label carries a recommendation.
 
 ### Persona block placement and truncation
 
-Besides the confirmed cleanup (`/odd_soul`), the only SOUL.md mutation is one block,
+Besides the confirmed cleanup (`/odd-soul`), the only SOUL.md mutation is one block,
 `<!-- hermes-odd:persona -->` … `<!-- /hermes-odd:persona -->`, holding the
 persona text and the answer style line (`hermes_odd/soul_persona.py`).
 Hermes keeps the first 70% and the last 20% of its cap of a long SOUL.md and
@@ -499,7 +499,7 @@ after a leading H1 line and/or a leading HTML comment header (not a managed
 marker) and their blank lines, else at line 1; it never lands inside a
 `gentle-ai:` block. An existing block is replaced in place, wherever it is;
 extra copies are collapsed; persona `none` removes it. `soul.py`'s parser
-knows both namespaces, so `/odd_doctor`'s truncation math covers every block,
+knows both namespaces, so `/odd-doctor`'s truncation math covers every block,
 and it reports ours with its size and whether it is at the top.
 
 ### Reversibility and safety
@@ -521,8 +521,8 @@ and it reports ours with its size and whether it is at the top.
   is loaded, the block is scanned with Hermes' own context threat patterns
   and refused if it would get the whole SOUL.md blocked.
 - A gentle-ai persona block is left alone; the summary warns that two
-  personas coexist and points to `/odd_soul plan persona`.
-- Undo: `/odd_setup persona none confirm` removes the block (the result is
+  personas coexist and points to `/odd-soul plan persona`.
+- Undo: `/odd-setup persona none confirm` removes the block (the result is
   byte-identical to the file before an insert), or copy a backup back.
 
 ### Persona texts
@@ -538,7 +538,7 @@ artifacts in English, the user's language, a caring and direct mentor tone,
 concepts before code; Rioplatense voseo or neutral Spanish. Product identity,
 branding, the author biography and tool preferences are excluded (tested).
 
-## Health commands (`/odd_status`, `/odd_doctor`)
+## Health commands (`/odd-status`, `/odd-doctor`)
 
 Concept ports of gentle-pi's `gentle:status` and `gentle:doctor`
 (`extensions/gentle-ai.ts`): the Pi versions report Pi package assets,
@@ -575,12 +575,12 @@ Binaries are found with `shutil.which` plus a scan of every `PATH` entry,
 deduplicated by real path (a Homebrew symlink and its Cellar target count
 once); version probes run in parallel, and the doctor runs the RDD mode and
 the native review probe in parallel, so it stays within about 6 s in total. A
-shared `Prober` caches results for 60 s: `/odd_status` runs the cached
+shared `Prober` caches results for 60 s: `/odd-status` runs the cached
 version and native review probes and shows the RDD mode only if
-`/odd_doctor` or `/odd_review_mode` cached it for the same repository. The
+`/odd-doctor` or `/odd-review-mode` cached it for the same repository. The
 repository is the git root (nearest `.git`, no subprocess) of `TERMINAL_CWD`,
 then `os.getcwd()`; gateways run from their launch directory, so the RDD mode
-of a project is usually known only from the CLI (or from `/odd_review_mode
+of a project is usually known only from the CLI (or from `/odd-review-mode
 <project>`).
 
 ### SOUL.md check (`hermes_odd/soul.py`)
@@ -601,11 +601,11 @@ shows the cap for 128k / 200k / 1M. A top-level block is `dropped` when it
 lies entirely in the lost middle and `partly` when it overlaps it. SOUL
 content is never returned. The hermes-odd persona block written by the setup
 is parsed too (namespace `hermes-odd`, see [First-run setup](#first-run-setup)).
-The cleanup that strips the gentle-ai blocks is `/odd_soul` (next section);
-the check's hint recommends `/odd_soul plan` whenever it would remove
+The cleanup that strips the gentle-ai blocks is `/odd-soul` (next section);
+the check's hint recommends `/odd-soul plan` whenever it would remove
 something.
 
-### SOUL.md cleanup (`/odd_soul`)
+### SOUL.md cleanup (`/odd-soul`)
 
 `hermes_odd/soul_cleanup.py` (rules, strict scan, verification),
 `hermes_odd/commands/soul.py` (text) and `hermes_odd/soul_tool.py` (tool).
@@ -661,11 +661,11 @@ something.
 Never read: `.env`, `auth.json`, credentials. Paths under the home show as
 `~/…`, others as their last three components. The `ctx.state` probe writes
 the key `doctor.probe`, reads it back and restores the previous value.
-`/odd_status` stays under 1,500 characters and `/odd_doctor` under 3,500.
+`/odd-status` stays under 1,500 characters and `/odd-doctor` under 3,500.
 Each status line and each doctor check is guarded: a failure becomes a line,
 never an exception.
 
-## RDD on Hermes (`/odd_review_mode`)
+## RDD on Hermes (`/odd-review-mode`)
 
 ### Upstream limitation (verified)
 
@@ -716,15 +716,15 @@ accepts Hermes; hermes-odd then says "available (detected)", points out that
 the facade is pending and starts nothing), or `unknown` (another code,
 garbage, timeout). The wording names the compiled set from the lock
 (`review-contract.immutable_review_runtimes`) unless gentle-ai reports a
-runtime outside it; `/odd_review_mode` also shows the runtimes eligible in
+runtime outside it; `/odd-review-mode` also shows the runtimes eligible in
 the probing environment.
 
 ### The command
 
-`/odd_review_mode [status|enable|disable] [global|clone] [project]`:
+`/odd-review-mode [status|enable|disable] [global|clone] [project]`:
 
 - the target is a known project (exact name, then prefix; ambiguous and
-  not-found answers name the candidates) among the recorded `/odd_tasks`
+  not-found answers name the candidates) among the recorded `/odd-tasks`
   projects and the process directories that are git repositories, else the
   process repository;
 - `status` (default) runs `review mode status --cwd <root> --json` (without

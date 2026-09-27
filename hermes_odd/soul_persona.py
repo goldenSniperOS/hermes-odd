@@ -94,7 +94,7 @@ class Result:
 
 
 def soul_path(home: Path | None = None) -> Path:
-    """``<Hermes home>/SOUL.md``, resolved like ``/odd_doctor`` does."""
+    """``<Hermes home>/SOUL.md``, resolved like ``/odd-doctor`` does."""
     return Path(home if home is not None else soul_mod.hermes_home()) / SOUL_FILE
 
 

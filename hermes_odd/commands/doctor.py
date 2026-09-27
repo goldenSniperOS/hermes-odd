@@ -1,4 +1,4 @@
-"""``/odd_doctor``: read-only health report (Pi ``gentle:doctor``).
+"""``/odd-doctor``: read-only health report (Pi ``gentle:doctor``).
 
 Concept port of gentle-shell's ``gentle:doctor`` (``extensions/gentle-ai.ts``):
 one line per check with a pass/warn/fail mark and a remedy when it is not a
@@ -57,30 +57,30 @@ BINARY_RULE = (
 UPGRADE_HINT = "brew upgrade gentleman-programming/tap/gentle-ai"
 INSTALL_HINT = "brew install gentleman-programming/tap/gentle-ai"
 SOUL_KEPT_HINT = (
-    "the remaining gentle-ai blocks are ones /odd_soul keeps (persona or unknown); "
+    "the remaining gentle-ai blocks are ones /odd-soul keeps (persona or unknown); "
     "trim SOUL.md by hand or pin context_file_max_chars"
 )
 
 
 def soul_hint(home: Path) -> str:
-    """Remedy for the SOUL.md check: point to ``/odd_soul plan`` when it would help."""
+    """Remedy for the SOUL.md check: point to ``/odd-soul plan`` when it would help."""
     from .. import soul_cleanup as sc
 
     plan = sc.plan_cleanup(home)
     if plan.error:
-        return f"/odd_soul cannot clean it: {plan.error}"
+        return f"/odd-soul cannot clean it: {plan.error}"
     if plan.writes:
         saved = plan.before_chars - plan.after_chars
         count = len(plan.removable)
         return (
-            f"hermes-odd already supplies ODD through its prompt section: run /odd_soul plan "
+            f"hermes-odd already supplies ODD through its prompt section: run /odd-soul plan "
             f"(dry run; {count} gentle-ai block{'s' if count != 1 else ''} to remove or move to "
-            f"lazy skills, saves {saved:,} chars), then /odd_soul apply confirm (backup first). "
+            f"lazy skills, saves {saved:,} chars), then /odd-soul apply confirm (backup first). "
             + BINARY_RULE
         )
     if plan.persona_optional:
         return (
-            "only the old gentle-ai persona is left: /odd_soul plan persona previews removing "
+            "only the old gentle-ai persona is left: /odd-soul plan persona previews removing "
             "it (the hermes-odd persona is active)"
         )
     return SOUL_KEPT_HINT
@@ -212,7 +212,7 @@ def check_review_mode(
     prober: Prober, binary: BinaryInfo | None, repo: Path | None, timeout: float
 ) -> Check:
     if timeout <= 0.1:
-        return Check(WARN, "RDD mode", "unknown (time budget spent)", "run /odd_doctor again")
+        return Check(WARN, "RDD mode", "unknown (time budget spent)", "run /odd-doctor again")
     mode = prober.review_mode(binary.path if binary else None, repo, timeout)
     text = review_mode_text(mode)
     if mode.state == "ok":
@@ -220,7 +220,7 @@ def check_review_mode(
     if mode.state == "no_repo":
         hint = (
             "the command process is not inside a git repository (gateways run from "
-            "their launch directory); run /odd_doctor from the CLI inside the project"
+            "their launch directory); run /odd-doctor from the CLI inside the project"
         )
     elif mode.state == "no_binary":
         hint = "install gentle-ai (see the binary check)"
@@ -241,7 +241,7 @@ def check_native_review(
 ) -> Check:
     """Whether gentle-ai accepts ``--agent hermes`` for native immutable review."""
     if timeout <= 0.1:
-        return Check(WARN, NATIVE_LABEL, "unknown (time budget spent)", "run /odd_doctor again")
+        return Check(WARN, NATIVE_LABEL, "unknown (time budget spent)", "run /odd-doctor again")
     native: NativeReview = prober.native_review(binary.path if binary else None, repo, timeout)
     text = native_review_text(native, binary.version if binary else None)
     if native.code:
@@ -255,15 +255,15 @@ def check_native_review(
             text,
             "upstream runtime eligibility, not a local fault: each candidate is reported as "
             "unavailable and continues under ordinary repository policy; advisory 4R "
-            "review on request (hermes-odd:rdd-review); to opt out: /odd_review_mode "
+            "review on request (hermes-odd:rdd-review); to opt out: /odd-review-mode "
             "disable clone",
         )
     if native.state == "available":
         return Check(WARN, NATIVE_LABEL, text, "update hermes-odd once the review facade ships")
     hint = {
         "no_binary": "install gentle-ai (see the binary check)",
-        "no_repo": "run /odd_doctor from the CLI inside a git project",
-    }.get(native.state, "run /odd_review_mode status to retry")
+        "no_repo": "run /odd-doctor from the CLI inside a git project",
+    }.get(native.state, "run /odd-review-mode status to retry")
     return Check(WARN, NATIVE_LABEL, text, hint)
 
 
@@ -290,10 +290,10 @@ def _lost_text(report: soul_mod.SoulReport, cap: int) -> str:
 
 
 def _hermes_block_text(report: soul_mod.SoulReport) -> str:
-    """The hermes-odd persona block written by ``/odd_setup`` / ``odd_setup_apply``."""
+    """The hermes-odd persona block written by ``/odd-setup`` / ``odd_setup_apply``."""
     ours = [b for b in report.hermes_blocks if b.name == "persona"]
     if not ours:
-        return "hermes-odd persona block: none (/odd_setup)"
+        return "hermes-odd persona block: none (/odd-setup)"
     block = ours[0]
     if not block.closed:
         return "hermes-odd persona block: unclosed (fix SOUL.md by hand)"
@@ -412,7 +412,7 @@ def check_plugin(runtime: RuntimeInfo | None) -> Check:
     hooks = f"hooks {runtime.hooks_registered}/{runtime.hooks_expected}"
     if runtime.hooks_registered < runtime.hooks_expected:
         level = FAIL if level == FAIL else WARN
-        hints.append("some hooks failed to register: /odd_agents and /odd_changes may stay empty")
+        hints.append("some hooks failed to register: /odd-agents and /odd-changes may stay empty")
     state = probe_state(runtime.ctx)
     fallback = runtime.fallback_stores()
     if state == "ok" and not fallback:
@@ -612,7 +612,7 @@ class Doctor:
 
         def native_review() -> Check:
             if "budget" not in probe:
-                return Check(WARN, NATIVE_LABEL, "unknown (not probed)", "run /odd_doctor again")
+                return Check(WARN, NATIVE_LABEL, "unknown (not probed)", "run /odd-doctor again")
             return check_native_review(
                 self.prober, first[0], probe["repo"], probe["budget"], probe.get("rdd_on")
             )
@@ -641,7 +641,7 @@ class Doctor:
         ]
         lines.extend(c.render() for c in checks)
         lines.append("")
-        lines.append("Summary: /odd_status")
+        lines.append("Summary: /odd-status")
         return fit("\n".join(lines))
 
 

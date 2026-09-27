@@ -13,14 +13,14 @@ license: MIT
 homepage: https://github.com/goldenSniperOS/hermes-odd
 tags: [workflow, odd, rdd, review, gentle-ai-compatible]
 # Settings live under plugins.entries.hermes-odd.settings. The first-run setup
-# (/odd_setup, tool odd_setup_apply) writes them; a valid value here wins over
+# (/odd-setup, tool odd_setup_apply) writes them; a valid value here wins over
 # the setup answers kept in plugin state. Tool odd_soul_apply is the model's
-# dry-run-then-confirm path for the SOUL.md cleanup (/odd_soul).
+# dry-run-then-confirm path for the SOUL.md cleanup (/odd-soul).
 config_schema:
   persona:
     type: str
     default: unset
-    description: "Chat persona written as one hermes-odd block at the top of SOUL.md: unset (not chosen yet), rioplatense, neutral, custom or none. Change it with /odd_setup persona <id>."
+    description: "Chat persona written as one hermes-odd block at the top of SOUL.md: unset (not chosen yet), rioplatense, neutral, custom or none. Change it with /odd-setup persona <id>."
   verbosity:
     type: str
     default: short
@@ -32,7 +32,7 @@ config_schema:
   soul_cleanup:
     type: str
     default: unset
-    description: "Cleanup of gentle-ai blocks in SOUL.md: unset, yes (the setup shows the dry-run plan and applies it only after your yes), later or no. /odd_soul plan works any time."
+    description: "Cleanup of gentle-ai blocks in SOUL.md: unset, yes (the setup shows the dry-run plan and applies it only after your yes), later or no. /odd-soul plan works any time."
   codegraph_guidance:
     type: str
     default: auto

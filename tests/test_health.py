@@ -1,4 +1,4 @@
-"""``/odd_status``, ``/odd_doctor``, their probes and the SOUL.md truncation math."""
+"""``/odd-status``, ``/odd-doctor``, their probes and the SOUL.md truncation math."""
 
 from __future__ import annotations
 
@@ -385,8 +385,8 @@ class SoulCheckTests(unittest.TestCase):
             "Cap 30,720 (m 128k (cache)): truncated, loses big (partly), routing", check.finding
         )
         self.assertIn("4 gentle-ai blocks", check.finding)
-        # Only unknown blocks: /odd_soul keeps them, so the hint says so.
-        self.assertIn("/odd_soul keeps", check.hint)
+        # Only unknown blocks: /odd-soul keeps them, so the hint says so.
+        self.assertIn("/odd-soul keeps", check.hint)
         self.assertNotIn(FAKE_CANARY, check.render())
         self.assertNotIn("xxxx", check.render())
 
@@ -616,7 +616,7 @@ class StatusTests(unittest.TestCase):
                 repo=lambda: Path("/work/proj"),
             )
             text = status.render()
-            self.assertIn("RDD: unknown here · run /odd_doctor", text)
+            self.assertIn("RDD: unknown here · run /odd-doctor", text)
             prober.review_mode(go, Path("/work/proj"))
             text2 = status.render()
         self.assertIn(f"hermes-odd {__version__} is active", text)
@@ -627,7 +627,7 @@ class StatusTests(unittest.TestCase):
         self.assertIn("ODD features: 1 · 2 open tasks (1 project)", text)
         self.assertIn("gentle-ai: 3.7.0 ✓ min 3.7.0 (~/go/bin/gentle-ai)", text)
         self.assertIn("Upstream: gentle-ai v3.7.0", text)
-        self.assertIn("Problems? /odd_doctor", text)
+        self.assertIn("Problems? /odd-doctor", text)
         self.assertIn("RDD: on (decided by global) · proj", text2)
         self.assertLessEqual(len(text), STATUS_MAX_CHARS)
         self.assertNotIn(HOME, text + text2)
@@ -680,10 +680,10 @@ class CommandsListingTests(unittest.TestCase):
         text = registry.get("odd_commands").handler("")
         self.assertLess(text.index("Viewers:"), text.index("Health:"))
         for spec in registry:
-            self.assertIn(f"/{spec.name}", text)
+            self.assertIn(f"/{spec.hermes_key}", text)
             self.assertIn(spec.group, ("Viewers", "Review", "Setup", "Health"))
         self.assertLess(text.index("Review:"), text.index("Health:"))
-        self.assertIn("/odd_review_mode [status|enable|disable] [global|clone] [project]", text)
+        self.assertIn("/odd-review-mode [status|enable|disable] [global|clone] [project]", text)
         self.assertEqual(registry.get("odd_review_mode").group, "Review")
         self.assertEqual(
             [s.name for s in registry],

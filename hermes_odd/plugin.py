@@ -39,7 +39,7 @@ def _safe_handler(spec: CommandSpec) -> Callable[[str], str]:
             result = spec.handler((raw_args or "").strip())
         except Exception as exc:  # noqa: BLE001 - surface as text, never raise
             logger.warning("hermes-odd /%s failed: %s", spec.name, exc, exc_info=True)
-            return f"/{spec.name} failed: {type(exc).__name__}: {exc}"
+            return f"/{spec.hermes_key} failed: {type(exc).__name__}: {exc}"
         if result is None:
             return ""
         return result if isinstance(result, str) else str(result)
@@ -76,7 +76,7 @@ def register_prompt_section(
 ) -> bool:
     """Register the compact always-on ODD section; return whether it succeeded.
 
-    The content is a callable so ``observer`` (the ``/odd_tasks`` project
+    The content is a callable so ``observer`` (the ``/odd-tasks`` project
     recorder) sees each session's ``cwd`` without changing the text, and
     ``setup_inputs`` adds the setup-pending line and the lazy-skill pointers.
     """

@@ -6,6 +6,14 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Docs, skills and command output now name commands in the hyphen form
+  (`/odd-status`). The Hermes CLI looks plugin commands up by exact name, so the
+  underscore form (`/odd_status`) printed before failed there with "Unknown
+  command"; gateways accept both. The smoke test checks it through the
+  registered command table.
+
 ## [0.5.0] - 2026-09-27
 
 ### Changed

@@ -1,7 +1,7 @@
-"""Known ODD projects for ``/odd_tasks``.
+"""Known ODD projects for ``/odd-tasks``.
 
 Hermes command handlers receive only ``raw_args``: no session, no cwd. So
-``/odd_tasks`` combines two sources of project roots (see ``docs/design.md``,
+``/odd-tasks`` combines two sources of project roots (see ``docs/design.md``,
 "Project resolution"):
 
 1. **Known projects**, recorded when Hermes renders the ``hermes-odd-workflow``

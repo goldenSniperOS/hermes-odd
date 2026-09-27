@@ -34,7 +34,7 @@ class RegisterTests(unittest.TestCase):
         output = self.ctx.commands["odd-commands"]["handler"]("")
         self.assertIsInstance(output, str)
         self.assertTrue(output.strip())
-        self.assertIn("/odd_commands", output)
+        self.assertIn("/odd-commands", output)
         self.assertIn("List hermes-odd commands", output)
         self.assertNotIn("<", output)  # no markup
 

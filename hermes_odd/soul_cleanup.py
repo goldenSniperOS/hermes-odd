@@ -1,4 +1,4 @@
-"""Clean the gentle-ai managed blocks out of ``SOUL.md`` (``/odd_soul``, ``odd_soul_apply``).
+"""Clean the gentle-ai managed blocks out of ``SOUL.md`` (``/odd-soul``, ``odd_soul_apply``).
 
 gentle-ai's Hermes writer (``gentle-ai install`` selecting Hermes,
 ``gentle-ai sync --agent hermes``) puts its guidance into ``SOUL.md`` as
@@ -325,7 +325,7 @@ def plan_text(text: str, path: Path, *, remove_persona: bool = False) -> Cleanup
     if remove_persona and not plan.hermes_persona:
         plan.persona_note = (
             "The gentle-ai persona is kept: SOUL.md has no hermes-odd persona block "
-            "(write one first with /odd_setup persona <id>)."
+            "(write one first with /odd-setup persona <id>)."
         )
     kept_lifts = {text[n.start : n.end] for _i, n in top if _is_lifted(n)}
     newline = "\r\n" if "\r\n" in text else "\n"
@@ -470,7 +470,7 @@ def apply_cleanup(
         check = verify(plan.before, back, plan.items)
         result.error = f"post-write check failed ({check})" if check else ""
     if result.error and result.backup is not None:
-        result.error += f"; restore it with /odd_soul restore {result.backup.name}"
+        result.error += f"; restore it with /odd-soul restore {result.backup.name}"
     result.verified = not result.error
     return result
 
@@ -509,7 +509,7 @@ def restore_backup(
     result = RestoreResult(path=path)
     chosen = resolve_backup(choice, home)
     if chosen is None:
-        result.error = f"no backup {choice!r}; /odd_soul restore lists them"
+        result.error = f"no backup {choice!r}; /odd-soul restore lists them"
         return result
     result.chosen = chosen
     try:

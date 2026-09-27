@@ -1,4 +1,4 @@
-"""First-run setup: section lines, /odd_setup, odd_setup_apply, SOUL persona block."""
+"""First-run setup: section lines, /odd-setup, odd_setup_apply, SOUL persona block."""
 
 from __future__ import annotations
 
@@ -607,7 +607,7 @@ class ConfigWriteTests(HomeCase):
         self.assertEqual(ctx.settings, {"engram_protocol": "auto", "verbosity": "short"})
 
 
-# -- /odd_setup -------------------------------------------------------------
+# -- /odd-setup -------------------------------------------------------------
 
 
 class CommandTests(HomeCase):
@@ -626,7 +626,7 @@ class CommandTests(HomeCase):
             "Answer style: short · default · inside the SOUL.md persona block",
             "Engram protocol: auto (when mcp__engram__* tools exist) · default · prompt section",
             "CodeGraph guidance: auto (when CodeGraph is on PATH or configured) · default",
-            "/odd_soul",
+            "/odd-soul",
             "a gentle-ai persona block coexists",
             "next new session",
         ):
@@ -642,7 +642,7 @@ class CommandTests(HomeCase):
         self.assertIn("dry run, nothing written", preview)
         self.assertIn("written after the H1 heading", preview)
         self.assertIn("<!-- hermes-odd:persona -->", preview)
-        self.assertIn("Reply `/odd_setup persona rioplatense confirm`", preview)
+        self.assertIn("Reply `/odd-setup persona rioplatense confirm`", preview)
         self.assertIn("both personas would coexist", preview)
         self.assertEqual(self.read(), USER_SOUL)
         self.assertEqual(self.backups(), [])
@@ -685,7 +685,7 @@ class CommandTests(HomeCase):
         self.assertIn("hermes-odd setup: skipped", command.handle("status"))
         reset = command.handle("reset")
         self.assertIn("pending again", reset)
-        self.assertIn("/odd_setup persona none", reset)
+        self.assertIn("/odd-setup persona none", reset)
         self.assertTrue(setup.pending())
         self.assertIn("<!-- hermes-odd:persona -->", self.read())  # reset keeps the block
 
@@ -694,7 +694,7 @@ class CommandTests(HomeCase):
         command, _setup = self.make()
         command.handle("persona neutral confirm")
         text = command.handle("verbosity detailed")
-        self.assertIn("/odd_setup persona <id> confirm", text)
+        self.assertIn("/odd-setup persona <id> confirm", text)
 
     def test_invalid_and_custom_without_text(self) -> None:
         command, _setup = self.make()
@@ -710,7 +710,7 @@ class CommandTests(HomeCase):
             "skip now",
         ):
             with self.subTest(raw=raw):
-                self.assertTrue(command.handle(raw).startswith("Usage: /odd_setup"))
+                self.assertTrue(command.handle(raw).startswith("Usage: /odd-setup"))
         self.assertIn("No own persona text", command.handle("persona custom confirm"))
 
     def test_registered_handler_covers_every_subcommand(self) -> None:
@@ -749,7 +749,7 @@ class CommandTests(HomeCase):
         register(ctx)
         self.assertIn("odd-setup", ctx.commands)
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("Setup:\n- /odd_setup", listing)
+        self.assertIn("Setup:\n- /odd-setup", listing)
         hint = ctx.commands["odd-setup"]["args_hint"]
         self.assertTrue(hint.startswith("["))
 
@@ -1035,7 +1035,7 @@ class SkillTests(unittest.TestCase):
             "confirm: false",
             "plan_id",
             "remove_gentle_persona",
-            "/odd_setup skip",
+            "/odd-setup skip",
         ):
             self.assertIn(token, self.text)
         self.assertIn("odd_setup_apply", self.text)
@@ -1046,10 +1046,10 @@ class SkillTests(unittest.TestCase):
         questions = " ".join(q["question"] for q in self.call["questions"])
         self.assertNotIn("TDD", questions)
         self.assertNotIn("tdd_mode", self.text)
-        self.assertNotIn("/odd_setup tdd", self.text)
+        self.assertNotIn("/odd-setup tdd", self.text)
         workflow = (REPO_ROOT / "skills" / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
         self.assertNotIn("TDD mode:", workflow)
-        self.assertNotIn("/odd_setup tdd", workflow)
+        self.assertNotIn("/odd-setup tdd", workflow)
 
 
 def manifest_config_schema() -> dict:

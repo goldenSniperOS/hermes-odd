@@ -1,4 +1,4 @@
-"""``/odd_soul``: clean the gentle-ai blocks out of ``SOUL.md`` (dry run, backup, restore).
+"""``/odd-soul``: clean the gentle-ai blocks out of ``SOUL.md`` (dry run, backup, restore).
 
 Deterministic plain text; never calls the model and never prints SOUL
 content (block names and sizes only). Subcommands:
@@ -30,7 +30,7 @@ from .doctor import display_path
 from .registry import CommandSpec
 
 OUTPUT_MAX_CHARS = 3500
-USAGE = "/odd_soul [status|plan [persona]|apply [persona] confirm|restore [N|backup]]"
+USAGE = "/odd-soul [status|plan [persona]|apply [persona] confirm|restore [N|backup]]"
 MAX_BACKUPS_LISTED = 5
 
 
@@ -125,7 +125,7 @@ def render_plan(plan: sc.CleanupPlan, context: soul_mod.ModelContext) -> str:
         lines.append("Nothing to clean: no block the cleanup removes.")
         if plan.persona_optional:
             lines.append(
-                "Optional: /odd_soul plan persona previews removing the old gentle-ai "
+                "Optional: /odd-soul plan persona previews removing the old gentle-ai "
                 "persona (the hermes-odd persona is active)."
             )
         return _fit("\n".join(lines))
@@ -138,15 +138,15 @@ def render_plan(plan: sc.CleanupPlan, context: soul_mod.ModelContext) -> str:
     lines.extend(impact_lines(plan, context, after=True))
     if plan.persona_optional:
         lines.append(
-            "Optional: /odd_soul plan persona also removes the old gentle-ai persona "
+            "Optional: /odd-soul plan persona also removes the old gentle-ai persona "
             "(the hermes-odd persona is active)."
         )
     lines.append(f"Warning: {sc.BINARY_WARNING}")
     persona = " persona" if plan.remove_persona and not plan.persona_note else ""
     lines.append(
-        f"Apply: /odd_soul apply{persona} confirm (backup {sp.SOUL_FILE}{sp.BACKUP_INFIX}"
+        f"Apply: /odd-soul apply{persona} confirm (backup {sp.SOUL_FILE}{sp.BACKUP_INFIX}"
         f"<UTC timestamp> first, last {sp.BACKUP_KEEP} kept; atomic write, then verified). "
-        "Undo: /odd_soul restore."
+        "Undo: /odd-soul restore."
     )
     return _fit("\n".join(lines))
 
@@ -183,7 +183,7 @@ def render_result(result: sc.CleanupResult) -> str:
     if result.rotated:
         lines.append(f"Old backups rotated out: {len(result.rotated)}.")
     lines.append(f"Warning: {sc.BINARY_WARNING}")
-    lines.append("Undo: /odd_soul restore 1 (the backup made now).")
+    lines.append("Undo: /odd-soul restore 1 (the backup made now).")
     lines.append(NEXT_SESSION_NOTE)
     return _fit("\n".join(lines))
 
@@ -236,12 +236,12 @@ class SoulCommand:
         lines.extend(impact_lines(plan, self.context(), after=False))
         found = sc.backups(self.home())
         if found:
-            lines.append(f"Backups: {len(found)} (newest {found[0].name}); /odd_soul restore")
+            lines.append(f"Backups: {len(found)} (newest {found[0].name}); /odd-soul restore")
         else:
             lines.append("Backups: none")
         if plan.writes:
             lines.append(
-                f"Next: /odd_soul plan (dry run; saves {plan.before_chars - plan.after_chars:,} "
+                f"Next: /odd-soul plan (dry run; saves {plan.before_chars - plan.after_chars:,} "
                 "chars)."
             )
         else:
@@ -271,7 +271,7 @@ class SoulCommand:
                     size = 0
                 lines.append(f"{number}. {path.name} · {size:,} chars")
             lines.append(
-                "Restore one: /odd_soul restore <N or name> (the current SOUL.md is backed up "
+                "Restore one: /odd-soul restore <N or name> (the current SOUL.md is backed up "
                 "first, so it can be undone the same way)."
             )
             return "\n".join(lines)
@@ -300,9 +300,9 @@ class SoulCommand:
                 return self.apply(persona=len(rest) == 2)
             if rest in ([], ["persona"]):
                 return (
-                    "Not applied: add `confirm` (/odd_soul apply"
+                    "Not applied: add `confirm` (/odd-soul apply"
                     + (" persona" if rest else "")
-                    + " confirm) after reading /odd_soul plan."
+                    + " confirm) after reading /odd-soul plan."
                 )
         if head == "restore" and len(words) <= 2:
             return self.restore(words[1] if len(words) == 2 else None)

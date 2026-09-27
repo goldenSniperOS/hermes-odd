@@ -22,7 +22,8 @@ Naming (verified against hermes-agent source):
 So a spec name is the Telegram-safe form users type in gateways
 (``odd_commands``) and :func:`hermes_command_key` gives the hyphenated key
 registered with Hermes (``odd-commands``). Gateways accept both
-``/odd_commands`` and ``/odd-commands``; the CLI accepts the hyphen form.
+``/odd_commands`` and ``/odd-commands``; the CLI accepts only the hyphen form,
+so every text hermes-odd shows uses ``/odd-commands``.
 """
 
 from __future__ import annotations
@@ -45,7 +46,7 @@ class CommandSpec:
     description: str
     handler: Handler
     args_hint: str = ""
-    group: str = ""  # heading in /odd_commands ("Viewers", "Review", "Health")
+    group: str = ""  # heading in /odd-commands ("Viewers", "Review", "Health")
 
     @property
     def hermes_key(self) -> str:

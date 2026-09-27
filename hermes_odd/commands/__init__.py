@@ -36,16 +36,16 @@ def build_registry(
 ) -> CommandRegistry:
     """Return the registry holding every odd command.
 
-    ``agent_store`` feeds ``/odd_agents``; without one an empty in-memory store
+    ``agent_store`` feeds ``/odd-agents``; without one an empty in-memory store
     is used (the command then answers that no subagents are recorded).
-    ``project_store`` feeds ``/odd_tasks`` with known project roots; without
+    ``project_store`` feeds ``/odd-tasks`` with known project roots; without
     one only the process's own directories are searched. ``change_store``
-    feeds ``/odd_changes``; without one an empty in-memory store is used.
-    ``runtime`` (what ``register`` registered) feeds ``/odd_status`` and
-    ``/odd_doctor``; ``prober`` is the cached gentle-ai prober they share with
-    ``/odd_review_mode`` (which resolves projects like ``/odd_tasks``).
-    ``setup`` feeds ``/odd_setup``; without one an in-memory setup is used.
-    ``/odd_soul`` works on the Hermes home's ``SOUL.md``.
+    feeds ``/odd-changes``; without one an empty in-memory store is used.
+    ``runtime`` (what ``register`` registered) feeds ``/odd-status`` and
+    ``/odd-doctor``; ``prober`` is the cached gentle-ai prober they share with
+    ``/odd-review-mode`` (which resolves projects like ``/odd-tasks``).
+    ``setup`` feeds ``/odd-setup``; without one an in-memory setup is used.
+    ``/odd-soul`` works on the Hermes home's ``SOUL.md``.
     """
     agents = agent_store if agent_store is not None else AgentStore()
     changes = change_store if change_store is not None else ChangeStore(agent_store=agent_store)

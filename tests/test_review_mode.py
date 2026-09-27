@@ -1,4 +1,4 @@
-"""``/odd_review_mode``, the native review availability probe and the RDD skills."""
+"""``/odd-review-mode``, the native review availability probe and the RDD skills."""
 
 from __future__ import annotations
 
@@ -424,8 +424,8 @@ class WriteCommandTests(unittest.TestCase):
                 text = command.render(args)
                 self.assertIn("needs an explicit scope", text)
                 self.assertIn("No change was made", text)
-                self.assertIn(f"/odd_review_mode {args} global", text)
-                self.assertIn(f"/odd_review_mode {args} clone", text)
+                self.assertIn(f"/odd-review-mode {args} global", text)
+                self.assertIn(f"/odd-review-mode {args} clone", text)
         self.assertEqual(runner.commands, [])
 
     def test_clone_without_repository_is_refused(self) -> None:
@@ -538,7 +538,7 @@ class RegistrationTests(unittest.TestCase):
         self.assertEqual(entry["args_hint"], "[status|enable|disable] [global|clone] [project]")
         self.assertFalse(entry["args_hint"].startswith("<"))
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("Review:\n- /odd_review_mode", listing)
+        self.assertIn("Review:\n- /odd-review-mode", listing)
 
 
 class RddSkillTests(unittest.TestCase):
@@ -567,7 +567,7 @@ class RddSkillTests(unittest.TestCase):
             "git show <sha>",
             "delegate_task",
             "hermes-odd:rdd-review-lenses",
-            "/odd_review_mode",
+            "/odd-review-mode",
             "never authorizes",
         ):
             self.assertIn(token, self.review)

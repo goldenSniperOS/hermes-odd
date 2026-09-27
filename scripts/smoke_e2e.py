@@ -160,7 +160,7 @@ def run(temp_home: Path) -> None:
     check(command is not None, f"/{COMMAND_KEY} is registered")
     output = command["handler"]("")
     check(isinstance(output, str) and output.strip() != "", f"/{COMMAND_KEY} returns text")
-    check("/odd_commands" in output, f"/{COMMAND_KEY} output lists itself")
+    check("/odd-commands" in output, f"/{COMMAND_KEY} output lists itself")
     print("---- /odd-commands output ----")
     print(output)
     print("------------------------------")
@@ -193,6 +193,23 @@ def run(temp_home: Path) -> None:
     run_health(manager, temp_home)
     run_soul_cleanup(manager, temp_home, loaded)
     run_review_mode(manager, temp_home)
+    run_cli_names(manager)
+
+
+def run_cli_names(manager) -> None:
+    """The CLI looks plugin commands up by exact name (cli.py process_command).
+
+    Gateways map ``_`` to ``-``, but the CLI does not, so every command must be
+    registered under its hyphen form and no command output may point users at
+    an underscore form the CLI rejects.
+    """
+    keys = sorted(k for k in manager._plugin_commands if k.startswith("odd"))
+    check(bool(keys), f"hermes-odd commands registered: {keys}")
+    check(all("_" not in k for k in keys), "every command key uses the hyphen form")
+    for key in keys:
+        output = manager._plugin_commands[key]["handler"]("")
+        leaked = sorted(set(re.findall(r"/odd_[a-z_]+", output)) - {"/odd_commands"})
+        check(not leaked, f"/{key} output shows only CLI-valid names (found {leaked})")
 
 
 def run_agents_lifecycle(manager, temp_home: Path) -> None:
@@ -388,7 +405,7 @@ DEMO_DOC = """\
 ## Tasks
 
 - [x] T1 Create the demo repository
-- [ ] T2 Show it in /odd_tasks
+- [ ] T2 Show it in /odd-tasks
       (continuation line)
 
 ## Next step
@@ -449,10 +466,10 @@ def run_tasks_viewer(manager, temp_home: Path, baseline_section: str) -> None:
     listing = command["handler"]("")
     check("demo-project (" in listing, "/odd-tasks lists the recorded project")
     check("1/2 demo" in listing, "/odd-tasks shows the demo feature progress")
-    check("next: T2 Show it in /odd_tasks" in listing, "/odd-tasks shows the next task")
+    check("next: T2 Show it in /odd-tasks" in listing, "/odd-tasks shows the next task")
     detail = command["handler"]("demo")
     check("✓ T1 Create the demo repository" in detail, "detail marks the done task")
-    check("○ T2 Show it in /odd_tasks  ← next" in detail, "detail marks the next task")
+    check("○ T2 Show it in /odd-tasks  ← next" in detail, "detail marks the next task")
     check("Next step: T2 show it." in detail, "detail shows the next step")
     print("---- /odd-tasks output ----")
     print(listing)
@@ -671,7 +688,7 @@ def run_soul_cleanup(manager, temp_home: Path, loaded) -> None:
     command = manager._plugin_commands.get("odd-soul")
     check(command is not None, "/odd-soul is registered")
     listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
-    check("- /odd_soul" in listing, "/odd-commands lists /odd_soul")
+    check("- /odd-soul" in listing, "/odd-commands lists /odd-soul")
     check("odd_soul_apply" in loaded.manifest.provides_tools, "manifest lists odd_soul_apply")
     check("odd_soul_apply" in manager._plugin_tool_names, "odd_soul_apply is a plugin tool")
 
@@ -734,7 +751,7 @@ def run_review_mode(manager, temp_home: Path) -> None:
     command = manager._plugin_commands.get("odd-review-mode")
     check(command is not None, "/odd-review-mode is registered")
     listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
-    check("Review:\n- /odd_review_mode" in listing, "/odd-commands lists it under Review")
+    check("Review:\n- /odd-review-mode" in listing, "/odd-commands lists it under Review")
     if shutil.which("gentle-ai") is None:
         print("skip: gentle-ai not on PATH; /odd-review-mode status not exercised")
         return

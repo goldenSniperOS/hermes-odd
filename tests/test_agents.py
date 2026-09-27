@@ -1,4 +1,4 @@
-"""Subagent tracking (hooks + store) and the ``/odd_agents`` viewer."""
+"""Subagent tracking (hooks + store) and the ``/odd-agents`` viewer."""
 
 from __future__ import annotations
 
@@ -317,7 +317,7 @@ class CommandTests(unittest.TestCase):
             self.clock.advance(1)
         text = self.handler("")
         self.assertEqual(text.count("\n  last: "), 10)
-        self.assertIn("… 4 more (/odd_agents all)", text)
+        self.assertIn("… 4 more (/odd-agents all)", text)
         self.assertIn("0 running · 14 finished", text)
         self.assertEqual(self.handler("all").count("✓ "), 14)
 
@@ -397,7 +397,7 @@ class CommandListingTests(unittest.TestCase):
         self.assertIn("odd-agents", ctx.commands)
         self.assertEqual(ctx.commands["odd-agents"]["args_hint"], "[id|all]")
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("/odd_agents [id|all]", listing)
+        self.assertIn("/odd-agents [id|all]", listing)
 
 
 if __name__ == "__main__":

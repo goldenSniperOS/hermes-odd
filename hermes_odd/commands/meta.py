@@ -1,4 +1,4 @@
-"""``/odd_commands``: list every hermes-odd command (Pi ``gentle:commands``)."""
+"""``/odd-commands``: list every hermes-odd command (Pi ``gentle:commands``)."""
 
 from __future__ import annotations
 
@@ -21,14 +21,14 @@ def make_odd_commands(registry: CommandRegistry) -> CommandSpec:
             lines.append("")
             lines.append(f"{group}:")
             for spec in groups[group]:
-                usage = f"/{spec.name}"
+                usage = f"/{spec.hermes_key}"
                 if spec.args_hint:
                     usage = f"{usage} {spec.args_hint}"
                 lines.append(f"- {usage}: {spec.description}")
         lines.append("")
         lines.append(
-            "Gateways accept /name or its hyphen form; the CLI uses the hyphen "
-            "form (for example /odd-commands)."
+            "Gateways also accept the underscore form Telegram's menu shows "
+            "(for example /odd_commands); the CLI accepts only the hyphen form."
         )
         return "\n".join(lines)
 

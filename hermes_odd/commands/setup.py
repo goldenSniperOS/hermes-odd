@@ -1,4 +1,4 @@
-"""``/odd_setup``: first-run setup status and direct setters (installer persona step).
+"""``/odd-setup``: first-run setup status and direct setters (installer persona step).
 
 Deterministic plain text; never calls the model. Subcommands:
 
@@ -6,7 +6,7 @@ Deterministic plain text; never calls the model. Subcommands:
   effective value, source and where it is applied, and the SOUL.md block;
 * ``skip``: mark the setup skipped (the agent stops offering it);
 * ``reset``: clear the answers and make the setup pending again. The SOUL.md
-  persona block is **not** removed (``/odd_setup persona none`` does that);
+  persona block is **not** removed (``/odd-setup persona none`` does that);
 * ``persona <rioplatense|neutral|custom|none> [confirm]``: without
   ``confirm`` a dry-run preview of the SOUL.md change; only the ``confirm``
   form writes (backup first). ``custom`` reuses the own text given to the
@@ -17,7 +17,7 @@ Deterministic plain text; never calls the model. Subcommands:
 There is no TDD answer: ODD applies one default test-first policy where it
 is applicable (``hermes-odd:odd-workflow`` section 6).
 
-The gentle-ai block cleanup of ``SOUL.md`` is ``/odd_soul``.
+The gentle-ai block cleanup of ``SOUL.md`` is ``/odd-soul``.
 
 A setter or a confirmed persona completes the setup.
 """
@@ -32,7 +32,7 @@ from .registry import CommandSpec
 
 OUTPUT_MAX_CHARS = 3500
 USAGE = (
-    "/odd_setup [status|skip|reset|persona <rioplatense|neutral|custom|none> [confirm]|"
+    "/odd-setup [status|skip|reset|persona <rioplatense|neutral|custom|none> [confirm]|"
     "engram <on|off>|codegraph <auto|off>|verbosity <short|detailed>]"
 )
 ENGRAM_VALUES = {"on": "auto", "auto": "auto", "off": "off"}
@@ -101,9 +101,9 @@ class SetupCommand:
         lines.append("")
         lines.append(
             "Set up: ask the agent (it loads hermes-odd:setup), or directly: "
-            "/odd_setup persona <rioplatense|neutral|custom|none> · engram <on|off> · "
+            "/odd-setup persona <rioplatense|neutral|custom|none> · engram <on|off> · "
             "codegraph <auto|off> · verbosity <short|detailed> · skip · "
-            "reset. SOUL cleanup of gentle-ai blocks: /odd_soul"
+            "reset. SOUL cleanup of gentle-ai blocks: /odd-soul"
         )
         lines.append(NEXT_SESSION_NOTE)
         return _fit("\n".join(lines))
@@ -114,7 +114,7 @@ class SetupCommand:
         self.setup.skip()
         return (
             "hermes-odd setup skipped: the agent will not offer it again. Answers were kept.\n"
-            "Run it later by asking the agent (hermes-odd:setup), or /odd_setup reset."
+            "Run it later by asking the agent (hermes-odd:setup), or /odd-setup reset."
         )
 
     def reset(self) -> str:
@@ -123,7 +123,7 @@ class SetupCommand:
             "hermes-odd setup reset: answers cleared, setup is pending again (the agent "
             "offers it once in the next new session).",
             "The SOUL.md persona block was not touched; remove it with "
-            "/odd_setup persona none (then confirm).",
+            "/odd-setup persona none (then confirm).",
         ]
         if config.state != "skipped":
             lines.append(config.text().replace("saved under", "defaults restored under"))
@@ -140,7 +140,7 @@ class SetupCommand:
             if not custom:
                 return (
                     "No own persona text is stored yet. Give it to the agent during setup "
-                    "(ask it to run hermes-odd:setup), then /odd_setup persona custom confirm "
+                    "(ask it to run hermes-odd:setup), then /odd-setup persona custom confirm "
                     "re-applies it."
                 )
         if confirm:
@@ -179,12 +179,12 @@ class SetupCommand:
         if plan.gentle_persona and persona != personas.NONE:
             lines.append(
                 "Warning: SOUL.md also has a gentle-ai persona block; both personas would "
-                "coexist (/odd_soul plan persona previews removing the old one)."
+                "coexist (/odd-soul plan persona previews removing the old one)."
             )
         if block:
             lines.extend(["", "---- block ----", block, "---------------"])
         lines.append("")
-        lines.append(f"Reply `/odd_setup persona {persona} confirm` to write it.")
+        lines.append(f"Reply `/odd-setup persona {persona} confirm` to write it.")
         return _fit("\n".join(lines))
 
     # -- dispatch ------------------------------------------------------------

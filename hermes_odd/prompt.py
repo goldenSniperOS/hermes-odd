@@ -119,7 +119,7 @@ def make_section_callable(
 
     Hermes calls it once per new session with a read-only ``session_info``
     mapping (``session_id``, ``model``, ``provider``, ``platform``,
-    ``profile_name``, ``cwd``). ``observer`` sees that mapping (``/odd_tasks``
+    ``profile_name``, ``cwd``). ``observer`` sees that mapping (``/odd-tasks``
     uses it to learn project roots); its failures are swallowed so the
     section is never skipped, and the observer cannot change the prompt.
     ``setup_inputs`` (the first-run setup) decides the setup-pending line and

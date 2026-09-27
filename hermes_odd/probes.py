@@ -1,4 +1,4 @@
-"""Read-only probes of the ``gentle-ai`` binary for ``/odd_status`` and ``/odd_doctor``.
+"""Read-only probes of the ``gentle-ai`` binary for ``/odd-status`` and ``/odd-doctor``.
 
 hermes-odd uses the user's installed ``gentle-ai`` binary only (RDD through
 ``gentle-ai review``); it never runs ``gentle-ai install`` or
@@ -21,13 +21,13 @@ The identity is always :data:`AGENT_ID` (``hermes``). hermes-odd never
 passes another runtime's identity to gentle-ai (never ``--agent pi``): that
 would break the review contract and make receipts meaningless.
 
-The only writes are the explicit, user-typed ``/odd_review_mode
+The only writes are the explicit, user-typed ``/odd-review-mode
 enable|disable`` commands (:meth:`Prober.set_review_mode`), which change
 gentle-ai's own review switch and nothing else.
 
 Every call runs without a shell, with a minimal environment, stdin closed and
 a hard timeout (:data:`PROBE_TIMEOUT_SECONDS`). Results are cached for
-:data:`CACHE_TTL_SECONDS` so repeated ``/odd_status`` calls cost nothing.
+:data:`CACHE_TTL_SECONDS` so repeated ``/odd-status`` calls cost nothing.
 Nothing here raises.
 """
 
@@ -276,7 +276,7 @@ def process_repo(environ: Mapping[str, str] | None = None) -> Path | None:
 
 
 class Prober:
-    """Cached, bounded gentle-ai probes shared by ``/odd_status`` and ``/odd_doctor``."""
+    """Cached, bounded gentle-ai probes shared by ``/odd-status`` and ``/odd-doctor``."""
 
     def __init__(
         self,
@@ -434,7 +434,7 @@ class Prober:
         """Run ``gentle-ai review mode enable|disable --scope <scope> [--cwd
         <repo>] --json`` once, never cached, and drop cached review modes.
 
-        Only called for an explicit user-typed ``/odd_review_mode`` command."""
+        Only called for an explicit user-typed ``/odd-review-mode`` command."""
         if action not in ("enable", "disable"):
             raise ValueError(f"not a review mode write: {action!r}")
         command = review_mode_command(binary, action, scope, repo)
@@ -454,7 +454,7 @@ class Prober:
                 del self._cache[key]
 
     def cached_review_mode(self, repo: Path | None) -> ReviewMode | None:
-        """A review-mode result cached by ``/odd_doctor`` for ``repo``, if fresh."""
+        """A review-mode result cached by ``/odd-doctor`` for ``repo``, if fresh."""
         if repo is None:
             return None
         with self._lock:

@@ -81,7 +81,7 @@ SCHEMA: dict[str, Any] = {
                 "enum": list(INPUT_VALUES["soul_cleanup"]),
                 "description": (
                     "yes = next, show the odd_soul_apply dry run and apply it only after the "
-                    "user's explicit yes; later = the user runs /odd_soul later; no = keep."
+                    "user's explicit yes; later = the user runs /odd-soul later; no = keep."
                 ),
             },
             "apply_persona_to_soul": {

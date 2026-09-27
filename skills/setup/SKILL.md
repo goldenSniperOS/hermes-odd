@@ -15,7 +15,7 @@ metadata:
 
 Records the user's preferences and applies them. The prompt section says
 "hermes-odd setup is pending" until this runs, the user skips it, or
-`/odd_setup` completes it.
+`/odd-setup` completes it.
 
 ## When
 
@@ -24,7 +24,7 @@ Records the user's preferences and applies them. The prompt section says
 - Only when the user is **not mid-task**: at the start of a conversation, after
   a task closed, or when the user asks for it. Offer it once in one short line;
   if the user is busy or says no, drop it and do not offer again in this session.
-- If the user does not want it at all, tell them `/odd_setup skip` stops the
+- If the user does not want it at all, tell them `/odd-setup skip` stops the
   offer for good (only the user can type it).
 
 ## Ask everything in ONE clarify call
@@ -64,7 +64,7 @@ dry-run plan, and nothing is written without a second, explicit yes.
     },
     {
       "question": "Clean the gentle-ai blocks out of SOUL.md (dry-run plan first, backup, your yes before writing)?",
-      "choices": ["Yes, show me the plan", "Later (/odd_soul)", "No"]
+      "choices": ["Yes, show me the plan", "Later (/odd-soul)", "No"]
     }
   ]
 }
@@ -81,7 +81,7 @@ Mapping to `odd_setup_apply` arguments:
 | 4 / None (Hermes default) | `persona: "none"` |
 | Short first / Detailed | `verbosity: "short"` / `"detailed"` |
 | Auto / Off | `engram_protocol: "auto"` / `"off"` |
-| Yes, show me the plan / Later (/odd_soul) / No | `soul_cleanup: "yes"` / `"later"` / `"no"` |
+| Yes, show me the plan / Later (/odd-soul) / No | `soul_cleanup: "yes"` / `"later"` / `"no"` |
 
 For a closed question, an "Other" answer that is not one of the choices is
 invalid: ask that question again. A blank answer means "not answered": omit
@@ -106,7 +106,7 @@ choose, default or infer an answer.
    `apply_persona_to_soul: true`.
 4. No: call `odd_setup_apply` with the other answers and
    `apply_persona_to_soul: false`; SOUL.md stays untouched. Tell the user
-   `/odd_setup persona <id>` previews and applies it later.
+   `/odd-setup persona <id>` previews and applies it later.
 5. Relay the tool's `summary` and `note` as they are, including any warning
    (for example two personas coexisting). On an `error`, show it, fix only
    what it names (for example a too long or blocked own text) and ask again.
@@ -124,7 +124,7 @@ Only after `odd_setup_apply` returned, and only in the parent session:
 3. Yes: call `odd_soul_apply` with `confirm: true` and the dry run's
    `plan_id`, then relay its `summary` and `note`. A `plan_id` mismatch
    means `SOUL.md` changed: run the dry run again and ask again.
-4. No, or `changes: false`: nothing is written; `/odd_soul plan` shows it
+4. No, or `changes: false`: nothing is written; `/odd-soul plan` shows it
    again any time.
 
 The old gentle-ai persona is kept unless the user explicitly asks to remove
@@ -137,15 +137,15 @@ yourself with file tools.
 - Engram protocol `auto`: the prompt section gets one line pointing to
   `hermes-odd:engram-protocol`; `off` removes it.
 - CodeGraph guidance is not asked: it defaults to `auto` (a pointer to
-  `hermes-odd:codegraph` while CodeGraph is present); `/odd_setup codegraph
+  `hermes-odd:codegraph` while CodeGraph is present); `/odd-setup codegraph
   off` turns it off.
 - An older setup that stored a TDD mode still loads; that answer is ignored.
 
 ## Commands the user can type
 
-`/odd_setup` (status), `/odd_setup skip`, `/odd_setup reset`,
-`/odd_setup persona <rioplatense|neutral|custom|none>` (dry-run preview;
-add `confirm` to write), `/odd_setup engram <on|off>`, `/odd_setup codegraph <auto|off>`,
-`/odd_setup verbosity <short|detailed>`, and for the cleanup
-`/odd_soul [status|plan|apply confirm|restore]`.
+`/odd-setup` (status), `/odd-setup skip`, `/odd-setup reset`,
+`/odd-setup persona <rioplatense|neutral|custom|none>` (dry-run preview;
+add `confirm` to write), `/odd-setup engram <on|off>`, `/odd-setup codegraph <auto|off>`,
+`/odd-setup verbosity <short|detailed>`, and for the cleanup
+`/odd-soul [status|plan|apply confirm|restore]`.
 In the CLI the hyphen form: `/odd-setup`, `/odd-soul`.

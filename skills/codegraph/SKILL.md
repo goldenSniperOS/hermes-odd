@@ -18,7 +18,7 @@ For structural or codebase questions (repository maps, architecture, call
 flow, dependencies, symbol references, impact analysis, "how does X work"),
 use CodeGraph before broad file searches. This is a hard ordering rule, not
 a preference. This skill is the lazy version of the CodeGraph block
-gentle-ai wrote into `SOUL.md`; `/odd_soul` moves it here.
+gentle-ai wrote into `SOUL.md`; `/odd-soul` moves it here.
 
 ## Worktree placement
 

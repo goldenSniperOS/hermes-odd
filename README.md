@@ -26,12 +26,12 @@ preflight, or `gentle-sdd-*` commands.
 ## Status
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
-ships lazy ODD skills, and registers the viewers `/odd_agents`,
-`/odd_tasks`, `/odd_changes`, the RDD switch `/odd_review_mode` and the
-health commands `/odd_status`, `/odd_doctor`, `/odd_commands`, plus a
-[first-run setup](#first-run-setup) (`/odd_setup`, persona and preferences)
+ships lazy ODD skills, and registers the viewers `/odd-agents`,
+`/odd-tasks`, `/odd-changes`, the RDD switch `/odd-review-mode` and the
+health commands `/odd-status`, `/odd-doctor`, `/odd-commands`, plus a
+[first-run setup](#first-run-setup) (`/odd-setup`, persona and preferences)
 and the [SOUL.md cleanup](#soulmd-cleanup-of-gentle-ai-blocks) of gentle-ai
-blocks (`/odd_soul`).
+blocks (`/odd-soul`).
 Native RDD review is blocked upstream for Hermes (see
 [RDD on Hermes](#rdd-on-hermes)).
 
@@ -59,10 +59,10 @@ Native RDD review is blocked upstream for Hermes (see
     [First-run setup](#first-run-setup)).
   - `hermes-odd:engram-protocol` — the Engram™ memory protocol bound to
     `mcp__engram__*`: when and what to save, topic keys, search before
-    asking, session summaries (moved here from `SOUL.md` by `/odd_soul`).
+    asking, session summaries (moved here from `SOUL.md` by `/odd-soul`).
   - `hermes-odd:codegraph` — CodeGraph before broad searches for structural
     questions, worktree placement, lazy `codegraph init` (moved here from
-    `SOUL.md` by `/odd_soul`).
+    `SOUL.md` by `/odd-soul`).
   - `hermes-odd:work-unit-commits` — the ODD commit rules: every task closes
     with a work-unit commit (behavior plus its tests and docs, Conventional
     Commit message) recorded as evidence; the advisory ~400-line per-task
@@ -149,7 +149,7 @@ gentle-ai installer's Hermes integration.
 
 | What | Needed for | Install |
 |---|---|---|
-| `gentle-ai` binary >= 3.7.0 | RDD: `/odd_review_mode` and the review status probe | `brew install gentleman-programming/tap/gentle-ai` |
+| `gentle-ai` binary >= 3.7.0 | RDD: `/odd-review-mode` and the review status probe | `brew install gentleman-programming/tap/gentle-ai` |
 | Engram™ binary | Persistent memory (the `hermes-odd:engram-protocol` skill and feature-doc mirrors) | `brew install gentleman-programming/tap/engram` |
 | Context7 MCP (optional) | Up-to-date library docs | Needs `npx` (Node.js) |
 | CodeGraph (optional) | Code navigation (the `hermes-odd:codegraph` skill) | See the upstream CodeGraph project |
@@ -198,7 +198,7 @@ hermes plugins list
 
 Start a new session. While setup is pending, hermes-odd asks the model to
 offer it once, when you are not in the middle of a task. You can also start
-it yourself with `/odd_setup`. It asks about:
+it yourself with `/odd-setup`. It asks about:
 
 - persona;
 - answer style;
@@ -213,7 +213,7 @@ The persona is written into `SOUL.md` only after you confirm it, with a
 backup. Details are in [First-run setup](#first-run-setup). Finish with:
 
 ```text
-/odd_doctor
+/odd-doctor
 ```
 
 It reports the health of the plugin, `SOUL.md` and the gentle-ai binary.
@@ -243,48 +243,48 @@ the exact commit of each release.
 Commands answer with plain text and never call the model, so the output is
 the same in the CLI, the TUI, and every gateway.
 
-In gateways (Telegram, Discord, Slack, ...) type the underscore form, for
-example `/odd_commands`; the hyphen form works too. In the Hermes CLI type
-the hyphen form, for example `/odd-commands`, because the CLI matches the
-registered name exactly.
+This README writes commands in the hyphen form, for example `/odd-commands`,
+because the Hermes CLI and TUI match the registered name exactly. Gateways
+(Telegram, Discord, Slack, ...) accept it too, and also the underscore form
+Telegram's command menu shows (`/odd_commands`).
 
 **Viewers**
 
 | Command | What it does |
 |---|---|
-| `/odd_agents [id\|all]` | Shows your `delegate_task` subagents: running first, then the last 24 h (up to 10; `all` lists up to 50, one line each). An id prefix shows one run: goal, role, status, timings, parent session and platform, a tool timeline and the child's summary |
-| `/odd_tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
-| `/odd_changes [file\|project\|all\|clear]` | Shows which files the agent and its subagents changed in the last 24 h (`all`: 7 days), grouped by project: `+added −removed  path  (n edits · by main/sa-xxxx · age)`, newest first, with per-project totals. A file (path, name or prefix) shows its edit timeline and, inside a git repository, its current uncommitted `git diff --numstat`; a project name lists that project; `clear` forgets every recorded change |
+| `/odd-agents [id\|all]` | Shows your `delegate_task` subagents: running first, then the last 24 h (up to 10; `all` lists up to 50, one line each). An id prefix shows one run: goal, role, status, timings, parent session and platform, a tool timeline and the child's summary |
+| `/odd-tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
+| `/odd-changes [file\|project\|all\|clear]` | Shows which files the agent and its subagents changed in the last 24 h (`all`: 7 days), grouped by project: `+added −removed  path  (n edits · by main/sa-xxxx · age)`, newest first, with per-project totals. A file (path, name or prefix) shows its edit timeline and, inside a git repository, its current uncommitted `git diff --numstat`; a project name lists that project; `clear` forgets every recorded change |
 
 **Review**
 
 | Command | What it does |
 |---|---|
-| `/odd_review_mode [status\|enable\|disable] [global\|clone] [project]` | `status` (default, read-only): the effective RDD mode and its source for the repository (a known project by name or prefix, else the directory Hermes runs from), both sources (global, clone), and whether native review is available on Hermes. `enable`/`disable` run the real `gentle-ai review mode <enable\|disable> --scope <global\|clone> --json`; the scope is required, and `clone` needs a git repository |
+| `/odd-review-mode [status\|enable\|disable] [global\|clone] [project]` | `status` (default, read-only): the effective RDD mode and its source for the repository (a known project by name or prefix, else the directory Hermes runs from), both sources (global, clone), and whether native review is available on Hermes. `enable`/`disable` run the real `gentle-ai review mode <enable\|disable> --scope <global\|clone> --json`; the scope is required, and `clone` needs a git repository |
 
 **Setup**
 
 | Command | What it does |
 |---|---|
-| `/odd_setup [status\|skip\|reset\|persona ID [confirm]\|engram on\|off\|codegraph auto\|off\|verbosity short\|detailed]` | `status` (default): pending / complete / skipped, every answer with its value, where it came from (config, setup, default) and where it is applied, and the SOUL.md block. `skip` stops the agent from offering setup; `reset` clears the answers and makes setup pending again (it does not remove the SOUL.md block: use `persona none`). `persona <rioplatense\|neutral\|custom\|none>` shows a dry-run preview of the SOUL.md change; only `persona <id> confirm` writes it (backup first). `engram <on\|off>`, `codegraph <auto\|off>`, `verbosity <short\|detailed>` store one answer |
-| `/odd_soul [status\|plan [persona]\|apply [persona] confirm\|restore [N]]` | Cleans the gentle-ai blocks out of `SOUL.md` (see [SOUL.md cleanup](#soulmd-cleanup-of-gentle-ai-blocks)). `status` (default): each block, its size and what the cleanup would do, and the current truncation. `plan`: dry run with the action per block, characters saved, the new size and the truncation before → after. `apply confirm`: backup, atomic write, verification. `restore`: lists the backups; `restore N` restores one (backing up the current file first) |
+| `/odd-setup [status\|skip\|reset\|persona ID [confirm]\|engram on\|off\|codegraph auto\|off\|verbosity short\|detailed]` | `status` (default): pending / complete / skipped, every answer with its value, where it came from (config, setup, default) and where it is applied, and the SOUL.md block. `skip` stops the agent from offering setup; `reset` clears the answers and makes setup pending again (it does not remove the SOUL.md block: use `persona none`). `persona <rioplatense\|neutral\|custom\|none>` shows a dry-run preview of the SOUL.md change; only `persona <id> confirm` writes it (backup first). `engram <on\|off>`, `codegraph <auto\|off>`, `verbosity <short\|detailed>` store one answer |
+| `/odd-soul [status\|plan [persona]\|apply [persona] confirm\|restore [N]]` | Cleans the gentle-ai blocks out of `SOUL.md` (see [SOUL.md cleanup](#soulmd-cleanup-of-gentle-ai-blocks)). `status` (default): each block, its size and what the cleanup would do, and the current truncation. `plan`: dry run with the action per block, characters saved, the new size and the truncation before → after. `apply confirm`: backup, atomic write, verification. `restore`: lists the backups; `restore N` restores one (backing up the current file first) |
 
 **Health**
 
 | Command | What it does |
 |---|---|
-| `/odd_status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the RDD mode when `/odd_doctor` or `/odd_review_mode` checked it in the last minute, native review availability on Hermes, and the supported upstream versions |
-| `/odd_doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), the RDD mode of the current git repository (`gentle-ai review mode status`), native review availability on Hermes, `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
-| `/odd_commands` | Lists hermes-odd commands, grouped |
+| `/odd-status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the RDD mode when `/odd-doctor` or `/odd-review-mode` checked it in the last minute, native review availability on Hermes, and the supported upstream versions |
+| `/odd-doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), the RDD mode of the current git repository (`gentle-ai review mode status`), native review availability on Hermes, `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
+| `/odd-commands` | Lists hermes-odd commands, grouped |
 
-`/odd_agents` records only metadata, from Hermes' `subagent_start`,
+`/odd-agents` records only metadata, from Hermes' `subagent_start`,
 `post_tool_call` and `subagent_stop` hooks: per tool call the name,
 ok/error and duration. Tool arguments and results are never stored. Records
 live in the profile's plugin state, so a run started from Telegram is visible
 in the CLI of the same profile. Stopping a subagent from the command is not
 supported (Hermes has no safe plugin API for it); ask the agent to stop it.
 
-`/odd_tasks` reads the feature documents straight from disk; nothing is
+`/odd-tasks` reads the feature documents straight from disk; nothing is
 copied into state. Because a command does not know which chat or directory
 it was typed in, it looks in the projects where a Hermes session of this
 profile recently ran (the last 10 git roots of the session working
@@ -293,7 +293,7 @@ directory Hermes itself runs from (`terminal.cwd` / the CLI launch
 directory). Only directories with an `odd/tasks/` folder are shown. The
 Engram mirror of each feature is not read (see `docs/design.md`).
 
-`/odd_changes` captures only successful `write_file` and `patch` calls
+`/odd-changes` captures only successful `write_file` and `patch` calls
 (including the ones `execute_code` makes through `hermes_tools`), from the
 main agent and its subagents, through Hermes' `post_tool_call` hook: no
 repository scans and no background polling. Edits made with terminal/shell
@@ -303,8 +303,8 @@ session id and platform are kept; file content and diffs are never stored or
 shown. `write_file` replaces a whole file, so its removed lines are unknown
 and show as `−?`. Entries are kept for 7 days, at most 200 files.
 
-`/odd_status` runs no subprocess except a `gentle-ai version` probe and the
-native review probe, both cached for 60 s. `/odd_doctor` runs only `gentle-ai
+`/odd-status` runs no subprocess except a `gentle-ai version` probe and the
+native review probe, both cached for 60 s. `/odd-doctor` runs only `gentle-ai
 version`, `gentle-ai review mode status --json` and the native review probe
 (no shell, minimal environment, 3 s timeout each, about 6 s in total, cached
 for 60 s); it never runs `gentle-ai install` or `sync`.
@@ -332,13 +332,13 @@ form (buttons on Telegram):
    `hermes-odd:engram-protocol` when `mcp__engram__*` tools exist) or off.
 4. **SOUL cleanup of gentle-ai blocks** — yes (the agent shows the dry-run
    plan through the `odd_soul_apply` tool and applies it only after your
-   explicit yes), later (`/odd_soul` whenever you want), or no.
+   explicit yes), later (`/odd-soul` whenever you want), or no.
 
 The agent then sends one summary and asks you to confirm before it calls the
 `odd_setup_apply` tool. If you decline the persona, the other answers are
 kept and `SOUL.md` is not touched. You can do everything without the model
-too: `/odd_setup persona neutral` (preview), then
-`/odd_setup persona neutral confirm`.
+too: `/odd-setup persona neutral` (preview), then
+`/odd-setup persona neutral confirm`.
 
 Where each answer goes:
 
@@ -349,11 +349,11 @@ Where each answer goes:
   `SOUL.md.hermes-odd-bak-<UTC timestamp>` (the last 5 are kept) and the new
   file is written atomically with the same permissions. Your own text and any
   `<!-- gentle-ai:... -->` blocks stay byte-identical; if a gentle-ai persona
-  block exists, both personas coexist and the summary says so. `/odd_setup
+  block exists, both personas coexist and the summary says so. `/odd-setup
   persona none` (then `confirm`) removes the block again.
 - **Engram protocol / CodeGraph guidance**: one pointer line each in the
   prompt section (`codegraph_guidance` is not asked; it defaults to `auto`,
-  `/odd_setup codegraph off` removes the line).
+  `/odd-setup codegraph off` removes the line).
 - **All answers**: `plugins.entries.hermes-odd.settings` in `config.yaml`
   (the plugin's `config_schema`), and the setup record in the plugin state.
   A valid value you edit in `config.yaml` wins. Managed installs refuse the
@@ -372,9 +372,9 @@ If you ever ran `gentle-ai install` for Hermes or `gentle-ai sync --agent
 hermes`, your `~/.hermes/SOUL.md` holds gentle-ai's managed blocks. Hermes
 sends `SOUL.md` with every message and cuts the middle of a long one, and
 hermes-odd already supplies ODD through its prompt section, so most of them
-are dead weight. `/odd_soul` removes them, only with your confirmation:
+are dead weight. `/odd-soul` removes them, only with your confirmation:
 
-| Block | What `/odd_soul` does |
+| Block | What `/odd-soul` does |
 |---|---|
 | `orchestrator` (the ODD orchestrator a current gentle-ai install writes) | removed |
 | `sdd-orchestrator` (with its nested `sdd-session-preflight`; the v3.7.0 name) | removed |
@@ -388,17 +388,17 @@ The kept `remote-authorization` block is a general safety rule; it keeps
 gentle-ai's own markers and bytes (hermes-odd does not claim text it does not
 maintain, and gentle-ai's tooling still recognizes it).
 
-1. `/odd_soul plan` — dry run: every block with its action and size, the
+1. `/odd-soul plan` — dry run: every block with its action and size, the
    characters saved, the new size and whether Hermes truncates it at 128k,
    200k and 1M context and for your configured model. Nothing is written.
-2. `/odd_soul apply confirm` — copies `SOUL.md` to
+2. `/odd-soul apply confirm` — copies `SOUL.md` to
    `SOUL.md.hermes-odd-bak-<UTC timestamp>` (the last 5 are kept), writes the
    new file atomically with the same permissions, then re-reads it and checks
    that kept blocks are byte-identical and in order, removed blocks are gone,
    the lifted block is there and your text outside blocks is unchanged (only
    the blank lines around removed blocks change). A second apply finds
    nothing to do.
-3. `/odd_soul restore` lists the backups; `/odd_soul restore 1` puts the
+3. `/odd-soul restore` lists the backups; `/odd-soul restore 1` puts the
    newest back (the current file is backed up first, so a restore can be
    undone the same way).
 
@@ -436,10 +436,10 @@ next_action: stop
 
 What hermes-odd does instead:
 
-- `/odd_review_mode` shows your RDD switch and the availability line
+- `/odd-review-mode` shows your RDD switch and the availability line
   (`Native review on Hermes: unavailable — gentle-ai 3.7.0 advertises
   immutable review only for claude-code, opencode, codex, pi`), detected live;
-  `/odd_status` and `/odd_doctor` show the same line.
+  `/odd-status` and `/odd-doctor` show the same line.
 - The `hermes-odd:rdd-review` skill tells the agent, when RDD is on, to report
   "native review unavailable on Hermes (gentle-ai runtime eligibility)" once
   per candidate, record it in the ODD feature document, and continue under
@@ -458,8 +458,8 @@ review facade waits on upstream runtime eligibility for Hermes.
 
 | Pi (gentle-pi) | Hermes (hermes-odd) | Notes |
 |---|---|---|
-| `gentle:persona` | `/odd_setup persona ID` | shipped as the [first-run setup](#first-run-setup) |
-| SOUL.md cleanup of gentle-ai blocks | `/odd_soul` | shipped: dry run, explicit confirmation, backup and restore |
+| `gentle:persona` | `/odd-setup persona ID` | shipped as the [first-run setup](#first-run-setup) |
+| SOUL.md cleanup of gentle-ai blocks | `/odd-soul` | shipped: dry run, explicit confirmation, backup and restore |
 | `gentle_review*` tools | native review facade | blocked upstream: gentle-ai does not accept Hermes as an immutable review runtime yet |
 | `skill-registry:refresh` | Hermes native skill index | not needed |
 

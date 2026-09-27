@@ -16,7 +16,7 @@ metadata:
 
 Engram™ is a persistent memory that survives sessions and context
 compaction. This skill is the lazy, Hermes-bound version of the memory
-protocol gentle-ai wrote into `SOUL.md`; `/odd_soul` moves it here so it no
+protocol gentle-ai wrote into `SOUL.md`; `/odd-soul` moves it here so it no
 longer costs tokens on every message. Load it when Engram tools exist and
 you are about to decide, fix, learn or recall something worth keeping.
 

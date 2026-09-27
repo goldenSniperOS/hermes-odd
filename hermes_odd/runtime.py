@@ -1,4 +1,4 @@
-"""What ``register(ctx)`` actually registered, for ``/odd_status`` and ``/odd_doctor``.
+"""What ``register(ctx)`` actually registered, for ``/odd-status`` and ``/odd-doctor``.
 
 The commands report the plugin's own surface (prompt section, skills, hooks,
 state backend) from this record instead of guessing: ``register`` fills it in

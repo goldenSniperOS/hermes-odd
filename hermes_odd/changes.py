@@ -1,4 +1,4 @@
-"""Changed-file tracking for ``/odd_changes`` (concept port of gentle-shell Gentle Changes).
+"""Changed-file tracking for ``/odd-changes`` (concept port of gentle-shell Gentle Changes).
 
 gentle-shell captures the successful write/edit tool calls of a Pi session
 and its owned subagents (no repository scans, no background polling) and
@@ -707,7 +707,7 @@ def register_change_hooks(ctx: Any, store: ChangeStore) -> bool:
     """
     register_hook = getattr(ctx, "register_hook", None)
     if not callable(register_hook):
-        logger.warning("hermes-odd: ctx.register_hook is unavailable; /odd_changes stays empty")
+        logger.warning("hermes-odd: ctx.register_hook is unavailable; /odd-changes stays empty")
         return False
     try:
         register_hook("post_tool_call", store.on_post_tool_call)

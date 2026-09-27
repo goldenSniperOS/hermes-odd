@@ -9,7 +9,7 @@ asking, and a guard that the applied plan is the one the user saw. So:
 * ``confirm: true`` needs that ``plan_id``: it is a digest of the current
   ``SOUL.md`` and the options, so a file changed since the plan (or a plan
   never shown) is refused. It then backs up, writes and verifies like
-  ``/odd_soul apply confirm``.
+  ``/odd-soul apply confirm``.
 
 The ``hermes-odd:setup`` skill calls it when the setup answer
 ``soul_cleanup`` is ``yes``, and only calls ``confirm: true`` after the

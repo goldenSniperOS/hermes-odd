@@ -1,4 +1,4 @@
-"""Feature-document parser, known projects and the ``/odd_tasks`` viewer."""
+"""Feature-document parser, known projects and the ``/odd-tasks`` viewer."""
 
 from __future__ import annotations
 
@@ -428,7 +428,7 @@ class ViewerTests(unittest.TestCase):
         spec = registry.get("odd_tasks")
         self.assertIsNotNone(spec)
         self.assertEqual(spec.args_hint, "[feature|project]")
-        self.assertIn("/odd_tasks [feature|project]", registry.get("odd_commands").handler(""))
+        self.assertIn("/odd-tasks [feature|project]", registry.get("odd_commands").handler(""))
         ctx = FakeContext()
         register(ctx)
         self.assertIn("odd-tasks", ctx.commands)

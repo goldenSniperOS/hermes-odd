@@ -1,13 +1,13 @@
-"""``/odd_status``: one compact status message (Pi ``gentle:status``).
+"""``/odd-status``: one compact status message (Pi ``gentle:status``).
 
 Concept port of gentle-shell's ``gentle:status`` (``extensions/gentle-ai.ts``):
 what is active and at which version, in a few lines. It reads the plugin's own
-records (prompt section, skills, the ``/odd_agents`` and ``/odd_changes``
-stores, feature documents through the ``/odd_tasks`` resolution) and runs no
+records (prompt section, skills, the ``/odd-agents`` and ``/odd-changes``
+stores, feature documents through the ``/odd-tasks`` resolution) and runs no
 subprocess except the cached ``gentle-ai version`` probe and the cached,
 read-only native review availability probe (``gentle-ai review status ...
 --agent hermes``, see :mod:`hermes_odd.rdd`); the RDD mode is only shown when
-``/odd_doctor`` or ``/odd_review_mode`` cached it in the last minute. The RDD wording
+``/odd-doctor`` or ``/odd-review-mode`` cached it in the last minute. The RDD wording
 follows gentle-ai's ``receipt-driven development: <mode> (decided by
 <source>)``. No upstream code or text is copied. Output stays under
 :data:`OUTPUT_MAX_CHARS`.
@@ -125,7 +125,7 @@ class Status:
             repo = None
         cached = self.prober.cached_review_mode(repo)
         if cached is None or cached.state != "ok":
-            return "RDD: unknown here · run /odd_doctor"
+            return "RDD: unknown here · run /odd-doctor"
         return f"RDD: {review_mode_text(cached)}"
 
     def _native_line(self) -> str:
@@ -162,7 +162,7 @@ class Status:
                 lines.append(step())
             except Exception as exc:  # noqa: BLE001 - one line never breaks the status
                 lines.append(f"{name}: unavailable ({type(exc).__name__})")
-        lines.append("Problems? /odd_doctor")
+        lines.append("Problems? /odd-doctor")
         return lines
 
     def render(self) -> str:

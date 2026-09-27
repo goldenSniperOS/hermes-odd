@@ -1,4 +1,4 @@
-"""SOUL cleanup of gentle-ai blocks: /odd_soul, odd_soul_apply, rules, backups, restore."""
+"""SOUL cleanup of gentle-ai blocks: /odd-soul, odd_soul_apply, rules, backups, restore."""
 
 from __future__ import annotations
 
@@ -173,7 +173,7 @@ class PlanTests(HomeCase):
             "128k (cap 30,720): fits → fits",
             "gentle-ai sync --agent hermes",
             "gentle-ai install",
-            "/odd_soul apply confirm",
+            "/odd-soul apply confirm",
             "SOUL.md.hermes-odd-bak-",
         ):
             self.assertIn(token, text)
@@ -194,7 +194,7 @@ class PlanTests(HomeCase):
             "Truncation by Hermes now:",
             "- 1M (cap 240,000): fits",
             "Backups: none",
-            "Next: /odd_soul plan",
+            "Next: /odd-soul plan",
         ):
             self.assertIn(token, text)
         self.assertNotIn(CANARY, text)
@@ -254,10 +254,10 @@ class PlanTests(HomeCase):
         default = sc.plan_cleanup(self.home)
         self.assertIn(PERSONA, default.after)
         self.assertTrue(default.persona_optional)
-        self.assertIn("/odd_soul plan persona", self.command().handle("plan"))
+        self.assertIn("/odd-soul plan persona", self.command().handle("plan"))
         requested = sc.plan_cleanup(self.home, remove_persona=True)
         self.assertEqual(requested.after, ours + "\n")
-        self.assertIn("/odd_soul apply persona confirm", self.command().handle("plan persona"))
+        self.assertIn("/odd-soul apply persona confirm", self.command().handle("plan persona"))
         done = self.command().handle("apply persona confirm")
         self.assertIn("SOUL.md cleaned", done)
         self.assertEqual(self.read(), ours + "\n")
@@ -269,7 +269,7 @@ class PlanTests(HomeCase):
         self.assertFalse(plan.writes)
         text = self.command().handle("plan")
         self.assertIn("Nothing to clean", text)
-        self.assertIn("/odd_soul plan persona", text)
+        self.assertIn("/odd-soul plan persona", text)
 
     def test_duplicate_remote_authorization_is_not_lifted_twice(self) -> None:
         self.write(REMOTE + "\n\n" + ROUTING + "\n")
@@ -405,7 +405,7 @@ class ApplyTests(HomeCase):
         self.assertTrue(result.written)
         self.assertFalse(result.verified)
         self.assertIn("post-write check failed", result.error)
-        self.assertIn("/odd_soul restore", result.error)
+        self.assertIn("/odd-soul restore", result.error)
 
     def test_backups_rotate_to_five(self) -> None:
         base = _dt.datetime(2026, 1, 1, tzinfo=_dt.UTC)
@@ -461,19 +461,19 @@ class DoctorTests(HomeCase):
         self.write(REAL_LIKE)
         check = check_soul(self.home, soul_mod.ModelContext("m", 1_000_000, "config"))
         self.assertEqual(check.level, WARN)
-        self.assertIn("/odd_soul plan", check.hint)
+        self.assertIn("/odd-soul plan", check.hint)
         self.assertIn("4 gentle-ai blocks to remove or move", check.hint)
         self.assertIn("gentle-ai sync --agent hermes", check.hint)
         self.assertNotIn("T9", check.hint)
         self.command().handle("apply confirm")
         check = check_soul(self.home, soul_mod.ModelContext("m", 1_000_000, "config"))
-        self.assertNotIn("/odd_soul plan (dry run", check.hint)
-        self.assertIn("/odd_soul keeps", check.hint)
+        self.assertNotIn("/odd-soul plan (dry run", check.hint)
+        self.assertIn("/odd-soul keeps", check.hint)
 
     def test_doctor_names_malformed_markers(self) -> None:
         self.write(HEADER + "<!-- gentle-ai:sdd-orchestrator -->\n" + "x" * 40_000)
         check = check_soul(self.home, soul_mod.ModelContext("m", 128_000, "cache"))
-        self.assertIn("/odd_soul cannot clean it", check.hint)
+        self.assertIn("/odd-soul cannot clean it", check.hint)
 
     def test_only_hermes_persona_left_passes(self) -> None:
         self.write(personas.render_block("neutral") + "\n\nBe kind.\n")
@@ -564,7 +564,7 @@ class RegistrationTests(unittest.TestCase):
         self.assertIn("odd-soul", ctx.commands)
         self.assertTrue(ctx.commands["odd-soul"]["args_hint"].startswith("["))
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("/odd_soul", listing)
+        self.assertIn("/odd-soul", listing)
         self.assertEqual(build_registry().get("odd_soul").group, "Setup")
         tool = next(t for t in ctx.tools if t["name"] == SOUL_TOOL)
         self.assertEqual(tool["toolset"], "hermes_odd")

@@ -1,4 +1,4 @@
-"""``/odd_agents``: plain-text view of Hermes subagents (Pi ``gentle:agents``).
+"""``/odd-agents``: plain-text view of Hermes subagents (Pi ``gentle:agents``).
 
 Concept port of the gentle-shell Gentle Agents card: one compact block per
 ``delegate_task`` child, a detail view per id, and an ``all`` history. The
@@ -46,7 +46,7 @@ EMPTY_TEXT = (
 )
 
 STOP_TEXT = (
-    "/odd_agents stop is not available: Hermes offers no safe plugin API to "
+    "/odd-agents stop is not available: Hermes offers no safe plugin API to "
     "interrupt a delegate_task child from a command. Ask the agent to stop it "
     "(delegate_task action=stop) in the conversation that started it."
 )
@@ -116,7 +116,7 @@ def _fit(
     header: list[str],
     footer: str = "",
     hidden: int = 0,
-    more_hint: str = " (/odd_agents all)",
+    more_hint: str = " (/odd-agents all)",
 ) -> str:
     """Join blocks under the size cap, ending with ``… N more`` when cut.
 
@@ -159,7 +159,7 @@ def render_list(records: list[dict[str, Any]], now: float) -> str:
     return _fit(
         blocks[:LIST_LIMIT],
         [_counts(records), ""],
-        "Details: /odd_agents [id] · history: /odd_agents all",
+        "Details: /odd-agents [id] · history: /odd-agents all",
         hidden=max(0, len(blocks) - LIST_LIMIT),
     )
 
@@ -247,7 +247,7 @@ def render_lookup(records: list[dict[str, Any]], prefix: str, now: float) -> str
     shown = _one_line(prefix, 40)
     if not matches:
         return (
-            f"No subagent matches '{shown}'. Run /odd_agents to list recent ids "
+            f"No subagent matches '{shown}'. Run /odd-agents to list recent ids "
             "(finished runs are kept for 24 h)."
         )
     if len(matches) > 1:

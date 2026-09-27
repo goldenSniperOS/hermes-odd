@@ -41,7 +41,7 @@ accumulated feature branch.
 ## RDD on Hermes: native review is unavailable
 
 The switch is the user's: `gentle-ai review mode status --json` (or the
-command `/odd_review_mode`) reports `status.effective` `on`/`off` and its
+command `/odd-review-mode`) reports `status.effective` `on`/`off` and its
 source. gentle-ai runs native immutable review only for runtimes that can
 launch a fresh, constrained reviewer and prove that boundary before review
 starts: claude-code, opencode, codex and pi. Upstream now gives receipt-driven
@@ -71,7 +71,7 @@ Hard rules:
   native review; never claim a review happened when it did not.
 - Never run `gentle-ai install` or `gentle-ai sync` for Hermes.
 - The switch belongs to the user. Change it only when the user types
-  `/odd_review_mode enable|disable global|clone`, or asks you to run that
+  `/odd-review-mode enable|disable global|clone`, or asks you to run that
   exact command.
 
 ## Optional advisory 4R review (no receipt)
@@ -105,7 +105,7 @@ never authorizes commit, push, PR or release.
 
 ## Toggle
 
-`/odd_review_mode` shows the effective mode, both sources and native review
-availability. `/odd_review_mode disable clone` opts this clone out;
-`/odd_review_mode enable|disable global` changes the user's global switch.
+`/odd-review-mode` shows the effective mode, both sources and native review
+availability. `/odd-review-mode disable clone` opts this clone out;
+`/odd-review-mode enable|disable global` changes the user's global switch.
 Any off wins; a clone can only opt out.
