@@ -117,7 +117,7 @@ gateway.
       scheduled CI.
 - [x] T11 Re-port upstream test-first ODD policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell
       a76e6f2/80375c6), decide the setup TDD question, re-render Hermes routing, re-pin.
-- [ ] T12 Real-install fix: the Hermes CLI resolves plugin commands by exact name
+- [x] T12 Real-install fix: the Hermes CLI resolves plugin commands by exact name
       (`/odd-status`), only gateways map `_` to `-`; document and print the hyphenated
       form everywhere, and add a smoke check that dispatches through the CLI path.
 
@@ -147,6 +147,10 @@ gateway.
 
 ## Progress
 
+- 2026-09-27: T12 1dfed5f hyphenated command names (review-9e837eb6ce78865f, 4 lenses, approved),
+  accc3a5 doc notes (review-a31fc00d6aab2f96, approved). Found by a real interactive CLI run:
+  `/odd_status` -> Unknown command; `/odd-status` works. One-shot `hermes chat -q` never
+  dispatches slash commands (Hermes design), so it is not a valid command test.
 - 2026-09-27: T11 done in four natively reviewed work units (Pi RDD, all approved and
   acknowledged): ff4c100 soul orchestrator block (review-c850caf3c3284824), 3da8229 test-first
   policy + re-pin to gentle-ai a9e36e9 / gentle-shell b756b4f (review-b6c149a1c3c2f967, 4 lenses,
@@ -237,4 +241,4 @@ gateway.
 
 ## Next step
 
-T12 (hyphenated command names), then v0.5.1 and a real CLI + Telegram check.
+Real CLI + Telegram check of v0.5.1; T8 stays blocked upstream.
