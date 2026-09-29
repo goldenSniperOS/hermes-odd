@@ -1,10 +1,10 @@
 <!-- hermes-odd:managed-odd-routing-canonical
 source_repo: https://github.com/Gentleman-Programming/gentle-ai
 source_path: internal/components/agentguidance/routing.go
-source_commit: a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b
+source_commit: d96a5d4f021b09d048958b518f550e1d8d629700
 render: agentguidance.RenderRouting(model.AgentHermes)
 agent_id: hermes
-generated_at: 2026-09-27T01:45:00Z
+generated_at: 2026-09-29T03:10:00Z
 block_sha256: 8f0fd320f0f1d99e8fc1d2a17626eee04f360b7f38dcd2fe96b47787f08860d5
 note: vendored verbatim for drift tracking; hermes-odd ports its ODD behavior in its own words. Since 5ffb65fc the Hermes render carries no RDD clauses (model.SupportsReceiptDrivenDevelopment).
 -->

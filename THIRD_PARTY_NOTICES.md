@@ -16,7 +16,7 @@ Buscaglia. See the README for the full notice.
 - Project: Gentle AI by Gentleman Programming (Alan Buscaglia)
 - URL: https://github.com/Gentleman-Programming/gentle-ai
 - Copyright: Copyright (c) 2025 Gentleman Programming
-- Pinned commit: a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b (`main` after v3.7.0;
+- Pinned commit: d96a5d4f021b09d048958b518f550e1d8d629700 (`main` after v3.7.0;
   no later release yet, see upstream/SUPPORTED.md)
 - License: MIT
 
@@ -93,8 +93,8 @@ SOFTWARE.
   Buscaglia / Gentleman Programming
 - URL: https://github.com/Gentleman-Programming/gentle-shell
 - Copyright: Copyright (c) 2025 Mario Zechner
-- Pinned commit: b756b4f34193eeb566d670f90ffc1c85e4fda601 (v3.7.0+208,
-  `git describe`: v3.7.0-208-gb756b4f)
+- Pinned commit: 4d2c3f5c7f11d3798c1115e34d08888bf46b314c (v3.7.0+276,
+  `git describe`: v3.7.0-276-g4d2c3f5)
 - License: MIT
 
 Files in this repository derived from gentle-shell:

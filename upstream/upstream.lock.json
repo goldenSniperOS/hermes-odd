@@ -1,30 +1,30 @@
 {
   "schema": "hermes-odd.upstream-lock/v1",
-  "updated": "2026-09-27",
+  "updated": "2026-09-29",
   "notes": "Authoritative record of the upstream versions hermes-odd supports. sha256 values hash the file content at pinned_commit (git show <commit>:<path> | shasum -a 256). Human triage of upstream changes lives in upstream/SUPPORTED.md.",
   "upstreams": {
     "gentle-ai": {
       "repo": "https://github.com/Gentleman-Programming/gentle-ai",
       "supported_release": "v3.7.0",
-      "pinned_commit": "a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b",
-      "commit_date": "2026-09-27T00:19:19+02:00",
+      "pinned_commit": "d96a5d4f021b09d048958b518f550e1d8d629700",
+      "commit_date": "2026-09-29T01:34:26+02:00",
       "release_tag_commit": "6dee8f833aec9e46015759c5065a9035795d9af1",
-      "release_note": "No release after v3.7.0 yet: the pin is main at a9e36e9 (T11 re-pin, 134 commits after the previous pin f182ea2; triage in upstream/SUPPORTED.md). The v3.7.0 tag object points at 6dee8f8, which is not on the rewritten main history; f182ea2 (the previous pin) is its main-history equivalent. The pinned main retires SDD (e219644b), makes applicable test-first the one ODD TDD policy (55e3abf1), limits receipt-driven development to runtimes with a native review transport (5ffb65fc: claude-code, codex, opencode, pi; Hermes gets ODD only) and installs an ODD-only orchestrator block for Hermes (fb4b59a7). The binary pins below stay 3.7.0 (the latest release).",
+      "release_note": "No release after v3.7.0 yet: the pin is main at d96a5d4 (T14 re-pin, 39 commits after a9e36e9; triage in upstream/SUPPORTED.md). The range moves the Go module to /v4 (a9f1390d) and adds Conductor, Kimi, OpenCode, Codex, Antigravity and sync fixes; RenderRouting(model.AgentHermes) and every Hermes-managed SOUL block are byte-identical to a9e36e9. Earlier: SDD retired (e219644b), applicable test-first (55e3abf1), receipt-driven development limited to runtimes with a native review transport (5ffb65fc; Hermes gets ODD only). The v3.7.0 tag object points at 6dee8f8, not on the rewritten main history. The binary pins below stay 3.7.0 (the latest release).",
       "binary": {
         "name": "gentle-ai",
         "min_version": "3.7.0",
         "tested_version": "3.7.0",
-        "used_for": "RDD through the `gentle-ai review` CLI and `gentle-ai review mode`; never `gentle-ai install` or `gentle-ai sync` for Hermes"
+        "used_for": "the read-only `gentle-ai version` probe of /odd-status and /odd-doctor; never `gentle-ai install` or `gentle-ai sync` for Hermes"
       }
     },
     "gentle-shell": {
       "repo": "https://github.com/Gentleman-Programming/gentle-shell",
       "supported_release": "v3.7.0",
-      "pinned_commit": "b756b4f34193eeb566d670f90ffc1c85e4fda601",
-      "commit_date": "2026-09-26T22:52:09+02:00",
+      "pinned_commit": "4d2c3f5c7f11d3798c1115e34d08888bf46b314c",
+      "commit_date": "2026-09-28T21:02:58-03:00",
       "release_tag_commit": "59257bff7023b44837cd4ff3edc3807f777be458",
-      "describe": "v3.7.0-208-gb756b4f",
-      "release_note": "Pinned 208 commits after the v3.7.0 tag (package.json still 3.7.0); those commits are triaged in upstream/SUPPORTED.md. gentle-pi 3.7.0 pins the gentle-ai 3.7.0 binary (scripts/gentle-ai-installer.mjs INSTALLER_VERSION).",
+      "describe": "v3.7.0-276-g4d2c3f5",
+      "release_note": "Pinned 276 commits after the v3.7.0 tag (package.json still 3.7.0); T14 triaged the 68 commits after b756b4f in upstream/SUPPORTED.md (ported: the changes-view sanitizing concept, 69c9f665). gentle-pi 3.7.0 pins the gentle-ai 3.7.0 binary (scripts/gentle-ai-installer.mjs INSTALLER_VERSION).",
       "npm": {
         "package": "gentle-pi",
         "version": "3.7.0"
@@ -47,17 +47,17 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/routing.go",
-          "sha256": "5bfb0472675b0fb108fe3b4e53ca7028ba5a3ff851fcc72f193ef8695a72bf13"
+          "sha256": "c0d27114eaaf44c1c2897e87beb12566e274ed6a8358f34204940f83937d215a"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/agents/capabilitymanifest/manifest.go",
-          "sha256": "b67e9f20a021caeb8556a15076a48a83aa56ee9132f5f8c39d794e51c95e3eef"
+          "sha256": "d8dd0a89253264bcfe3214e3333ef7df5d4b3108f1761dccc64f9114b87a196f"
         },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "4bb5b1895e720c622f32f1e503bd5502348385334951fe1e203ed65450c138ca"
+          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
         },
         {
           "upstream": "gentle-shell",
@@ -67,7 +67,7 @@
         {
           "upstream": "gentle-shell",
           "path": "assets/orchestrator-delegation.md",
-          "sha256": "6ffc5ffbb0f01f94773b7cd00bd3f707373043f44bf166b4bda25f5940807da0"
+          "sha256": "25bf0147aee45b4d48607024d8bdb48d5c198380e5198f5067874738e9e49cba"
         },
         {
           "upstream": "gentle-shell",
@@ -129,7 +129,7 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "4bb5b1895e720c622f32f1e503bd5502348385334951fe1e203ed65450c138ca"
+          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
         },
         {
           "upstream": "gentle-shell",
@@ -169,12 +169,12 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/agents/capabilitymanifest/manifest.go",
-          "sha256": "b67e9f20a021caeb8556a15076a48a83aa56ee9132f5f8c39d794e51c95e3eef"
+          "sha256": "d8dd0a89253264bcfe3214e3333ef7df5d4b3108f1761dccc64f9114b87a196f"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/cli/review_transport_capability.go",
-          "sha256": "546d757504c2019b0390520e4f0f671cc6af2723788340ae9920b9854a91ef67"
+          "sha256": "a29372eca86edfe0c29520909fdd8b60e99ef807a0b797c33237dfa860df63d0"
         },
         {
           "upstream": "gentle-ai",
@@ -244,7 +244,7 @@
         {
           "upstream": "gentle-shell",
           "path": "scripts/gentle-ai-installer.mjs",
-          "sha256": "0d57ec9926847b7363362e5a07d999b464b9cf93a6cffd62b0acc093259df7fb"
+          "sha256": "3b897818fbf8aef7ef22c9c11c5f8a8118453fbcb67d69ea1c8cf7d608d20547"
         }
       ]
     },
@@ -272,7 +272,7 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "4bb5b1895e720c622f32f1e503bd5502348385334951fe1e203ed65450c138ca"
+          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
         },
         {
           "upstream": "gentle-shell",
@@ -297,17 +297,17 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-shell.ts",
-          "sha256": "aee363dd19e9f1847a7f56052bf214094f94e83c72f7ccbc4134255774c33322"
+          "sha256": "1413f73b9b0e877f4dcf4ce1a6bcdfb7bc3795c18e8e8c137b9606da5ddaf0ef"
         },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-todo.ts",
-          "sha256": "69ced27868f477dcfaa4a24a2f2fd6c2e3b9c569740c6880e95b14bf63b4d795"
+          "sha256": "db4bcc80b9e41a23a37285e4dd31de67a496a72fef16aa7711cd601daec0b25d"
         },
         {
           "upstream": "gentle-shell",
           "path": "docs/gentle-shell.md",
-          "sha256": "4922bfe9c5a517c38298906a9aed9516b32ea63d9249dec75db6e166d23c42ea"
+          "sha256": "64a9b65835c73b8380637fb6a7f2baeeb7d6784d2f1e9917b064de3571342226"
         },
         {
           "upstream": "gentle-shell",
@@ -322,7 +322,7 @@
         {
           "upstream": "gentle-shell",
           "path": "lib/review-sidebar-state.ts",
-          "sha256": "992a6cf467d5b00765cbe9ca71cca1ec7e3692de273a89136a3e54f997076091"
+          "sha256": "605a8eaf83f8eebd87a1ebd271168751d32ea95b2f3c0421ab4afa121a81661f"
         },
         {
           "upstream": "gentle-shell",
@@ -332,12 +332,12 @@
         {
           "upstream": "gentle-shell",
           "path": "lib/shell-changes-view.ts",
-          "sha256": "0c52be91704e139fadc307d1691ff678a50f89fba8f489d8717d98dfda0cfc76"
+          "sha256": "f09cf54732825df9e7a992cfc9a55ced84b5e146f195634a8044b1fec301dde9"
         },
         {
           "upstream": "gentle-shell",
           "path": "README.md",
-          "sha256": "c26c43bf3ccb8c6c6329f7333c48e294ef3bcf3ace06e4664bcef5f2be620c54"
+          "sha256": "6c95a68fcdfb8f56399c917d97ab01340c22e6cd1632fa6c062d678a56cc1d7a"
         }
       ]
     },
@@ -368,7 +368,7 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "4bb5b1895e720c622f32f1e503bd5502348385334951fe1e203ed65450c138ca"
+          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
         }
       ]
     },
@@ -393,17 +393,17 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/communitytool/codegraph_guidance.go",
-          "sha256": "597de9faab5aaebb3189438b980d758fa0f15e5410ed1bc4c8a41f80f774d48a"
+          "sha256": "03ecc47af2952bc032f1669b228705bbb828b003579f2994a3b115bdabd58ec0"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/inject.go",
-          "sha256": "5f8349c3b7967da26f94cc88ba246872b6956dfd282a8d8bc96ae9e15837d6b6"
+          "sha256": "ecd9ad4ff6c10f57d3f8933a1c445830ef379fbfef65223a91487b49d29fac2e"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/remote_authorization.go",
-          "sha256": "4dbf8e640d4919579d1d24b12e29c0ce9021fc0ba994aa7a7d2948d58893e596"
+          "sha256": "221bec658b59e50511e38e5141fa3b14fa213a03cf113cdfaafe10556c90c442"
         },
         {
           "upstream": "gentle-ai",
@@ -413,7 +413,7 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/orchestrator.go",
-          "sha256": "0d3d4e174561b190f27bd550187054e53589303d9bf0522a67db77943613612f"
+          "sha256": "47b4232c59194835a927be1b1bf9daae61dc8348dbf75df531c785ea96d2968a"
         }
       ]
     },
@@ -456,7 +456,7 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/routing.go",
-          "sha256": "5bfb0472675b0fb108fe3b4e53ca7028ba5a3ff851fcc72f193ef8695a72bf13"
+          "sha256": "c0d27114eaaf44c1c2897e87beb12566e274ed6a8358f34204940f83937d215a"
         }
       ]
     }

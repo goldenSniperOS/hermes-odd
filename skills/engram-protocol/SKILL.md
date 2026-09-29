@@ -10,7 +10,7 @@ metadata:
     category: workflow
     related_skills: [odd-feature-tracking]
 ---
-<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/engram/protocol.md -->
+<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/engram/protocol.md -->
 
 # Engram memory protocol (Hermes)
 

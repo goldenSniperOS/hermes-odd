@@ -10,8 +10,8 @@ metadata:
     category: workflow
     related_skills: [odd-workflow, odd-feature-tracking, chained-pr]
 ---
-<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/work-unit-commits/SKILL.md -->
-<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/work-unit-commits/SKILL.md -->
+<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/components/agentguidance/routing.go -->
 
 # Work-unit commits (ODD)
 

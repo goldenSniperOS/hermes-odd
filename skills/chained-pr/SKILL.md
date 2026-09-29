@@ -10,9 +10,9 @@ metadata:
     category: workflow
     related_skills: [work-unit-commits, odd-feature-tracking, odd-workflow]
 ---
-<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/chained-pr/SKILL.md -->
-<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/chained-pr/references/chaining-details.md -->
-<!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/chained-pr/SKILL.md -->
+<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/chained-pr/references/chaining-details.md -->
+<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/components/agentguidance/routing.go -->
 
 # Chained PRs (400-line review budget)
 

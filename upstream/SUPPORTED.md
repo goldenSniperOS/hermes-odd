@@ -13,16 +13,16 @@ triage decision for every upstream change.
 
 | Upstream | Supported release | Pinned commit | gentle-ai binary min |
 |---|---|---|---|
-| gentle-ai | v3.7.0 (pinned to later `main`) | `a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b` (2026-09-27) | 3.7.0 (tested 3.7.0) |
-| gentle-shell (npm `gentle-pi` 3.7.0) | v3.7.0 (pinned to later `main`) | `b756b4f34193eeb566d670f90ffc1c85e4fda601` (2026-09-26, `v3.7.0-208-gb756b4f`) | 3.7.0 (pinned by gentle-pi 3.7.0) |
+| gentle-ai | v3.7.0 (pinned to later `main`) | `d96a5d4f021b09d048958b518f550e1d8d629700` (2026-09-29) | 3.7.0 (tested 3.7.0) |
+| gentle-shell (npm `gentle-pi` 3.7.0) | v3.7.0 (pinned to later `main`) | `4d2c3f5c7f11d3798c1115e34d08888bf46b314c` (2026-09-28, `v3.7.0-276-g4d2c3f5`) | 3.7.0 (pinned by gentle-pi 3.7.0) |
 
 Notes:
 
 - **No release after v3.7.0.** Neither upstream has tagged a release since
   v3.7.0 (gentle-shell `package.json` and its bundled gentle-ai installer
-  still say 3.7.0), so both pins follow `main` (T11, 2026-09-27): gentle-ai
-  `a9e36e9`, 134 commits after the previous pin `f182ea2`; gentle-shell
-  `b756b4f`, 208 commits after the tag. Every commit is triaged below. The
+  still say 3.7.0), so both pins follow `main` (T14, 2026-09-29): gentle-ai
+  `d96a5d4`, 39 commits after the T11 pin `a9e36e9`; gentle-shell
+  `4d2c3f5`, 276 commits after the tag (68 after the T11 pin `b756b4f`). Every commit is triaged below. The
   binary minimum stays 3.7.0, the latest release.
 - **gentle-ai tag vs history.** The `v3.7.0` tag points at `6dee8f8`, which is
   not on gentle-ai's current `main` (its history was rewritten to drop the
@@ -45,7 +45,7 @@ Notes:
 |---|---|---|---|
 | `odd` | ported (T11: default test-first policy, ODD-only orchestrator behavior) | `hermes_odd/prompt.py` (section `hermes-odd-workflow`), `skills/odd-workflow`, `skills/odd-delegation`, `skills/odd-feature-tracking`, `upstream/odd-routing-hermes.canonical.md` | gentle-ai `internal/components/agentguidance/routing.go`, `internal/agents/capabilitymanifest/manifest.go`, `internal/assets/skills/_shared/odd-orchestrator-sections.md`, `internal/assets/hermes/orchestrator.md`, `internal/model/rdd.go`; gentle-shell `extensions/gentle-ai.ts`, `assets/orchestrator.md`, `assets/orchestrator-delegation.md`, `assets/orchestrator-skills.md`, `assets/orchestrator-memory.md`, `assets/agents/gentle-ai-worker.md` |
 | `rdd` | removed (T13; T7 shipped it, T8 closed won't-do; Hermes excluded upstream since `5ffb65fc`) | only `skills/advisory-review-lenses` remains (optional 4R advisory review, no receipt) | gentle-ai `internal/assets/skills/rdd-defect-workflow/SKILL.md`, `internal/agents/capabilitymanifest/manifest.go`, `internal/cli/review_transport_capability.go`, `internal/model/rdd.go`; gentle-shell `skills/rdd-defect-workflow/SKILL.md`, `docs/review-integration.md`, `extensions/gentle-ai.ts`, `lib/review-integration-v2.ts`, `lib/native-review-cli.ts`, `assets/agents/review-{risk,resilience,readability,reliability}.md`, `assets/chains/4r-review.chain.md` |
-| `review-contract` | not planned (T8 closed won't-do; Hermes excluded upstream since `5ffb65fc`) | none; kept for drift tracking only | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
+| `review-contract` | removed (T13; T8 closed won't-do; Hermes excluded upstream since `5ffb65fc`) | none; kept for drift tracking only | gentle-ai `contracts/review-provider-contract/CONTRACT_SEMVER`, `contracts/review-integration/v2/schemas/{capabilities-v2.6,start-v4,status-v9,consent-v3,transition-binding}.schema.json`; gentle-shell `contracts/review-provider-contract-mirror/provider-contract.lock.json`, `.../v1.2.0/bundle/orchestration/pi.md`, `scripts/gentle-ai-installer.mjs` |
 | `viewers` | ported | Viewers `/odd-agents`, `/odd-tasks`, `/odd-changes`; Health `/odd-status`, `/odd-doctor`, `/odd-commands` (all concept ports, no copied text) | gentle-shell `extensions/gentle-ai.ts`, `extensions/gentle-agents.ts`, `lib/agents-protocol.ts`, `lib/agents-view.ts`, `docs/gentle-agents-activity.md`, `extensions/gentle-shell.ts`, `extensions/gentle-todo.ts`, `docs/gentle-shell.md`, `lib/shell-changes.ts`, `lib/shell-todo.ts`, `lib/review-sidebar-state.ts`, `lib/session-changes.ts`, `lib/shell-changes-view.ts`, `README.md` |
 | `persona` | ported (T9a) | First-run setup: skill `skills/setup` (one `clarify` call), `/odd-setup` (`hermes_odd/commands/setup.py`), tool `odd_setup_apply` (`hermes_odd/setup_tool.py`), preferences and setup record (`hermes_odd/setup.py`), plugin `config_schema`, and one `<!-- hermes-odd:persona -->` block at the top of `SOUL.md` (`hermes_odd/soul_persona.py`, texts in `hermes_odd/personas.py`, own wording) | gentle-ai `internal/assets/hermes/persona-gentleman.md`, `internal/assets/hermes/persona-neutral.md`; gentle-shell `extensions/gentle-ai.ts` (`GENTLEMAN_PERSONA_PROMPT`, `NEUTRAL_PERSONA_PROMPT`) |
 | `soul-cleanup` | ported (T9b) | `/odd-soul` (`hermes_odd/commands/soul.py`), tool `odd_soul_apply` (`hermes_odd/soul_tool.py`), cleanup rules and verification (`hermes_odd/soul_cleanup.py`, concept port), lazy skills `skills/engram-protocol` and `skills/codegraph` (own wording), one pointer line each in the prompt section | gentle-ai `internal/assets/engram/protocol.md`, `internal/components/communitytool/codegraph_guidance.go`, `internal/components/agentguidance/inject.go`, `internal/components/agentguidance/remote_authorization.go`, `internal/assets/generic/remote-authorization-contract.md`, `internal/components/agentguidance/orchestrator.go` |
@@ -100,6 +100,40 @@ tooling.
    markers, `THIRD_PARTY_NOTICES.md`, the canonical render and this file.
 
 ## Triage log
+
+### 2026-09-29: T14 re-pin (gentle-ai `d96a5d4`, gentle-shell `4d2c3f5`)
+
+gentle-ai `a9e36e9..d96a5d4` (39 commits). Checks: `RenderRouting(model.AgentHermes)`
+rendered at both commits (throwaway Go program, see How to sync) is
+byte-identical to the vendored body; `internal/agents/hermes`,
+`internal/assets/hermes`, the ported skills (`judgment-day`,
+`work-unit-commits`, `chained-pr`) and `_shared` are unchanged apart from
+imports; the remote-authorization, orchestrator and codegraph guidance
+sources change only their import path, so the managed SOUL blocks that
+`/odd-soul` detects and keeps are unchanged. Re-pin only.
+
+| Commits | Decision |
+|---|---|
+| `a9f1390d`, `9696205e`, `9bce022a` Go module path `/v4`, release linkage | not portable (Go module path); re-pin only |
+| `855ea658`, `d5d168ac`, `bb0b3f5e` Conductor | not portable (other runtime; catalog-only, no Hermes impact) |
+| `8bf0841a`..`c9293b27` Kimi, `a9d4b078`..`d23f4901` OpenCode, `f2e55223`..`b424e4b7` Codex persona marker, `3e0800cf`..`8154efd1` Antigravity Engram, `e8c9f595` Pi agent dir | not portable (other runtimes' installers) |
+| `d268d8ac`, `a00ce201`..`d96a5d4f` workspace-scoped sync | not portable (hermes-odd never runs `gentle-ai sync`) |
+| `e2cb2bf2` telemetry, `26d46159`, `61692e5f`, `ccbc26a5` tests, `af24bfd9`, `7ae52f71`, `da46e510`..`d623137c` docs | not portable (telemetry, upstream tests and docs) |
+
+gentle-shell `b756b4f..4d2c3f5` (68 commits).
+
+| Commits | Decision |
+|---|---|
+| `69c9f665`, `f3fdb56` sanitize and expand tabs in the changes view | ported as a concept (T14 `1524f40`): every `/odd-changes` reply maps tabs to two spaces and other control characters to `?` |
+| `aa8e5c0`, `5b37c26`, `725e198`, `f2bbe0f`, `a735c44`, `12de3e9`, `4ea9bcb`, `08fe729`, `49c171a`, `b27bd32` ODD working label inferred from tool activity (`lib/odd-phase-inference.ts`, `assets/orchestrator-delegation.md`) | not portable (Pi prompt widget label; Hermes has no working label, as for `50960b9`) |
+| `a886244`, `4d2c3f5` resume hint on exit (`extensions/resume-hint.ts`) | not portable (gentle-shell launcher; Hermes prints its own resume command) |
+| `53d62fb` harness through `appendSystemPrompt` | not portable (Pi prompt plumbing; hermes-odd uses `register_system_prompt_section`) |
+| `f55a8d5`, `3618835`, `cedc69e`, `4f5ab39`, `1dda0ca`, `5d47382`, `af480fb`, `8c5e8a1`, `ccec6d7`, `21d3e3b`, `07992a0`, `c99b949`, `aac1d27`, `2fa1ea4`, `11ac05b`, `78775c3` RDD sidebar | not portable (RDD removed in T13; Pi TUI) |
+| `8dae7fa`, `dccab2c`, `23e53dc`, `68a05f0`, `0c3f4e6`, `311f8a3`, `7dd5be0`, `941dc48`, `10dfcd3`, `f14b19a`, `b9deaba`, `5cc591f` native review provider | not portable (RDD removed in T13) |
+| `3f182b8`, `863a57c`, `cd94577`, `d881e6a`, `8cc401e`, `d1b6d85`, `a584d8b`, `a285d95`, `f17c249`, `177988b`, `2ac0d35` editor selection and overlay repaint; `a7c8480`, `ed0a5a9`, `2602690`, `f0e560b`, `63d69ab`, `5d18867`, `2ded820`, `338f1f6` tool-call cards and themes | not portable (Pi TUI aesthetics) |
+| `a2e1f22`, `9879a1f` model profiles | not portable (Pi model profiles) |
+| `95879ad`, `fe61793` Windows installer cleanup | not portable (Pi package installer) |
+| `d0bfec4`, `878249c` README demo links | informational |
 
 ### T13: RDD removed from hermes-odd
 

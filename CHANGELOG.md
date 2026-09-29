@@ -26,6 +26,17 @@ supported runtime such as Pi.
   `hermes-odd:advisory-review-lenses` and is now self-contained: an optional
   4R advisory review that issues no receipt.
 - The plugin and package descriptions no longer claim RDD support.
+- Upstream re-pin (T14): gentle-ai `d96a5d4` and gentle-shell `4d2c3f5` (both
+  still v3.7.0, pinned to later `main`); every commit is triaged in
+  `upstream/SUPPORTED.md`. The Hermes routing render and the managed SOUL
+  blocks are unchanged upstream.
+
+### Fixed
+
+- `/odd-changes` replies neutralize control characters in file and project
+  names (tabs become two spaces, other control characters `?`), so a recorded
+  name cannot carry terminal escapes into a CLI or gateway reply (concept of
+  gentle-shell `69c9f665`).
 
 ## [0.5.1] - 2026-09-27
 
