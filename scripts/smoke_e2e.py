@@ -7,7 +7,7 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
 * ``odd-commands`` is registered and its handler lists itself as plain text;
 * the ``hermes-odd-workflow`` prompt section is registered, renders, and fits
   in 4000 characters;
-* the ``hermes-odd:*`` skills (``EXPECTED_SKILLS``: the ODD, RDD, setup,
+* the ``hermes-odd:*`` skills (``EXPECTED_SKILLS``: the ODD, advisory review, setup,
   memory and CodeGraph skills plus the portable ``judgment-day``,
   ``work-unit-commits`` and ``chained-pr``) are registered;
 * first-run setup: the fresh home renders the section with the
@@ -613,7 +613,7 @@ def run_health(manager, temp_home: Path) -> None:
     check(status.startswith("hermes-odd "), "/odd-status starts with the plugin version")
     check(f"Prompt: {SECTION_ID} " in status, "/odd-status shows the prompt section")
     check(f"Skills: {len(EXPECTED_SKILLS)} (" in status, "/odd-status counts the skills")
-    check("Native review on Hermes: " in status, "/odd-status shows native review availability")
+    check("Native review" not in status and "RDD" not in status, "/odd-status has no RDD lines")
     check("Subagents: " in status and "Changes (24 h): 2 files" in status, "status reads stores")
     check("ODD features: " in status, "/odd-status counts feature documents")
     check("gentle-ai: " in status and "Upstream: gentle-ai v" in status, "binary + lock lines")
@@ -621,13 +621,14 @@ def run_health(manager, temp_home: Path) -> None:
     doctor = doctor_cmd["handler"]("")
     for name in (
         "gentle-ai binary",
-        "RDD mode",
-        "Native review on Hermes",
         "SOUL.md",
         "plugin surface",
         "upstream lock",
     ):
         check(f"  {name}: " in doctor, f"/odd-doctor reports {name}")
+    check(
+        "RDD mode" not in doctor and "Native review" not in doctor, "/odd-doctor has no RDD checks"
+    )
     check(
         "3 gentle-ai blocks" not in doctor and "2 gentle-ai blocks" in doctor,
         "/odd-doctor finds the synthetic SOUL's 2 managed blocks in the throwaway home",

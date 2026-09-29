@@ -1,4 +1,4 @@
-"""hermes-odd: ODD and RDD workflow support for Hermes."""
+"""hermes-odd: ODD workflow support for Hermes."""
 
 from __future__ import annotations
 

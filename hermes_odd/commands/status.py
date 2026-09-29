@@ -4,13 +4,8 @@ Concept port of gentle-shell's ``gentle:status`` (``extensions/gentle-ai.ts``):
 what is active and at which version, in a few lines. It reads the plugin's own
 records (prompt section, skills, the ``/odd-agents`` and ``/odd-changes``
 stores, feature documents through the ``/odd-tasks`` resolution) and runs no
-subprocess except the cached ``gentle-ai version`` probe and the cached,
-read-only native review availability probe (``gentle-ai review status ...
---agent hermes``, see :mod:`hermes_odd.rdd`); the RDD mode is only shown when
-``/odd-doctor`` or ``/odd-review-mode`` cached it in the last minute. The RDD wording
-follows gentle-ai's ``receipt-driven development: <mode> (decided by
-<source>)``. No upstream code or text is copied. Output stays under
-:data:`OUTPUT_MAX_CHARS`.
+subprocess except the cached ``gentle-ai version`` probe. No upstream code
+or text is copied. Output stays under :data:`OUTPUT_MAX_CHARS`.
 """
 
 from __future__ import annotations
@@ -23,13 +18,12 @@ from .. import __version__
 from .. import upstream as upstream_mod
 from ..agents import RUNNING, AgentStore
 from ..changes import ChangeStore
-from ..probes import Prober, is_below, process_repo
+from ..probes import Prober, is_below
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
-from ..rdd import native_review_line, probe_repo
 from ..runtime import RuntimeInfo
 from .changes import counts
-from .doctor import display_path, review_mode_text, supported_text
+from .doctor import display_path, supported_text
 from .registry import CommandSpec
 from .tasks import collect
 
@@ -82,7 +76,6 @@ class Status:
         project_store: ProjectStore | None = None,
         *,
         lock_loader: Callable[[], dict[str, Any]] = upstream_mod.load_lock,
-        repo: Callable[[], Path | None] = process_repo,
         cwd_candidates: list[Path] | None = None,
     ):
         self.runtime = runtime
@@ -91,7 +84,6 @@ class Status:
         self.change_store = change_store
         self.project_store = project_store
         self._lock_loader = lock_loader
-        self._repo = repo
         self._cwd = cwd_candidates
 
     def _lock(self) -> dict[str, Any] | None:
@@ -118,23 +110,6 @@ class Status:
         where = display_path(info.path)
         return f"gentle-ai: {info.version} {mark}{extra} min {minimum or '?'} ({where})"
 
-    def _rdd_line(self) -> str:
-        try:
-            repo = self._repo()
-        except Exception:  # noqa: BLE001
-            repo = None
-        cached = self.prober.cached_review_mode(repo)
-        if cached is None or cached.state != "ok":
-            return "RDD: unknown here · run /odd-doctor"
-        return f"RDD: {review_mode_text(cached)}"
-
-    def _native_line(self) -> str:
-        info = self.prober.first_version()
-        native = self.prober.native_review(
-            info.path if info else None, probe_repo(self.project_store, self._repo)
-        )
-        return native_review_line(native, info.version if info else None)
-
     def lines(self) -> list[str]:
         runtime = self.runtime
         lock = self._lock()
@@ -149,8 +124,6 @@ class Status:
             ("Changes", lambda: _changes_line(self.change_store)),
             ("ODD features", lambda: _features_line(self.project_store, self._cwd)),
             ("gentle-ai", lambda: self._binary_line(lock)),
-            ("RDD", self._rdd_line),
-            ("Native review on Hermes", self._native_line),
             (
                 "Upstream",
                 lambda: f"Upstream: {supported_text(lock)}" if lock else "Upstream: lock ✗",

@@ -2,9 +2,9 @@
 
 Concept port of gentle-shell's ``gentle:doctor`` (``extensions/gentle-ai.ts``):
 one line per check with a pass/warn/fail mark and a remedy when it is not a
-pass. The checks are Hermes-specific (gentle-ai binary, RDD mode, native
-review availability on Hermes, SOUL.md truncation, the plugin's own surface,
-the upstream lock, Hermes itself); no upstream code or text is copied.
+pass. The checks are Hermes-specific (gentle-ai binary, SOUL.md truncation,
+the plugin's own surface, the upstream lock, Hermes itself); no upstream code
+or text is copied.
 Nothing here writes outside the plugin's own
 ``ctx.state`` probe key, runs ``gentle-ai install``/``sync``, or reads
 ``.env``/``auth.json``. Output is plain text under :data:`OUTPUT_MAX_CHARS`.
@@ -17,7 +17,6 @@ import os
 import sys
 import time
 from collections.abc import Callable
-from concurrent.futures import Future, ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -26,17 +25,12 @@ from .. import soul as soul_mod
 from .. import upstream as upstream_mod
 from ..probes import (
     BinaryInfo,
-    NativeReview,
     Prober,
-    ReviewMode,
     is_below,
     parse_version,
-    process_repo,
 )
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
-from ..rdd import LABEL as NATIVE_LABEL
-from ..rdd import known_git_roots, native_review_text
 from ..runtime import RuntimeInfo
 from .registry import CommandSpec
 from .tasks import path_tail
@@ -146,7 +140,7 @@ def check_binary(
             Check(
                 FAIL,
                 "gentle-ai binary",
-                f"not found on PATH (RDD needs gentle-ai >= {minimum or '?'})",
+                f"not found on PATH (needs gentle-ai >= {minimum or '?'})",
                 f"install the binary: {INSTALL_HINT}. {BINARY_RULE}",
             ),
             None,
@@ -186,85 +180,6 @@ def check_binary(
     return Check(
         level, "gentle-ai binary", finding, f"{hint}. {BINARY_RULE}" if hint else ""
     ), first
-
-
-# -- 2. RDD mode -----------------------------------------------------------
-
-
-def review_mode_text(mode: ReviewMode | None) -> str:
-    """``on (decided by global) · repo``; wording follows gentle-ai's own
-    ``receipt-driven development: <effective> (decided by <source>)``."""
-    if mode is None:
-        return "unknown"
-    name = Path(mode.repo).name if mode.repo else ""
-    if mode.state == "ok":
-        source = f" (decided by {mode.source[:20]})" if mode.source else ""
-        return f"{mode.effective}{source}" + (f" · {name}" if name else "")
-    reason = {
-        "no_repo": "not in a git repository",
-        "no_binary": "gentle-ai missing",
-        "timeout": "gentle-ai timed out",
-    }.get(mode.state, "gentle-ai review mode status failed")
-    return f"unknown ({reason})"
-
-
-def check_review_mode(
-    prober: Prober, binary: BinaryInfo | None, repo: Path | None, timeout: float
-) -> Check:
-    if timeout <= 0.1:
-        return Check(WARN, "RDD mode", "unknown (time budget spent)", "run /odd-doctor again")
-    mode = prober.review_mode(binary.path if binary else None, repo, timeout)
-    text = review_mode_text(mode)
-    if mode.state == "ok":
-        return Check(OK, "RDD mode", f"receipt-driven development {text}")
-    if mode.state == "no_repo":
-        hint = (
-            "the command process is not inside a git repository (gateways run from "
-            "their launch directory); run /odd-doctor from the CLI inside the project"
-        )
-    elif mode.state == "no_binary":
-        hint = "install gentle-ai (see the binary check)"
-    else:
-        hint = "run `gentle-ai review mode status` in the repository to see the error"
-    return Check(WARN, "RDD mode", text, hint)
-
-
-# -- 2b. native review on Hermes -------------------------------------------
-
-
-def check_native_review(
-    prober: Prober,
-    binary: BinaryInfo | None,
-    repo: Path | None,
-    timeout: float,
-    rdd_on: bool | None = None,
-) -> Check:
-    """Whether gentle-ai accepts ``--agent hermes`` for native immutable review."""
-    if timeout <= 0.1:
-        return Check(WARN, NATIVE_LABEL, "unknown (time budget spent)", "run /odd-doctor again")
-    native: NativeReview = prober.native_review(binary.path if binary else None, repo, timeout)
-    text = native_review_text(native, binary.version if binary else None)
-    if native.code:
-        text += f" ({native.code})"
-    if native.state == "unavailable":
-        if rdd_on is False:
-            return Check(OK, NATIVE_LABEL, text + "; RDD is off, so nothing expects it")
-        return Check(
-            WARN,
-            NATIVE_LABEL,
-            text,
-            "upstream runtime eligibility, not a local fault: each candidate is reported as "
-            "unavailable and continues under ordinary repository policy; advisory 4R "
-            "review on request (hermes-odd:rdd-review); to opt out: /odd-review-mode "
-            "disable clone",
-        )
-    if native.state == "available":
-        return Check(WARN, NATIVE_LABEL, text, "update hermes-odd once the review facade ships")
-    hint = {
-        "no_binary": "install gentle-ai (see the binary check)",
-        "no_repo": "run /odd-doctor from the CLI inside a git project",
-    }.get(native.state, "run /odd-review-mode status to retry")
-    return Check(WARN, NATIVE_LABEL, text, hint)
 
 
 # -- 3. SOUL.md ------------------------------------------------------------
@@ -543,7 +458,6 @@ class Doctor:
         prober: Prober | None = None,
         *,
         home: Callable[[], Path] = soul_mod.hermes_home,
-        repo: Callable[[], Path | None] = process_repo,
         lock_loader: Callable[[], dict[str, Any]] = upstream_mod.load_lock,
         version_of: Callable[[], str | None] = hermes_version,
         clock: Callable[[], float] = time.time,
@@ -555,7 +469,6 @@ class Doctor:
         self.project_store = project_store
         self.prober = prober if prober is not None else Prober()
         self._home = home
-        self._repo = repo
         self._lock_loader = lock_loader
         self._version_of = version_of
         self._clock = clock
@@ -585,41 +498,7 @@ class Doctor:
         def home() -> Path:
             return Path(self._home())
 
-        probe: dict[str, Any] = {}
-
-        def rdd_mode() -> Check:
-            # The mode and the native review probe run in parallel so the
-            # report stays within TOTAL_BUDGET_SECONDS; the native check
-            # below reads the probe's cached result.
-            budget = min(3.0, remaining())
-            repo = self._repo()
-            probe_repo = repo
-            if probe_repo is None:
-                roots = known_git_roots(self.project_store)
-                probe_repo = roots[0] if roots else None
-            probe.update(budget=budget, repo=probe_repo)
-            binary_path = first[0].path if first[0] else None
-            with ThreadPoolExecutor(max_workers=1) as pool:
-                pending: Future = pool.submit(
-                    self.prober.native_review, binary_path, probe_repo, budget
-                )
-                check = check_review_mode(self.prober, first[0], repo, budget)
-                pending.result()
-            mode = self.prober.cached_review_mode(repo)
-            if mode is not None and mode.state == "ok":
-                probe["rdd_on"] = mode.effective == "on"
-            return check
-
-        def native_review() -> Check:
-            if "budget" not in probe:
-                return Check(WARN, NATIVE_LABEL, "unknown (not probed)", "run /odd-doctor again")
-            return check_native_review(
-                self.prober, first[0], probe["repo"], probe["budget"], probe.get("rdd_on")
-            )
-
         guarded.append(("gentle-ai binary", binary))
-        guarded.append(("RDD mode", rdd_mode))
-        guarded.append((NATIVE_LABEL, native_review))
         guarded.append(("SOUL.md", lambda: check_soul(home(), self._model_context(home()))))
         guarded.append(("plugin surface", lambda: check_plugin(self.runtime)))
         guarded.append(("upstream lock", lambda: check_lock(self._lock_loader, self._clock())[0]))
@@ -651,7 +530,7 @@ def make_odd_doctor(doctor: Doctor) -> CommandSpec:
 
     return CommandSpec(
         name="odd_doctor",
-        description="Read-only health report: gentle-ai, RDD mode, native review, SOUL.md, plugin",
+        description="Read-only health report: gentle-ai, SOUL.md, plugin",
         handler=handler,
         group="Health",
     )
@@ -663,14 +542,11 @@ __all__ = [
     "check_binary",
     "check_hermes",
     "check_lock",
-    "check_native_review",
     "check_plugin",
-    "check_review_mode",
     "check_soul",
     "display_path",
     "make_odd_doctor",
     "parse_version",
     "probe_state",
-    "review_mode_text",
     "supported_text",
 ]

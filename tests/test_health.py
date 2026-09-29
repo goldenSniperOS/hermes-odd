@@ -29,7 +29,6 @@ from hermes_odd.commands.doctor import (  # noqa: E402
     check_hermes,
     check_lock,
     check_plugin,
-    check_review_mode,
     check_soul,
     display_path,
     probe_state,
@@ -37,10 +36,8 @@ from hermes_odd.commands.doctor import (  # noqa: E402
 from hermes_odd.commands.status import OUTPUT_MAX_CHARS as STATUS_MAX_CHARS  # noqa: E402
 from hermes_odd.commands.status import Status  # noqa: E402
 from hermes_odd.probes import (  # noqa: E402
-    BinaryInfo,
     Prober,
     ProbeResult,
-    ReviewMode,
     find_binaries,
     is_below,
     parse_version,
@@ -52,37 +49,13 @@ from hermes_odd.upstream import load_lock  # noqa: E402
 
 HOME = os.path.expanduser("~")
 FAKE_CANARY = "sk-doctor-FAKE-SECRET-not-real"
-REVIEW_JSON = (
-    '{"schema": "gentle-ai.review-mode/v1", "operation": "status", "status": '
-    '{"schema": "gentle-ai.rdd-mode-status/v1", "global": "on", "clone_local": "", '
-    '"effective": "on", "source": "global"}}'
-)
-
-UNSUPPORTED_JSON = (
-    '{"schema": "gentle-ai.review-integration.failure/v2", "contract": '
-    '"gentle-ai.review-integration/v2", "operation": "review.status", "phase": "preflight", '
-    '"code": "immutable_review_transport_unsupported", "next_action": "stop", "cause": '
-    '"the active runtime is not eligible for immutable receipt review; exit receipt-driven '
-    "review with `gentle-ai review mode disable --scope clone --cwd \\u003crepo\\u003e`; "
-    'supported immutable review runtimes: claude-code, opencode, codex, pi"}'
-)
-NATIVE_LINE = (
-    "Native review on Hermes: unavailable — gentle-ai 3.7.0 advertises immutable review "
-    "only for claude-code, opencode, codex, pi"
-)
 
 
 class FakeRunner:
     """Maps a binary path to its ``version`` stdout; records every command."""
 
-    def __init__(
-        self, versions=None, review=REVIEW_JSON, review_state="ok", native=None, native_state=None
-    ):
+    def __init__(self, versions=None):
         self.versions = versions or {}
-        self.review = review
-        self.review_state = review_state
-        self.native = UNSUPPORTED_JSON if native is None else native
-        self.native_state = native_state or "failed"
         self.commands: list[list[str]] = []
 
     def __call__(self, command, timeout):
@@ -92,11 +65,6 @@ class FakeRunner:
             if isinstance(value, ProbeResult):
                 return value
             return ProbeResult("ok", value or "", 0) if value is not None else ProbeResult("failed")
-        if command[1:4] == ["review", "mode", "status"]:
-            return ProbeResult(self.review_state, self.review, 0)
-        if command[1:3] == ["review", "status"]:
-            assert command[command.index("--agent") + 1] == "hermes", command
-            return ProbeResult(self.native_state, self.native, 1)
         raise AssertionError(f"unexpected command {command}")
 
 
@@ -222,43 +190,6 @@ class CachingTests(unittest.TestCase):
         now[0] += 2
         prober.first_version()
         self.assertEqual(len(runner.commands), 2)
-
-    def test_review_mode_cache_is_visible_to_status(self) -> None:
-        now = [0.0]
-        prober = Prober(runner=FakeRunner(), clock=lambda: now[0], finder=lambda: [])
-        repo = Path("/work/repo")
-        self.assertIsNone(prober.cached_review_mode(repo))
-        prober.review_mode("/x/gentle-ai", repo)
-        self.assertEqual(prober.cached_review_mode(repo).effective, "on")
-        now[0] += 61
-        self.assertIsNone(prober.cached_review_mode(repo))
-
-
-class ReviewModeTests(unittest.TestCase):
-    binary = BinaryInfo("/x/gentle-ai", "3.7.0", "ok")
-
-    def test_on_reports_source_and_uses_read_only_flags(self) -> None:
-        runner = FakeRunner()
-        prober = Prober(runner=runner, finder=lambda: [])
-        check = check_review_mode(prober, self.binary, Path("/work/myrepo"), 3.0)
-        self.assertEqual(check.level, OK)
-        self.assertIn("receipt-driven development on (decided by global) · myrepo", check.finding)
-        self.assertEqual(
-            runner.commands[0],
-            ["/x/gentle-ai", "review", "mode", "status", "--cwd", "/work/myrepo", "--json"],
-        )
-
-    def test_unknown_states(self) -> None:
-        prober = Prober(runner=FakeRunner(), finder=lambda: [])
-        self.assertIn(
-            "not in a git repository", check_review_mode(prober, self.binary, None, 3).finding
-        )
-        self.assertIn("gentle-ai missing", check_review_mode(prober, None, Path("/r"), 3).finding)
-        bad = Prober(runner=FakeRunner(review="not json"), finder=lambda: [])
-        self.assertEqual(check_review_mode(bad, self.binary, Path("/r"), 3).level, WARN)
-        slow = Prober(runner=FakeRunner(review_state="timeout"), finder=lambda: [])
-        self.assertIn("timed out", check_review_mode(slow, self.binary, Path("/r"), 3).finding)
-        self.assertIn("time budget", check_review_mode(prober, self.binary, Path("/r"), 0).finding)
 
 
 def synthetic_soul(sizes: dict[str, int], preamble: int = 500, trailer: int = 0) -> str:
@@ -511,7 +442,7 @@ def _runtime_of(ctx: FakeContext) -> RuntimeInfo:
     raise AssertionError("runtime not found")
 
 
-def make_doctor(tmp: Path, runtime=None, versions=None, repo=None, soul: str | None = None):
+def make_doctor(tmp: Path, runtime=None, versions=None, soul: str | None = None):
     if soul is not None:
         (tmp / "SOUL.md").write_text(soul, encoding="utf-8")
     go = f"{HOME}/go/bin/gentle-ai"
@@ -520,9 +451,6 @@ def make_doctor(tmp: Path, runtime=None, versions=None, repo=None, soul: str | N
         runtime,
         prober,
         home=lambda: tmp,
-        repo=lambda: repo,
-        version_of=lambda: "0.21.0",
-        model_context=lambda home: soul_mod.ModelContext("m", 200_000, "cache"),
     )
 
 
@@ -537,25 +465,23 @@ class DoctorReportTests(unittest.TestCase):
                 Path(tmp),
                 _runtime_of(ctx),
                 versions={f"{HOME}/go/bin/gentle-ai": "gentle-ai 3.7.0"},
-                repo=repo,
                 soul=synthetic_soul({"persona": 1_000, "sdd-thing": 60_000}),
             )
             text = doctor.render()
         self.assertTrue(text.startswith("hermes-odd doctor (read-only)"))
         for name in (
             "gentle-ai binary",
-            "RDD mode",
             "SOUL.md",
             "plugin surface",
-            "Native review on Hermes",
             "upstream lock",
             "Hermes",
         ):
             self.assertIn(f"  {name}: ", text)
         self.assertIn("✓  gentle-ai binary: 3.7.0", text)
-        self.assertIn(f"⚠  {NATIVE_LINE} (immutable_review_transport_unsupported)", text)
-        self.assertIn("hermes-odd:rdd-review", text)
-        self.assertIn("✓  RDD mode: receipt-driven development on (decided by global) · proj", text)
+        # T13: RDD checks removed
+        self.assertNotIn("RDD mode", text)
+        self.assertNotIn("Native review on Hermes", text)
+        self.assertNotIn("hermes-odd:rdd-review", text)
         self.assertIn("   fix: ", text)
         self.assertLessEqual(len(text), OUTPUT_MAX_CHARS)
         self.assertNotIn(HOME, text)
@@ -613,11 +539,8 @@ class StatusTests(unittest.TestCase):
                 changes,
                 None,
                 cwd_candidates=[root],
-                repo=lambda: Path("/work/proj"),
             )
             text = status.render()
-            self.assertIn("RDD: unknown here · run /odd-doctor", text)
-            prober.review_mode(go, Path("/work/proj"))
             text2 = status.render()
         self.assertIn(f"hermes-odd {__version__} is active", text)
         self.assertIn("Prompt: hermes-odd-workflow 3332/4000 chars", text)
@@ -628,38 +551,16 @@ class StatusTests(unittest.TestCase):
         self.assertIn("gentle-ai: 3.7.0 ✓ min 3.7.0 (~/go/bin/gentle-ai)", text)
         self.assertIn("Upstream: gentle-ai v3.7.0", text)
         self.assertIn("Problems? /odd-doctor", text)
-        self.assertIn("RDD: on (decided by global) · proj", text2)
+        # T13: RDD lines removed from status
+        self.assertNotIn("RDD:", text)
+        self.assertNotIn("RDD:", text2)
         self.assertLessEqual(len(text), STATUS_MAX_CHARS)
         self.assertNotIn(HOME, text + text2)
         # Only the cached version probe ran (one run for status twice).
-        self.assertEqual(prober.runs, 2)  # version once + the explicit review probe
-
-    def test_status_shows_native_review_line(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            repo = Path(tmp) / "proj"
-            (repo / ".git").mkdir(parents=True)
-            go = f"{HOME}/go/bin/gentle-ai"
-            prober = prober_for([go], {go: "gentle-ai 3.7.0"})
-            status = Status(None, prober, cwd_candidates=[], repo=lambda: repo)
-            text = status.render()
-            again = status.render()
-        self.assertIn(NATIVE_LINE, text)
-        self.assertEqual(text, again)
-        self.assertEqual(prober.runs, 2)  # version + native probe, both cached
-        self.assertLessEqual(len(text), STATUS_MAX_CHARS)
-        self.assertNotIn(tmp, text)
-
-    def test_status_native_line_without_repo(self) -> None:
-        go = f"{HOME}/go/bin/gentle-ai"
-        status = Status(
-            None, prober_for([go], {go: "gentle-ai 3.7.0"}), cwd_candidates=[], repo=lambda: None
-        )
-        self.assertIn(
-            "Native review on Hermes: unknown (the probe needs a git repository", status.render()
-        )
+        self.assertEqual(prober.runs, 1)  # version once, cached
 
     def test_status_without_stores_or_binary(self) -> None:
-        status = Status(None, prober_for([], {}), cwd_candidates=[], repo=lambda: None)
+        status = Status(None, prober_for([], {}), cwd_candidates=[])
         text = status.render()
         self.assertIn("Prompt: section not registered ✗", text)
         self.assertIn("Subagents: not tracked", text)
@@ -670,7 +571,7 @@ class StatusTests(unittest.TestCase):
             def records(self):
                 raise RuntimeError("x")
 
-        status = Status(None, prober_for([], {}), Boom(), cwd_candidates=[], repo=lambda: None)
+        status = Status(None, prober_for([], {}), Boom(), cwd_candidates=[])
         self.assertIn("Subagents: unavailable (RuntimeError)", status.render())
 
 
@@ -730,16 +631,6 @@ class DisplayPathTests(unittest.TestCase):
         self.assertEqual(display_path("/usr/bin"), "/usr/bin")
         # Regression: Linux CI temp homes (/tmp/tmpXXXX) must never be printed in full.
         self.assertEqual(display_path("/tmp/tmp79f4j516/SOUL.md"), "…/tmp79f4j516/SOUL.md")
-
-
-class ReviewModeTextTests(unittest.TestCase):
-    def test_wording(self) -> None:
-        from hermes_odd.commands.doctor import review_mode_text
-
-        self.assertEqual(
-            review_mode_text(ReviewMode("ok", "off", "clone", "/r/x")), "off (decided by clone) · x"
-        )
-        self.assertEqual(review_mode_text(None), "unknown")
 
 
 if __name__ == "__main__":
