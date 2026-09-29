@@ -100,10 +100,10 @@ gateway.
       CLI + `rdd-review` skill: honest RDD on Hermes (native immutable review unavailable
       for this runtime -> report per candidate, continue under ordinary policy) + optional
       4R advisory review via `delegate_task`, clearly labeled as receipt-less.
-- [ ] T8 BLOCKED ON UPSTREAM: native `odd_review` facade. gentle-ai 3.7.0 rejects
-      `--agent hermes` (`immutable_review_transport_unsupported`; capability manifest
-      advertises review transport only for claude-code, opencode, codex, pi). Never
-      impersonate `--agent pi`. Ask upstream via the gentle-ai Discussion.
+- [ ] T8 CLOSED WON'T-DO: native `odd_review` facade. gentle-ai upstream (5ffb65fc)
+      limits RDD to runtimes with a native review transport (claude-code, opencode,
+      codex, pi); Hermes is excluded by design. The capability manifest is unchanged.
+      Upstream exclusion recorded in SUPPORTED.md. No Discussion filed (user dropped it).
 - [x] T9a First-run setup: `/odd_setup`, tool `odd_setup_apply`, skill `setup` (one
       `clarify`, <=5 questions), plugin `config_schema`, pending-setup hint in the section.
       Persona (no default; mentor rioplatense / mentor neutral / own text / none) is
@@ -120,6 +120,16 @@ gateway.
 - [x] T12 Real-install fix: the Hermes CLI resolves plugin commands by exact name
       (`/odd-status`), only gateways map `_` to `-`; document and print the hyphenated
       form everywhere, and add a smoke check that dispatches through the CLI path.
+- [ ] T13 Remove RDD from hermes-odd. Upstream excludes Hermes from RDD (5ffb65fc);
+      the compatibility claims must go.
+      WU1: Remove `/odd-review-mode` command, `rdd.py`, probes review/native methods,
+           `rdd-review` skill, and all their tests.
+      WU2: Remove RDD checks from `/odd-doctor` and `/odd-status`; rename
+           `rdd-review-lenses` → `advisory-review-lenses`; update prompt line,
+           judgment-day, odd-workflow skill references.
+      WU3: Update plugin.yaml description/tags, README (drop RDD from title and
+           positioning, rewrite the RDD section as historical), SUPPORTED.md
+           (close rdd row), CHANGELOG. Bump version.
 
 ## Acceptance criteria
 
@@ -241,4 +251,4 @@ gateway.
 
 ## Next step
 
-Real CLI + Telegram check of v0.5.1; T8 stays blocked upstream.
+T13: remove RDD from hermes-odd. Three work units planned.

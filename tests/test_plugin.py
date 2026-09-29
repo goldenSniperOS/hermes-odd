@@ -85,6 +85,12 @@ class RegisterTests(unittest.TestCase):
         for tool in self.ctx.tools:
             self.assertIn(tool["name"], line)
 
+    def test_review_mode_command_removed(self) -> None:
+        """T13: /odd-review-mode was removed (upstream excludes Hermes from RDD)."""
+        self.assertNotIn("odd-review-mode", self.ctx.commands)
+        for spec in build_registry():
+            self.assertNotEqual(spec.name, "odd_review_mode")
+
 
 class DefensiveRegistrationTests(unittest.TestCase):
     def test_missing_register_command_does_not_raise(self) -> None:
@@ -123,7 +129,7 @@ class RegistryValidationTests(unittest.TestCase):
             registry.add(CommandSpec(name="odd_x", description="d", handler=str))
 
     def test_hermes_key(self) -> None:
-        self.assertEqual(hermes_command_key("odd_review_mode"), "odd-review-mode")
+        self.assertEqual(hermes_command_key("odd_status"), "odd-status")
 
 
 class DirectoryLoaderTests(unittest.TestCase):

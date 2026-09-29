@@ -8,7 +8,7 @@ metadata:
   hermes:
     tags: [workflow, review, dual-review, adversarial, delegate_task, gentle-ai-compatible]
     category: workflow
-    related_skills: [rdd-review, rdd-review-lenses, odd-delegation, work-unit-commits]
+    related_skills: [advisory-review-lenses, odd-delegation, work-unit-commits]
 ---
 <!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/judgment-day/SKILL.md -->
 <!-- derived-from: gentle-ai@a9e36e9b8a4d7885244466cd9ea6cc3ad330a69b internal/assets/skills/judgment-day/references/prompts-and-formats.md -->
@@ -28,10 +28,8 @@ a native RDD review. Label every result "advisory judgment — no receipt".
 
 - Only when the user explicitly asks for a judgment day, a dual or
   adversarial review, or "juzgar", for a concrete target.
-- It replaces the advisory 4R review of `hermes-odd:rdd-review` for that
-  target: never run both on the same target. With RDD on, the per-candidate
-  "native review unavailable on Hermes" report of `hermes-odd:rdd-review`
-  still applies; a judgment does not replace it.
+- It replaces the advisory 4R review for that target: never run both on the
+  same target.
 - Target unclear (which commit, which range, which files)? Ask one scope
   question with `clarify` and stop.
 
@@ -67,7 +65,7 @@ Do one exhaustive read-only sweep of what the target changes or activates.
 Do not edit, stage, commit, run formatters, install anything or delegate.
 Return findings only, in this block format, one block per finding:
 <paste the finding block from the mission template of
-hermes-odd:rdd-review-lenses, with ids JA-001... or JB-001...>
+hermes-odd:advisory-review-lenses, with ids JA-001... or JB-001...>
 If clean, say "no findings" and list what you checked.
 ```
 

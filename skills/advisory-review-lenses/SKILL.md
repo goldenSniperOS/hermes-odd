@@ -1,14 +1,14 @@
 ---
-name: rdd-review-lenses
+name: advisory-review-lenses
 description: "The four 4R lens charters (Risk, Resilience, Readability, Reliability) and the read-only delegate_task mission for a receipt-less advisory review of one commit."
-version: 0.1.0
+version: 0.2.0
 author: goldenSniperOS
 license: MIT
 metadata:
   hermes:
-    tags: [workflow, rdd, review, 4r, delegate_task, gentle-ai-compatible]
+    tags: [workflow, review, 4r, advisory, delegate_task, gentle-ai-compatible]
     category: workflow
-    related_skills: [rdd-review, odd-delegation]
+    related_skills: [judgment-day, odd-delegation]
 ---
 <!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-risk.md -->
 <!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-resilience.md -->
@@ -18,7 +18,7 @@ metadata:
 
 # 4R lens charters (advisory, no receipt)
 
-Used by `hermes-odd:rdd-review` for the optional advisory review. Each lens
+Used by `hermes-odd:judgment-day` or directly for the optional advisory review. Each lens
 runs exactly once, read-only, over one commit. Lenses find problems; they
 never fix them.
 

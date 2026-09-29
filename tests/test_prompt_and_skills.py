@@ -78,16 +78,18 @@ class PromptSectionTests(unittest.TestCase):
             "4+ files",
             "2+ non-trivial files",
             "~20 tool calls",
-            "RDD switch",
         ]:
             self.assertIn(token, self.section)
+        # T13: RDD references removed from the prompt section
+        self.assertNotIn("RDD switch", self.section)
+        self.assertNotIn("rdd-review", self.section)
 
     def test_every_referenced_skill_is_shipped(self) -> None:
         referenced = set(SKILL_REF_RE.findall(self.section))
         self.assertIn("odd-workflow", referenced)
         self.assertIn("odd-feature-tracking", referenced)
         self.assertIn("odd-delegation", referenced)
-        self.assertIn("rdd-review", referenced)
+        self.assertNotIn("rdd-review", referenced)
         missing = referenced - shipped_skill_names() - PENDING_SKILLS
         self.assertEqual(missing, set())
 
@@ -175,8 +177,7 @@ class PortableSkillTests(unittest.TestCase):
             "exactly once with `clarify`",
             "at most two",
             "There is no third round",
-            "hermes-odd:rdd-review",
-            "hermes-odd:rdd-review-lenses",
+            "hermes-odd:advisory-review-lenses",
             "never run both",
             "JUDGMENT: APPROVED",
             "JUDGMENT: ESCALATED",
@@ -308,7 +309,8 @@ class CanonicalProvenanceTests(unittest.TestCase):
             self.assertIn("RED", text)
         self.assertIn("Presence is not applicability", workflow)
         self.assertIn("Test-first: applies, runner <exact command> | exception:", delegation)
-        self.assertIn("no native RDD review on Hermes", section)
+        # T13: RDD review line removed from the prompt section
+        self.assertNotIn("no native RDD review on Hermes", section)
 
 
 if __name__ == "__main__":

@@ -35,7 +35,7 @@ COMPONENTS = (
     "portable-skills",
 )
 PORTABLE_SKILLS = ("judgment-day", "work-unit-commits", "chained-pr")
-STATUSES = {"ported", "partial", "pending"}
+STATUSES = {"ported", "partial", "pending", "removed"}
 # Local read-only upstream checkouts (developer machines only; CI has none).
 # The directory name is built from parts so the old-name test never matches it.
 UPSTREAM_CACHE = Path(
@@ -161,35 +161,30 @@ class LockConsistencyTests(unittest.TestCase):
                 self.assertEqual(commit, self.lock["upstreams"][upstream]["pinned_commit"])
 
     def test_rdd_markers_are_indexed_under_rdd(self) -> None:
+        """advisory-review-lenses keeps its derived-from markers in the rdd component."""
         rdd = {(s["upstream"], s["path"]) for s in self.lock["components"]["rdd"]["sources"]}
-        for name in ("rdd-review", "rdd-review-lenses"):
+        for name in ("advisory-review-lenses",):
             text = (REPO_ROOT / "skills" / name / "SKILL.md").read_text(encoding="utf-8")
             markers = MARKER_RE.findall(text)
             self.assertTrue(markers, name)
             for upstream, _commit, rel in markers:
                 self.assertIn((upstream, rel), rdd, f"{name}: {rel}")
 
-    def test_rdd_is_partial_and_native_review_blocked(self) -> None:
+    def test_rdd_removed_and_upstream_exclusion_recorded(self) -> None:
         rdd = self.lock["components"]["rdd"]
-        self.assertEqual(rdd["status"], "partial")
-        for rel in (
-            "skills/rdd-review/SKILL.md",
-            "skills/rdd-review-lenses/SKILL.md",
-            "hermes_odd/commands/review_mode.py",
-        ):
-            self.assertIn(rel, rdd["local_files"])
-        self.assertIn("hermes_odd/review.py", rdd["planned_files"])
-        self.assertIn("immutable_review_transport_unsupported", rdd["port_notes"])
+        self.assertEqual(rdd["status"], "removed")
+        self.assertIn("T13", rdd["tasks"])
+        self.assertNotIn("skills/rdd-review/SKILL.md", rdd["local_files"])
+        self.assertNotIn("hermes_odd/commands/review_mode.py", rdd["local_files"])
+        self.assertIn("skills/advisory-review-lenses/SKILL.md", rdd["local_files"])
+        self.assertEqual(rdd["planned_files"], [])
+        self.assertIn("upstream", rdd["port_notes"].lower())
         contract = self.lock["components"]["review-contract"]
         self.assertEqual(contract["hermes_failure_code"], "immutable_review_transport_unsupported")
         self.assertEqual(contract["failure_schema"], "gentle-ai.review-integration.failure/v2")
         self.assertEqual(
             contract["immutable_review_runtimes"], ["claude-code", "opencode", "codex", "pi"]
         )
-        self.assertIn("immutable_review_transport_unsupported", contract["capability_note"])
-        supported = SUPPORTED.read_text(encoding="utf-8")
-        self.assertIn("blocked upstream: runtime eligibility", supported)
-        self.assertIn("ported as a receipt-less skill", supported)
 
     def test_persona_markers_are_indexed_under_persona(self) -> None:
         persona = {

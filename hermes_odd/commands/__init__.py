@@ -19,7 +19,6 @@ from .registry import (
     hermes_command_key,
     validate_command_name,
 )
-from .review_mode import ReviewModeCommand, make_odd_review_mode
 from .setup import SetupCommand, make_odd_setup
 from .soul import SoulCommand, make_odd_soul
 from .status import Status, make_odd_status
@@ -54,7 +53,6 @@ def build_registry(
     registry.add(make_odd_agents(agents))
     registry.add(make_odd_tasks(project_store))
     registry.add(make_odd_changes(changes))
-    registry.add(make_odd_review_mode(ReviewModeCommand(shared_prober, project_store)))
     registry.add(
         make_odd_setup(SetupCommand(setup if setup is not None else Setup(backend=MemoryBackend())))
     )

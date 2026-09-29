@@ -47,7 +47,6 @@ Files in this repository derived from gentle-ai:
   in hermes-odd's own words)
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`
-- `skills/rdd-review/SKILL.md`
 - `skills/work-unit-commits/SKILL.md` (the commit-unit behavior of
   `internal/assets/skills/work-unit-commits/SKILL.md` and the ODD commit
   closure of `internal/components/agentguidance/routing.go`, restated in
@@ -107,8 +106,7 @@ Files in this repository derived from gentle-shell:
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`
-- `skills/rdd-review/SKILL.md`
-- `skills/rdd-review-lenses/SKILL.md` (4R lens charters condensed from
+- `skills/advisory-review-lenses/SKILL.md` (4R lens charters condensed from
   `assets/agents/review-{risk,resilience,readability,reliability}.md` and
   `assets/chains/4r-review.chain.md`)
 

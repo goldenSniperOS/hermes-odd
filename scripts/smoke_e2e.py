@@ -52,12 +52,7 @@ Loads hermes-odd through Hermes' own ``PluginManager`` inside a throwaway
   is planned (dry run, nothing written), dry-run through ``odd_soul_apply``
   via Hermes' tool registry, applied with ``apply confirm`` (backup, exact
   expected text, permissions kept), loaded whole by Hermes' own
-  ``load_soul_md``, applied again (no-op) and restored from the backup;
-* ``/odd-review-mode`` (status only, read-only) from inside a throwaway git
-  repository: it reports the RDD mode and the native review availability line
-  from the real ``gentle-ai`` on ``PATH`` (``gentle-ai review status ...
-  --agent hermes``, refused in preflight by gentle-ai 3.7.0). ``enable`` and
-  ``disable`` are never run by the smoke.
+  ``load_soul_md``, applied again (no-op) and restored from the backup.
 
 Isolation: the temporary home holds only a ``config.yaml`` that enables
 ``hermes-odd`` and a ``plugins/hermes-odd`` symlink to this checkout. Nothing
@@ -90,6 +85,7 @@ COMMAND_KEY = "odd-commands"
 SECTION_ID = "hermes-odd-workflow"
 SECTION_LIMIT = 4000
 EXPECTED_SKILLS = [
+    "advisory-review-lenses",
     "chained-pr",
     "codegraph",
     "engram-protocol",
@@ -97,8 +93,6 @@ EXPECTED_SKILLS = [
     "odd-delegation",
     "odd-feature-tracking",
     "odd-workflow",
-    "rdd-review",
-    "rdd-review-lenses",
     "setup",
     "work-unit-commits",
 ]
@@ -192,7 +186,16 @@ def run(temp_home: Path) -> None:
     run_changes_viewer(manager, temp_home)
     run_health(manager, temp_home)
     run_soul_cleanup(manager, temp_home, loaded)
-    run_review_mode(manager, temp_home)
+    # T13: /odd-review-mode removed (upstream excludes Hermes from RDD)
+    check(
+        manager._plugin_commands.get("odd-review-mode") is None,
+        "/odd-review-mode is NOT registered (T13: RDD removed)",
+    )
+    listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
+    check(
+        "Review:" not in listing,
+        "/odd-commands does not list a Review group",
+    )
     run_cli_names(manager)
 
 
@@ -745,41 +748,6 @@ def run_soul_cleanup(manager, temp_home: Path, loaded) -> None:
     print("---- /odd-soul apply confirm output ----")
     print(applied)
     print("--------------------------------")
-
-
-def run_review_mode(manager, temp_home: Path) -> None:
-    command = manager._plugin_commands.get("odd-review-mode")
-    check(command is not None, "/odd-review-mode is registered")
-    listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
-    check("Review:\n- /odd-review-mode" in listing, "/odd-commands lists it under Review")
-    if shutil.which("gentle-ai") is None:
-        print("skip: gentle-ai not on PATH; /odd-review-mode status not exercised")
-        return
-    repo = temp_home / "review-repo"
-    repo.mkdir()
-    _git(repo, "init", "-q")
-    previous = os.getcwd()
-    saved_cwd = os.environ.pop("TERMINAL_CWD", None)
-    try:
-        os.chdir(repo)
-        output = command["handler"]("status")
-    finally:
-        os.chdir(previous)
-        if saved_cwd is not None:
-            os.environ["TERMINAL_CWD"] = saved_cwd
-    check(output.startswith("RDD review mode · review-repo"), "status targets the process repo")
-    check("receipt-driven development: " in output, "status reports the RDD mode")
-    check(
-        "Native review on Hermes: unavailable — gentle-ai " in output
-        and "advertises immutable review only for" in output,
-        "status reports native review unavailable on Hermes (real gentle-ai)",
-    )
-    check("immutable_review_transport_unsupported" in output, "status shows the failure code")
-    check(len(output) < 3500, f"/odd-review-mode is {len(output)} chars (< 3500)")
-    check(str(Path.home()) + "/" not in output, "no full home paths in the output")
-    print("---- /odd-review-mode status output ----")
-    print(output)
-    print("----------------------------------------")
 
 
 def install_gate() -> None:

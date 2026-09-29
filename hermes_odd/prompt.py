@@ -58,8 +58,6 @@ Blocking questions: `clarify` (one decision, closed choices, recommended first);
 
 Language: reply in the user's language; code, comments, commits, docs and task files in English.
 
-Review: no native RDD review on Hermes; with the user's RDD switch on, load hermes-odd:rdd-review.
-
 Formal SDD is not provided by this plugin.
 
 Load with `skill_view` by qualified name, never a same-named bare skill: substantial work hermes-odd:odd-workflow, hermes-odd:odd-feature-tracking; delegating hermes-odd:odd-delegation; commits, PRs hermes-odd:work-unit-commits, hermes-odd:chained-pr; dual review hermes-odd:judgment-day.

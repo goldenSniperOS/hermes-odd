@@ -102,20 +102,14 @@
       ]
     },
     "rdd": {
-      "status": "partial",
-      "tasks": ["T7", "T8"],
-      "description": "Receipt-driven development for Hermes: /odd_review_mode over the real gentle-ai review mode CLI, the honest rdd-review protocol skill and the receipt-less 4R advisory review (rdd-review-lenses); the native odd_review facade over the gentle-ai review CLI is blocked on upstream runtime eligibility.",
-      "port_notes": "T7 ported: /odd_review_mode status|enable|disable wraps `gentle-ai review mode` (schema gentle-ai.review-mode/v1; enable/disable need an explicit --scope global|clone and are explicit user-typed writes of gentle-ai's own switch); the native review availability is probed read-only with `gentle-ai review status --cwd <git repo> --contract gentle-ai.review-integration/v2 --agent hermes --next-transition` (always --agent hermes, never another runtime's identity) and shown by /odd_review_mode, /odd_status and /odd_doctor. skills/rdd-review is an honest Hermes protocol (candidate = one work-unit commit or PR slice; with RDD on, report 'native review unavailable on Hermes' once per candidate, record it in the feature document and continue under ordinary repository policy; no impersonation, no fake receipts). The optional advisory 4R review runs the lens charters of skills/rdd-review-lenses (condensed from gentle-shell assets/agents/review-*.md and assets/chains/4r-review.chain.md, without the Pi ledger/JSON envelope and controller authority) as read-only delegate_task children over `git show <sha>`, labeled 'advisory review — no receipt'. T8 blocked: gentle-ai 3.7.0 refuses --agent hermes with immutable_review_transport_unsupported, and since 5ffb65fc upstream gives receipt-driven development only to model.SupportsReceiptDrivenDevelopment (claude-code, codex, opencode, pi; internal/model/rdd.go), so Hermes officially receives ODD only; the rdd-defect-workflow skills are not derived (their frontmatter declares Apache-2.0).",
+      "status": "removed",
+      "tasks": ["T7", "T8", "T13"],
+      "description": "Receipt-driven development was removed from hermes-odd in T13: upstream (gentle-ai 5ffb65fc) limits RDD to runtimes with a native review transport (claude-code, codex, opencode, pi); Hermes is excluded by design. The /odd-review-mode command, the rdd-review skill and the native review probes were deleted. The advisory 4R review lenses (skills/advisory-review-lenses) and judgment-day remain as advisory review, clearly labeled as receipt-less.",
+      "port_notes": "T7 ported the RDD surface (status, enable, disable, honest protocol, advisory 4R). T8 blocked: upstream excludes Hermes. T13 removed the RDD surface entirely: /odd-review-mode, rdd-review skill, native review probes, RDD checks in doctor/status. Advisory review lenses renamed from rdd-review-lenses to advisory-review-lenses.",
       "local_files": [
-        "hermes_odd/rdd.py",
-        "hermes_odd/probes.py",
-        "hermes_odd/commands/review_mode.py",
-        "skills/rdd-review/SKILL.md",
-        "skills/rdd-review-lenses/SKILL.md"
+        "skills/advisory-review-lenses/SKILL.md"
       ],
-      "planned_files": [
-        "hermes_odd/review.py"
-      ],
+      "planned_files": [],
       "sources": [
         {
           "upstream": "gentle-ai",

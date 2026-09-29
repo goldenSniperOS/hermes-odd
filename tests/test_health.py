@@ -681,17 +681,15 @@ class CommandsListingTests(unittest.TestCase):
         self.assertLess(text.index("Viewers:"), text.index("Health:"))
         for spec in registry:
             self.assertIn(f"/{spec.hermes_key}", text)
-            self.assertIn(spec.group, ("Viewers", "Review", "Setup", "Health"))
-        self.assertLess(text.index("Review:"), text.index("Health:"))
-        self.assertIn("/odd-review-mode [status|enable|disable] [global|clone] [project]", text)
-        self.assertEqual(registry.get("odd_review_mode").group, "Review")
+            self.assertIn(spec.group, ("Viewers", "Setup", "Health"))
+        self.assertLess(text.index("Setup:"), text.index("Health:"))
+        self.assertNotIn("/odd-review-mode", text)
         self.assertEqual(
             [s.name for s in registry],
             [
                 "odd_agents",
                 "odd_tasks",
                 "odd_changes",
-                "odd_review_mode",
                 "odd_setup",
                 "odd_soul",
                 "odd_status",
@@ -709,7 +707,6 @@ class CommandsListingTests(unittest.TestCase):
                 "odd-status",
                 "odd-doctor",
                 "odd-commands",
-                "odd-review-mode",
                 "odd-setup",
                 "odd-soul",
             ):
