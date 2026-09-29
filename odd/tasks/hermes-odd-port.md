@@ -120,7 +120,7 @@ gateway.
 - [x] T12 Real-install fix: the Hermes CLI resolves plugin commands by exact name
       (`/odd-status`), only gateways map `_` to `-`; document and print the hyphenated
       form everywhere, and add a smoke check that dispatches through the CLI path.
-- [ ] T13 Remove RDD from hermes-odd. Upstream excludes Hermes from RDD (5ffb65fc);
+- [x] T13 Remove RDD from hermes-odd. Upstream excludes Hermes from RDD (5ffb65fc);
       the compatibility claims must go.
       WU1: Remove `/odd-review-mode` command, `rdd.py`, probes review/native methods,
            `rdd-review` skill, and all their tests.
@@ -157,6 +157,18 @@ gateway.
 
 ## Progress
 
+- 2026-09-29: T13 done in four natively reviewed work units (Pi RDD over committed
+  ranges; per-commit targets via temporary detached worktrees), all approved and
+  acknowledged: efc948a remove /odd-review-mode + rdd-review, rename lenses
+  (review-95752c402b7932e1, high, 4 lenses), 0976421 remove RDD from doctor/status,
+  delete rdd.py and review probes (review-992cf93c2953cb25, high, 4 lenses), feb8ec6
+  self-contained advisory-review-lenses skill (review-7bf361409008c81b, medium),
+  bd558e6 docs without RDD (review-41f7ca7d55dd6e67, medium). T8 closed won't-do.
+  Non-blocking follow-ups: lock rdd/review-contract wording vs SUPPORTED.md, probes
+  docstring, stderr cap now MAX_OUTPUT_CHARS, doctor test determinism.
+  Decision: receipted review of Hermes work = commit, then review from Pi in a
+  console (Hermes cannot relay Pi's interactive prompts); Hermes keeps only
+  advisory review skills. Upstream sync (T14) before the v0.6.0 release.
 - 2026-09-27: T12 1dfed5f hyphenated command names (review-9e837eb6ce78865f, 4 lenses, approved),
   accc3a5 doc notes (review-a31fc00d6aab2f96, approved). Found by a real interactive CLI run:
   `/odd_status` -> Unknown command; `/odd-status` works. One-shot `hermes chat -q` never
@@ -251,4 +263,4 @@ gateway.
 
 ## Next step
 
-T13: remove RDD from hermes-odd. Three work units planned.
+T14: pull latest gentle-ai/gentle-shell, triage and port what applies; then v0.6.0 and a real CLI pty test.
