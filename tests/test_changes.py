@@ -382,6 +382,18 @@ class CaptureTests(TempRepo):
         self.assertNotIn(home + os.sep, listing)
         self.assertIn("demo-project (…/work/demo-project)", listing)
 
+    def test_output_neutralizes_control_characters_in_names(self) -> None:
+        # Upstream gentle-shell 69c9f665 sanitizes the changes view; a file or
+        # project name must not smuggle terminal escapes or tabs into a reply.
+        odd = str(self.repo / "src" / "ev\x1b[31mil\tname\r.py")
+        self.store.on_post_tool_call(**write_call("a", "x", resolved=odd))
+        for args in ("", "all", "app"):
+            listing = make_odd_changes(self.store).handler(args)
+            with self.subTest(args=args):
+                for char in ("\x1b", "\t", "\r", "\x00"):
+                    self.assertNotIn(char, listing)
+        self.assertIn("src/ev?[31mil name .py", make_odd_changes(self.store).handler(""))
+
     def test_handler_never_raises(self) -> None:
         self.store.on_post_tool_call()
         self.store.on_post_tool_call(tool_name="write_file", status="ok", args="junk", result=5)

@@ -283,11 +283,31 @@ def render_lookup(
     )
 
 
+def terminal_safe(text: str) -> str:
+    """Tabs become two spaces; every other control character except the line
+    break becomes ``?``, so a recorded file or project name cannot smuggle
+    terminal escapes into a CLI or gateway reply (concept of gentle-shell
+    69c9f665, which sanitizes its changes view)."""
+    out = []
+    for char in text:
+        code = ord(char)
+        if char == "\t":
+            out.append("  ")
+        elif char != "\n" and (code < 0x20 or 0x7F <= code < 0xA0):
+            out.append("?")
+        else:
+            out.append(char)
+    return "".join(out)
+
+
 def make_odd_changes(
     store: ChangeStore,
     numstat: Callable[[str, str, bool], NumstatResult] = git_numstat,
 ) -> CommandSpec:
     def handler(raw_args: str) -> str:
+        return terminal_safe(_answer(raw_args))
+
+    def _answer(raw_args: str) -> str:
         args = (raw_args or "").strip()
         words = args.split()
         head = words[0].lower() if words else ""
