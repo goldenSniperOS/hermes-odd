@@ -98,6 +98,17 @@ class PromptSectionTests(unittest.TestCase):
 
 
 class SkillFileTests(unittest.TestCase):
+    def test_no_skill_claims_rdd_on_hermes(self) -> None:
+        """T13: upstream excludes Hermes from RDD; skills only offer advisory review."""
+        for path in sorted(SKILLS_DIR.glob("*/SKILL.md")):
+            body = "\n".join(
+                ln
+                for ln in path.read_text(encoding="utf-8").splitlines()
+                if not ln.startswith("<!-- derived-from:")
+            )
+            with self.subTest(skill=path.parent.name):
+                self.assertNotRegex(body, r"\bRDD\b|receipt-driven|rdd-review|odd-review-mode")
+
     def test_every_skill_has_valid_frontmatter(self) -> None:
         dirs = sorted(p.parent for p in SKILLS_DIR.glob("*/SKILL.md"))
         self.assertTrue(dirs)

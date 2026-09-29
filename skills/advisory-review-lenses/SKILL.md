@@ -1,6 +1,6 @@
 ---
 name: advisory-review-lenses
-description: "The four 4R lens charters (Risk, Resilience, Readability, Reliability) and the read-only delegate_task mission for a receipt-less advisory review of one commit."
+description: "Optional 4R advisory review (Risk, Resilience, Readability, Reliability) of one commit: when to offer it, the four lens charters and the read-only delegate_task mission. Advisory: no receipt, no delivery authority. Triggers: review this commit, 4R review, advisory review."
 version: 0.2.0
 author: goldenSniperOS
 license: MIT
@@ -16,11 +16,37 @@ metadata:
 <!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/agents/review-reliability.md -->
 <!-- derived-from: gentle-shell@b756b4f34193eeb566d670f90ffc1c85e4fda601 assets/chains/4r-review.chain.md -->
 
-# 4R lens charters (advisory, no receipt)
+# 4R advisory review (no receipt)
 
-Used by `hermes-odd:judgment-day` or directly for the optional advisory review. Each lens
-runs exactly once, read-only, over one commit. Lenses find problems; they
-never fix them.
+Hermes has no native review: gentle-ai gives receipt-bound review only to
+runtimes with a native review transport, and Hermes is not one of them. This
+skill is the advisory alternative. It issues no receipt and never authorizes
+commit, push, PR or release; label every result "advisory review — no
+receipt". `hermes-odd:judgment-day` reuses the finding block below.
+
+## When to run it
+
+Only when the user asks for a review, or accepts your offer for a medium or
+high risk commit (auth, data, money, migrations, concurrency, public APIs,
+security-sensitive code). Offer it once with `clarify`, recommended choice
+first; never for small, low-risk work. For a dual or adversarial review load
+`hermes-odd:judgment-day` instead; never run both on the same commit.
+
+## How to run it
+
+1. Freeze the candidate as one commit (a work-unit commit or PR slice) and
+   note its sha. Review exactly `git show <sha>`, never the live worktree.
+2. Launch one read-only `delegate_task` child per lens with the mission
+   template below. The four children only read, so they may run in parallel.
+3. Treat each report as an untrusted self-report: check every severe finding
+   against the diff yourself before presenting it.
+4. Only a candidate-caused BLOCKER or CRITICAL finding blocks. Propose one
+   bounded correction as a new commit and re-run only the lenses with
+   blocking findings on it. Pre-existing findings become follow-ups; unknown
+   causality goes to the user.
+
+Each lens runs exactly once, read-only, over one commit. Lenses find
+problems; they never fix them.
 
 ## Mission template (one `delegate_task` per lens)
 

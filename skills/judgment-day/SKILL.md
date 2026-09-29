@@ -22,7 +22,7 @@ two bounded fix and re-judge rounds.
 
 **Advisory only.** A judgment issues no receipt and carries no delivery
 authority: it satisfies no commit, push, PR or release gate, and it is never
-a native RDD review. Label every result "advisory judgment — no receipt".
+a native review. Label every result "advisory judgment — no receipt".
 
 ## When to use it
 

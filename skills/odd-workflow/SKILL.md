@@ -175,9 +175,8 @@ same-named bare skill (those may carry workflows this plugin does not ship):
   `auto-chain`, `single-pr`, `exception-ok`), the chain strategy
   (`stacked-to-main`, `feature-branch-chain`), slice boundaries and the `gh`
   commands.
-- `hermes-odd:rdd-review`: the review candidate (a work-unit commit or a PR
-  slice), the user-owned RDD switch, and why native review is unavailable on
-  Hermes (the optional 4R advisory review carries no receipt).
+- `hermes-odd:advisory-review-lenses`: the optional 4R advisory review of
+  one work-unit commit or PR slice, only on request; it carries no receipt.
 - `hermes-odd:judgment-day`: only when the user asks for a dual or
   adversarial review; advisory, no receipt.
 

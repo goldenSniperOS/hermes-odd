@@ -61,8 +61,7 @@ documentation change that stands on its own.
   delegated or granted push policy is recorded in the feature document and
   followed exactly; nothing here grants it.
 - The review candidate is that work-unit commit, or the PR slice it belongs
-  to: never a TODO checkbox and never the accumulated feature branch
-  (`hermes-odd:rdd-review`).
+  to: never a TODO checkbox and never the accumulated feature branch.
 
 ## 3. The ~400-line heuristic (advisory)
 
