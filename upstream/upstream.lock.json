@@ -184,8 +184,8 @@
       ]
     },
     "review-contract": {
-      "status": "pending",
-      "tasks": ["T7", "T8"],
+      "status": "removed",
+      "tasks": ["T7", "T8", "T13"],
       "description": "Versions of the gentle-ai review CLI contract and of the provider contract mirror that the odd_review facade will speak.",
       "review_cli_contract": "gentle-ai.review-integration/v2",
       "capabilities_schema": "gentle-ai.review-integration.capabilities/v2.6",

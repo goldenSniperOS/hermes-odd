@@ -6,6 +6,27 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+**Breaking:** receipt-driven development (RDD) is removed. Since gentle-ai
+`5ffb65fc` (`internal/model/rdd.go`) upstream limits RDD to runtimes with a
+native review transport (claude-code, codex, opencode, pi) and excludes Hermes
+by design. For a receipted review, commit the work and review it from a
+supported runtime such as Pi.
+
+### Removed
+
+- `/odd-review-mode` and the `hermes-odd:rdd-review` skill.
+- The RDD mode and native review checks in `/odd-doctor` and `/odd-status`,
+  and the native review and review mode probes; the only gentle-ai probe left
+  is `gentle-ai version`.
+- The planned native review facade (T8), closed as won't-do.
+
+### Changed
+
+- `hermes-odd:rdd-review-lenses` is renamed to
+  `hermes-odd:advisory-review-lenses` and is now self-contained: an optional
+  4R advisory review that issues no receipt.
+- The plugin and package descriptions no longer claim RDD support.
+
 ## [0.5.1] - 2026-09-27
 
 ### Fixed

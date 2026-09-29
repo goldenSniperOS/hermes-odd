@@ -1,6 +1,6 @@
 # hermes-odd
 
-Based on the ODD and RDD workflows of
+Based on the ODD workflow of
 [Gentle AI™](https://github.com/Gentleman-Programming/gentle-ai) and
 [gentle-shell](https://github.com/Gentleman-Programming/gentle-shell)
 (npm `gentle-pi`) by Alan Buscaglia / Gentleman Programming, running on
@@ -15,9 +15,9 @@ Independent community project; see [Not affiliated](#not-affiliated).
 
 </div>
 
-hermes-odd is an **Organic Driven Development (ODD)** and **receipt-driven
-development (RDD)** workflow harness for Hermes Agent. It adapts the Gentle AI
-workflows to Hermes-native surfaces: a compact system prompt section, lazy
+hermes-odd is an **Organic Driven Development (ODD)** workflow harness for
+Hermes Agent, with optional advisory review (no receipt). It adapts the Gentle
+AI workflows to Hermes-native surfaces: a compact system prompt section, lazy
 plugin skills, and plain-text slash commands.
 
 hermes-odd is **not** SDD. It ships no SDD agents, chains, skills,
@@ -27,13 +27,13 @@ preflight, or `gentle-sdd-*` commands.
 
 Early (0.1.0). The plugin loads, injects a compact ODD prompt section,
 ships lazy ODD skills, and registers the viewers `/odd-agents`,
-`/odd-tasks`, `/odd-changes`, the RDD switch `/odd-review-mode` and the
+`/odd-tasks`, `/odd-changes` and the
 health commands `/odd-status`, `/odd-doctor`, `/odd-commands`, plus a
 [first-run setup](#first-run-setup) (`/odd-setup`, persona and preferences)
 and the [SOUL.md cleanup](#soulmd-cleanup-of-gentle-ai-blocks) of gentle-ai
 blocks (`/odd-soul`).
-Native RDD review is blocked upstream for Hermes (see
-[RDD on Hermes](#rdd-on-hermes)).
+Receipted review does not run on Hermes (see
+[Review on Hermes](#review-on-hermes)).
 
 ## What gets injected
 
@@ -74,8 +74,9 @@ Native RDD review is blocked upstream for Hermes (see
   - `hermes-odd:judgment-day` — blind dual review on request: two read-only
     `delegate_task` judges, one `clarify` before any fix, at most two fix and
     re-judge rounds. Advisory: no receipt, no delivery authority.
-  - `hermes-odd:rdd-review`, `hermes-odd:rdd-review-lenses` — RDD on Hermes
-    and the receipt-less 4R lenses (see [RDD on Hermes](#rdd-on-hermes)).
+  - `hermes-odd:advisory-review-lenses` — optional 4R advisory review (Risk,
+    Resilience, Readability, Reliability). Advisory: no receipt (see
+    [Review on Hermes](#review-on-hermes)).
 
   The section and the skills name these by their qualified `hermes-odd:`
   names on purpose: a same-named bare skill in `~/.hermes/skills` (for
@@ -103,7 +104,7 @@ v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits (both on
 `main` after v3.7.0, since neither has a newer release) in
 [`upstream/upstream.lock.json`](upstream/upstream.lock.json).
 [`upstream/SUPPORTED.md`](upstream/SUPPORTED.md) has the support matrix per
-component (ODD, RDD, review contract, viewers, persona, SOUL cleanup,
+component (ODD, review, viewers, persona, SOUL cleanup,
 portable skills), the upstream sync procedure and the triage log that records,
 for every upstream change, whether it was ported, is not portable (and why) or
 is pending.
@@ -149,7 +150,7 @@ gentle-ai installer's Hermes integration.
 
 | What | Needed for | Install |
 |---|---|---|
-| `gentle-ai` binary >= 3.7.0 | RDD: `/odd-review-mode` and the review status probe | `brew install gentleman-programming/tap/gentle-ai` |
+| `gentle-ai` binary >= 3.7.0 | `/odd-status` and `/odd-doctor` version checks | `brew install gentleman-programming/tap/gentle-ai` |
 | Engram™ binary | Persistent memory (the `hermes-odd:engram-protocol` skill and feature-doc mirrors) | `brew install gentleman-programming/tap/engram` |
 | Context7 MCP (optional) | Up-to-date library docs | Needs `npx` (Node.js) |
 | CodeGraph (optional) | Code navigation (the `hermes-odd:codegraph` skill) | See the upstream CodeGraph project |
@@ -256,12 +257,6 @@ Telegram's command menu shows (`/odd_commands`).
 | `/odd-tasks [feature\|project]` | Shows your ODD feature documents (`odd/tasks/<feature>.md`): per project, each feature with a progress bar, done/total, the next open task and when it changed, newest first. A feature prefix (or `project/feature`) shows every task with ✓ / ○, the next step and the file; a project name lists only that project |
 | `/odd-changes [file\|project\|all\|clear]` | Shows which files the agent and its subagents changed in the last 24 h (`all`: 7 days), grouped by project: `+added −removed  path  (n edits · by main/sa-xxxx · age)`, newest first, with per-project totals. A file (path, name or prefix) shows its edit timeline and, inside a git repository, its current uncommitted `git diff --numstat`; a project name lists that project; `clear` forgets every recorded change |
 
-**Review**
-
-| Command | What it does |
-|---|---|
-| `/odd-review-mode [status\|enable\|disable] [global\|clone] [project]` | `status` (default, read-only): the effective RDD mode and its source for the repository (a known project by name or prefix, else the directory Hermes runs from), both sources (global, clone), and whether native review is available on Hermes. `enable`/`disable` run the real `gentle-ai review mode <enable\|disable> --scope <global\|clone> --json`; the scope is required, and `clone` needs a git repository |
-
 **Setup**
 
 | Command | What it does |
@@ -273,8 +268,8 @@ Telegram's command menu shows (`/odd_commands`).
 
 | Command | What it does |
 |---|---|
-| `/odd-status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the RDD mode when `/odd-doctor` or `/odd-review-mode` checked it in the last minute, native review availability on Hermes, and the supported upstream versions |
-| `/odd-doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), the RDD mode of the current git repository (`gentle-ai review mode status`), native review availability on Hermes, `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
+| `/odd-status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), and the supported upstream versions |
+| `/odd-doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
 | `/odd-commands` | Lists hermes-odd commands, grouped |
 
 `/odd-agents` records only metadata, from Hermes' `subagent_start`,
@@ -303,17 +298,13 @@ session id and platform are kept; file content and diffs are never stored or
 shown. `write_file` replaces a whole file, so its removed lines are unknown
 and show as `−?`. Entries are kept for 7 days, at most 200 files.
 
-`/odd-status` runs no subprocess except a `gentle-ai version` probe and the
-native review probe, both cached for 60 s. `/odd-doctor` runs only `gentle-ai
-version`, `gentle-ai review mode status --json` and the native review probe
-(no shell, minimal environment, 3 s timeout each, about 6 s in total, cached
-for 60 s); it never runs `gentle-ai install` or `sync`.
+`/odd-status` runs no subprocess except a `gentle-ai version` probe, cached
+for 60 s. `/odd-doctor` runs only `gentle-ai version` (no shell, minimal
+environment, 3 s timeout, cached for 60 s); it never runs `gentle-ai install` or `sync`.
 It measures `SOUL.md` and reads only the model name, base URL and context
 length keys of `config.yaml` and `context_length_cache.yaml` to compute
 Hermes' truncation cap; `.env`, `auth.json` and other secrets are never
 read, SOUL content is never printed, and paths under your home show as `~/…`.
-In a gateway the command runs from the gateway's directory, so the RDD mode
-of a repository is usually only known from the CLI.
 
 ## First-run setup
 
@@ -412,47 +403,24 @@ explicit yes (the tool also refuses a plan that no longer matches the file).
 > selecting Hermes or `gentle-ai sync --agent hermes`. hermes-odd needs only
 > the gentle-ai **binary**; keep Hermes out of gentle-ai's install and sync.
 
-## RDD on Hermes
+## Review on Hermes
 
-Receipt-driven development (RDD) is Gentle AI's review discipline: a frozen
-candidate (one work-unit commit or PR slice), risk-scoped review lenses, at
-most one bounded correction, and an outcome derived from Git and bound to the
-candidate as a receipt. A review outcome never authorizes delivery.
+hermes-odd has no native (receipted) review. Since gentle-ai commit
+`5ffb65fc`, receipt-driven development is limited to runtimes with a native
+review transport (claude-code, codex, opencode, pi); Hermes is excluded by
+design. hermes-odd never impersonates another runtime and never fakes a
+receipt.
 
-**Native RDD review does not run on Hermes today, and hermes-odd says so.**
-gentle-ai runs native immutable review only for runtimes that can launch a
-fresh, constrained reviewer and prove that boundary before the review starts.
-gentle-ai 3.7.0 advertises that for claude-code, opencode, codex and pi, not
-for hermes, and upstream now gives receipt-driven development only to those
-runtimes: every other runtime, Hermes included, gets ODD only. Asked as
-Hermes, the review CLI refuses in preflight:
+What exists on Hermes, on request and advisory only (no receipt, no delivery
+authority):
 
-```text
-gentle-ai review status --cwd . --contract gentle-ai.review-integration/v2 --agent hermes --next-transition
-schema: gentle-ai.review-integration.failure/v2
-code:   immutable_review_transport_unsupported
-next_action: stop
-```
+- a **4R review** (Risk, Resilience, Readability, Reliability;
+  `hermes-odd:advisory-review-lenses`) as read-only `delegate_task` children
+  over one commit (`git show <sha>`);
+- a **judgment day** (`hermes-odd:judgment-day`), a blind dual review.
 
-What hermes-odd does instead:
-
-- `/odd-review-mode` shows your RDD switch and the availability line
-  (`Native review on Hermes: unavailable — gentle-ai 3.7.0 advertises
-  immutable review only for claude-code, opencode, codex, pi`), detected live;
-  `/odd-status` and `/odd-doctor` show the same line.
-- The `hermes-odd:rdd-review` skill tells the agent, when RDD is on, to report
-  "native review unavailable on Hermes (gentle-ai runtime eligibility)" once
-  per candidate, record it in the ODD feature document, and continue under
-  your ordinary repository policy (the applicable checks, CI, human
-  review).
-- On request, an **advisory 4R review** (Risk, Resilience, Readability,
-  Reliability; `hermes-odd:rdd-review-lenses`) runs as read-only
-  `delegate_task` children over the exact commit (`git show <sha>`), labeled
-  "advisory review — no receipt".
-
-hermes-odd never impersonates another runtime (it never passes `--agent pi`
-or any other identity to gentle-ai) and never fakes a receipt. The native
-review facade waits on upstream runtime eligibility for Hermes.
+For a receipted review of work done in Hermes, commit it and review that
+commit from a runtime gentle-ai supports, such as Pi.
 
 ## Planned commands
 
@@ -460,7 +428,7 @@ review facade waits on upstream runtime eligibility for Hermes.
 |---|---|---|
 | `gentle:persona` | `/odd-setup persona ID` | shipped as the [first-run setup](#first-run-setup) |
 | SOUL.md cleanup of gentle-ai blocks | `/odd-soul` | shipped: dry run, explicit confirmation, backup and restore |
-| `gentle_review*` tools | native review facade | blocked upstream: gentle-ai does not accept Hermes as an immutable review runtime yet |
+| `gentle_review*` tools | none | not planned: Hermes is excluded from RDD upstream (see [Review on Hermes](#review-on-hermes)) |
 | `skill-registry:refresh` | Hermes native skill index | not needed |
 
 ## Development

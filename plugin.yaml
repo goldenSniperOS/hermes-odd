@@ -3,15 +3,15 @@ version: 0.5.1
 manifest_version: 1
 kind: standalone
 description: >-
-  ODD and RDD workflow harness for Hermes Agent, based on and compatible with
-  Gentle AI™ workflows: Organic Driven Development (ODD) and receipt-driven
-  development (RDD), with plain-text slash commands that answer identically in the
-  CLI and every gateway without calling the model. Independent community
+  ODD workflow harness for Hermes Agent, based on and compatible with Gentle AI™
+  workflows: Organic Driven Development (ODD) with optional advisory review, and
+  plain-text slash commands that answer identically in the CLI and every gateway
+  without calling the model. Independent community
   project; not affiliated with or endorsed by Gentleman Programming.
 author: goldenSniperOS
 license: MIT
 homepage: https://github.com/goldenSniperOS/hermes-odd
-tags: [workflow, odd, rdd, review, gentle-ai-compatible]
+tags: [workflow, odd, review, gentle-ai-compatible]
 # Settings live under plugins.entries.hermes-odd.settings. The first-run setup
 # (/odd-setup, tool odd_setup_apply) writes them; a valid value here wins over
 # the setup answers kept in plugin state. Tool odd_soul_apply is the model's
