@@ -130,6 +130,11 @@ gateway.
       WU3: Update plugin.yaml description/tags, README (drop RDD from title and
            positioning, rewrite the RDD section as historical), SUPPORTED.md
            (close rdd row), CHANGELOG. Bump version.
+- [x] T14 Upstream sync: gentle-ai a9e36e9 -> d96a5d4 (39 commits), gentle-shell
+      b756b4f -> 4d2c3f5 (68 commits). Triage every commit/file (ported, not portable
+      and why, pending) in SUPPORTED.md; port what applies to Hermes (ODD behavior,
+      routing re-render, viewers, SOUL-cleanup block changes); re-pin the lock; drift
+      script exits 0. Each work unit natively reviewed from Pi. Then v0.6.0.
 
 ## Acceptance criteria
 
@@ -157,6 +162,14 @@ gateway.
 
 ## Progress
 
+- 2026-09-29: T14 done in two natively reviewed work units (Pi, committed ranges via
+  temporary worktrees), both approved and acknowledged: 1524f40 /odd-changes
+  control-character neutralizing, concept of gentle-shell 69c9f665
+  (review-397e24ad8d7b681e, high, 4 lenses), aa7b02d re-pin to gentle-ai d96a5d4 /
+  gentle-shell 4d2c3f5 with all 107 commits triaged in SUPPORTED.md
+  (review-9dd19f243c94bfd7, high, 4 lenses). RenderRouting(model.AgentHermes) is
+  byte-identical at both pins; drift checker exits 0. Non-blocking follow-ups: test
+  coverage of the tab/CR branches in terminal_safe, Unicode format controls.
 - 2026-09-29: T13 done in four natively reviewed work units (Pi RDD over committed
   ranges; per-commit targets via temporary detached worktrees), all approved and
   acknowledged: efc948a remove /odd-review-mode + rdd-review, rename lenses
@@ -263,4 +276,4 @@ gateway.
 
 ## Next step
 
-T14: pull latest gentle-ai/gentle-shell, triage and port what applies; then v0.6.0 and a real CLI pty test.
+v0.6.0 release (T13 + T14), then a real CLI pty test and a Telegram check.
