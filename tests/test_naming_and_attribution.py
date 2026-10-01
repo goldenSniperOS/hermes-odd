@@ -15,7 +15,7 @@ from hermes_odd.prompt import SECTION_ID, SKILL_NAMESPACE, build_odd_section  # 
 
 # Built from parts so this file never matches its own pattern.
 OLD_NAME_RE = re.compile("gentle" + r"[-_ ]" + "hermes", re.IGNORECASE)
-EXCLUDED_DIRS = {".git", "__pycache__", ".codegraph", ".atl", "odd"}
+EXCLUDED_DIRS = {".git", "__pycache__", ".codegraph", ".atl", ".venv", ".refs", "odd"}
 DERIVED_RE = re.compile(r"<!-- derived-from: (gentle-ai|gentle-shell)@[0-9a-f]{40} ")
 NOTICES = REPO_ROOT / "THIRD_PARTY_NOTICES.md"
 COPYRIGHT_LINES = {
