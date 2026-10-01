@@ -28,6 +28,7 @@ from .. import soul_persona as sp
 from ..setup import NEXT_SESSION_NOTE
 from .doctor import display_path
 from .registry import CommandSpec
+from .safe_text import code_path
 
 OUTPUT_MAX_CHARS = 3500
 USAGE = "/odd-soul [status|plan [persona]|apply [persona] confirm|restore [N|backup]]"
@@ -157,7 +158,7 @@ def render_result(result: sc.CleanupResult) -> str:
         return f"SOUL.md cleanup not applied: {result.error}"
     if not result.written:
         return "SOUL.md cleanup: nothing to do (no block the cleanup removes); unchanged."
-    backup = f" (backup {result.backup.name})" if result.backup else ""
+    backup = f" (backup {code_path(result.backup.name)})" if result.backup else ""
     lines = [
         f"SOUL.md cleaned: {plan.before_chars:,} → {plan.after_chars:,} chars{backup}.",
     ]
@@ -236,7 +237,9 @@ class SoulCommand:
         lines.extend(impact_lines(plan, self.context(), after=False))
         found = sc.backups(self.home())
         if found:
-            lines.append(f"Backups: {len(found)} (newest {found[0].name}); /odd-soul restore")
+            lines.append(
+                f"Backups: {len(found)} (newest {code_path(found[0].name)}); /odd-soul restore"
+            )
         else:
             lines.append("Backups: none")
         if plan.writes:
@@ -269,7 +272,7 @@ class SoulCommand:
                     size = sc.measure(path.read_text(encoding="utf-8", errors="replace"))
                 except OSError:
                     size = 0
-                lines.append(f"{number}. {path.name} · {size:,} chars")
+                lines.append(f"{number}. {code_path(path.name)} · {size:,} chars")
             lines.append(
                 "Restore one: /odd-soul restore <N or name> (the current SOUL.md is backed up "
                 "first, so it can be undone the same way)."
@@ -278,9 +281,13 @@ class SoulCommand:
         result = sc.restore_backup(choice, home)
         if result.error and not result.written:
             return f"SOUL.md not restored: {result.error}"
-        backup = f"; the previous file is backup {result.backup.name}" if result.backup else ""
+        backup = (
+            f"; the previous file is backup {code_path(result.backup.name)}"
+            if result.backup
+            else ""
+        )
         name = result.chosen.name if result.chosen else choice
-        text = f"SOUL.md restored from {name}{backup}."
+        text = f"SOUL.md restored from {code_path(name)}{backup}."
         if result.error:
             text += f"\nWarning: {result.error}"
         return text + "\n" + NEXT_SESSION_NOTE

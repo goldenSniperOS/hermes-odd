@@ -380,7 +380,7 @@ class CaptureTests(TempRepo):
         listing = make_odd_changes(self.store).handler("")
         self.assertNotIn(str(self.base), listing)
         self.assertNotIn(home + os.sep, listing)
-        self.assertIn("demo-project (…/work/demo-project)", listing)
+        self.assertIn("demo-project (`…/work/demo-project`)", listing)
 
     def test_output_neutralizes_control_characters_in_names(self) -> None:
         # Upstream gentle-shell 69c9f665 sanitizes the changes view; a file or
@@ -470,9 +470,9 @@ class ViewerTests(TempRepo):
         self.clock.advance(180)
         text = self.command().handler("")
         self.assertIn("Changes (last 24 h): 2 files · +9 −≥1 · 1 project", text)
-        self.assertIn("demo-project (…/work/demo-project) · 2 files · +9 −≥1", text)
-        self.assertIn("+5 −≥1  src/app.py  (2 edits · by sa-1a2b3c4d, main · 3m ago)", text)
-        self.assertIn("+4 −0  README.md  (1 edit · by main · 3m ago)", text)
+        self.assertIn("demo-project (`…/work/demo-project`) · 2 files · +9 −≥1", text)
+        self.assertIn("+5 −≥1  `src/app.py`  (2 edits · by sa-1a2b3c4d, main · 3m ago)", text)
+        self.assertIn("+4 −0  `README.md`  (1 edit · by main · 3m ago)", text)
         self.assertIn("Terminal/shell edits and other tools are not tracked", text)
 
     def test_default_window_is_24h_and_all_is_7_days(self) -> None:
@@ -488,8 +488,8 @@ class ViewerTests(TempRepo):
             self.store.record("write_file", [FileOp(str(self.repo / f"file-{i:03}.txt"), 1, None)])
         text = self.command().handler("")
         self.assertLessEqual(len(text), OUTPUT_MAX_CHARS)
-        self.assertRegex(text, r"… \d+ more \(/odd-changes all\)")
-        self.assertIn("/odd-changes clear", text)
+        self.assertRegex(text, r"… \d+ more \(`/odd-changes` all\)")
+        self.assertIn("`/odd-changes` clear", text)
 
     def test_projects_grouped_newest_first(self) -> None:
         other = self.base / "other"
@@ -522,13 +522,15 @@ class ViewerTests(TempRepo):
         self.store.record("write_file", [FileOp(self.file, 1, None)])
         self.store.record("write_file", [FileOp(str(self.repo / "src" / "app_test.py"), 1, None)])
         command = self.command()
-        self.assertTrue(command.handler("app.py").startswith("src/app.py\n"))
+        self.assertTrue(command.handler("app.py").startswith("`src/app.py`\n"))
         self.assertIn("is ambiguous: 2 files match", command.handler("src/app"))
-        self.assertTrue(command.handler("app_t").startswith("src/app_test.py"))
-        self.assertTrue(command.handler("demo-project/src/app.py").startswith("src/app.py"))
-        self.assertIn("demo-project (…/work/demo-project) · 2 files", command.handler("demo-proj"))
+        self.assertTrue(command.handler("app_t").startswith("`src/app_test.py`"))
+        self.assertTrue(command.handler("demo-project/src/app.py").startswith("`src/app.py`"))
+        self.assertIn(
+            "demo-project (`…/work/demo-project`) · 2 files", command.handler("demo-proj")
+        )
         self.assertIn("No recorded change matches 'nope.rs'", command.handler("nope.rs"))
-        self.assertTrue(command.handler("test.py").startswith("src/app_test.py"))
+        self.assertTrue(command.handler("test.py").startswith("`src/app_test.py`"))
 
     def test_lookup_without_records(self) -> None:
         self.assertIn("No file changes recorded", self.command().handler("x"))
@@ -623,7 +625,7 @@ class RegistrationTests(unittest.TestCase):
         self.assertIn("odd-changes", ctx.commands)
         self.assertEqual(ctx.commands["odd-changes"]["args_hint"], "[file|project|all|clear]")
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("/odd-changes [file|project|all|clear]", listing)
+        self.assertIn("`/odd-changes` [file|project|all|clear]", listing)
         post = [cb for name, cb in ctx.hooks if name == "post_tool_call"]
         self.assertEqual(len(post), 2)  # subagent tracking + change capture
 
@@ -636,7 +638,7 @@ class RegistrationTests(unittest.TestCase):
             target = os.path.join(root, "x.py")
             ctx.fire("post_tool_call", **write_call("x.py", "a\nb\n", resolved=target))
             text = ctx.commands["odd-changes"]["handler"]("")
-        self.assertIn("+2 −?  x.py  (1 edit · by main · just now)", text)
+        self.assertIn("+2 −?  `x.py`  (1 edit · by main · just now)", text)
         self.assertIn(SCHEMA, ctx.state.dump())
 
 

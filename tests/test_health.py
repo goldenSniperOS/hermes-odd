@@ -134,7 +134,7 @@ class BinaryCheckTests(unittest.TestCase):
         check, first = check_binary(prober, "3.7.0", 3.0)
         self.assertEqual(check.level, OK)
         self.assertEqual(first.version, "3.7.1")
-        self.assertIn("3.7.1 at …/homebrew/bin/gentle-ai (min 3.7.0)", check.finding)
+        self.assertIn("3.7.1 at `…/homebrew/bin/gentle-ai` (min 3.7.0)", check.finding)
 
     def test_below_min_fails_with_binary_only_hint(self) -> None:
         go = f"{HOME}/go/bin/gentle-ai"
@@ -152,7 +152,7 @@ class BinaryCheckTests(unittest.TestCase):
         check, first = check_binary(prober, "3.7.0", 3.0)
         self.assertEqual(check.level, FAIL)  # the first on PATH is what runs
         self.assertEqual(first.path, go)
-        self.assertIn("also on PATH: …/homebrew/bin/gentle-ai 3.7.0", check.finding)
+        self.assertIn("also on PATH: `…/homebrew/bin/gentle-ai` 3.7.0", check.finding)
         self.assertIn("shadows a newer 3.7.0", check.hint)
         self.assertIn("never run `gentle-ai install`", check.hint)
 
@@ -434,7 +434,7 @@ def _runtime_of(ctx: FakeContext) -> RuntimeInfo:
     # The status closure holds the Status; reach the runtime through it.
     for cell in status.__closure__ or []:
         spec = cell.cell_contents
-        handler = getattr(spec, "handler", None)
+        handler = getattr(getattr(spec, "handler", None), "__wrapped__", None)
         for inner in getattr(handler, "__closure__", None) or []:
             value = inner.cell_contents
             if isinstance(value, Status):
@@ -548,7 +548,7 @@ class StatusTests(unittest.TestCase):
         self.assertIn("Subagents: 1 running · 1 finished (24 h)", text)
         self.assertIn("Changes (24 h): 2 files · +5 −≥1", text)
         self.assertIn("ODD features: 1 · 2 open tasks (1 project)", text)
-        self.assertIn("gentle-ai: 3.7.0 ✓ min 3.7.0 (~/go/bin/gentle-ai)", text)
+        self.assertIn("gentle-ai: 3.7.0 ✓ min 3.7.0 (`~/go/bin/gentle-ai`)", text)
         self.assertIn("Upstream: gentle-ai v3.7.0", text)
         self.assertIn("Problems? /odd-doctor", text)
         # T13: RDD lines removed from status
@@ -625,12 +625,12 @@ class CommandsListingTests(unittest.TestCase):
 
 class DisplayPathTests(unittest.TestCase):
     def test_never_a_full_home_path(self) -> None:
-        self.assertEqual(display_path(f"{HOME}/go/bin/gentle-ai"), "~/go/bin/gentle-ai")
-        self.assertEqual(display_path(HOME), "~")
-        self.assertEqual(display_path("/opt/homebrew/bin/gentle-ai"), "…/homebrew/bin/gentle-ai")
-        self.assertEqual(display_path("/usr/bin"), "/usr/bin")
+        self.assertEqual(display_path(f"{HOME}/go/bin/gentle-ai"), "`~/go/bin/gentle-ai`")
+        self.assertEqual(display_path(HOME), "`~`")
+        self.assertEqual(display_path("/opt/homebrew/bin/gentle-ai"), "`…/homebrew/bin/gentle-ai`")
+        self.assertEqual(display_path("/usr/bin"), "`/usr/bin`")
         # Regression: Linux CI temp homes (/tmp/tmpXXXX) must never be printed in full.
-        self.assertEqual(display_path("/tmp/tmp79f4j516/SOUL.md"), "…/tmp79f4j516/SOUL.md")
+        self.assertEqual(display_path("/tmp/tmp79f4j516/SOUL.md"), "`…/tmp79f4j516/SOUL.md`")
 
 
 if __name__ == "__main__":

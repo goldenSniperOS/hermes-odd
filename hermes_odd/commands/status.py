@@ -174,6 +174,7 @@ def make_odd_status(status: Status) -> CommandSpec:
         description="Compact status: versions, prompt budget, skills, activity, gentle-ai",
         handler=handler,
         group="Health",
+        max_chars=OUTPUT_MAX_CHARS,
     )
 
 

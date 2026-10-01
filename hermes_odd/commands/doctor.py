@@ -34,6 +34,7 @@ from ..prompt import SECTION_ID, SECTION_MAX_CHARS
 from ..recall import HEALTH_TIMEOUT_SECONDS, Recall, display_url, last_text
 from ..runtime import RuntimeInfo
 from .registry import CommandSpec
+from .safe_text import code_path
 from .tasks import path_tail
 
 OUTPUT_MAX_CHARS = 3500
@@ -96,6 +97,11 @@ class Check:
 
 
 def display_path(path: Any) -> str:
+    """:func:`short_path` as inline code, so a gateway never attaches the file."""
+    return code_path(short_path(path))
+
+
+def short_path(path: Any) -> str:
     """``~/rel`` under the home directory; short system paths (two components,
     such as ``/usr/bin``) as is; anything deeper as a tail of at most three
     components that always drops the first directory, so a gateway reply never

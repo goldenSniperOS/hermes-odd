@@ -1,7 +1,8 @@
 """Declarative slash-command registry for hermes-odd.
 
 Every hermes-odd command is a :class:`CommandSpec` whose handler takes the raw
-argument string and returns plain text. Handlers never call the model, so the
+argument string and returns plain text (paths and command references in
+inline code). Handlers never call the model, so the
 same text is returned in the CLI, the TUI and every gateway.
 
 Naming (verified against hermes-agent source):
@@ -23,14 +24,21 @@ So a spec name is the Telegram-safe form users type in gateways
 (``odd_commands``) and :func:`hermes_command_key` gives the hyphenated key
 registered with Hermes (``odd-commands``). Gateways accept both
 ``/odd_commands`` and ``/odd-commands``; the CLI accepts only the hyphen form,
-so every text hermes-odd shows uses ``/odd-commands``.
+so every text hermes-odd shows uses ``/odd-commands``, in inline code (see
+:mod:`hermes_odd.commands.safe_text`) so Telegram does not link ``/odd`` alone.
 """
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
+
+from .safe_text import gateway_safe
+
+logger = logging.getLogger("hermes_odd")
+REPLY_MAX_CHARS = 3500
 
 COMMAND_NAME_RE = re.compile(r"^[a-z0-9_]+$")
 COMMAND_NAME_MAX_CHARS = 32
@@ -47,10 +55,36 @@ class CommandSpec:
     handler: Handler
     args_hint: str = ""
     group: str = ""  # heading in /odd-commands ("Viewers", "Review", "Health")
+    max_chars: int = REPLY_MAX_CHARS
+
+    def __post_init__(self) -> None:
+        if callable(self.handler) and not getattr(self.handler, "_odd_gateway_safe", False):
+            object.__setattr__(self, "handler", _gateway_safe_handler(self))
 
     @property
     def hermes_key(self) -> str:
         return hermes_command_key(self.name)
+
+
+def _gateway_safe_handler(spec: CommandSpec) -> Handler:
+    """Every reply passes :func:`gateway_safe`: no bare path a gateway would
+    attach, command references in inline code, still within ``max_chars``.
+    A failure becomes text too, so an exception message cannot leak a path."""
+    inner = spec.handler
+
+    def handler(raw_args: str = "") -> str:
+        try:
+            result = inner(raw_args)
+        except Exception as exc:  # noqa: BLE001 - surface as text, never raise
+            logger.warning("hermes-odd /%s failed: %s", spec.name, exc, exc_info=True)
+            result = f"/{spec.hermes_key} failed: {type(exc).__name__}: {exc}"
+        if not isinstance(result, str):
+            return result
+        return gateway_safe(result, spec.max_chars)
+
+    handler._odd_gateway_safe = True  # type: ignore[attr-defined]
+    handler.__wrapped__ = inner  # type: ignore[attr-defined]
+    return handler
 
 
 def hermes_command_key(name: str) -> str:

@@ -4,7 +4,7 @@ Concept port of gentle-shell's Gentle Changes: files captured from
 successful ``write_file`` / ``patch`` calls of the main agent and its
 subagents, grouped by project with line counts and attribution. The Pi
 two-pane diff viewer is not ported (Pi TUI; hermes-odd stores no content).
-Output uses no Markdown and stays under :data:`OUTPUT_MAX_CHARS`, so a
+Output uses no Markdown beyond inline code and stays under :data:`OUTPUT_MAX_CHARS`, so a
 Telegram reply never needs splitting; the CLI and TUI show the same text.
 """
 
@@ -19,6 +19,7 @@ from typing import Any
 from ..changes import MAIN, MAX_TIMELINE, ChangeStore, NumstatResult, git_numstat
 from .agents import short_id
 from .registry import CommandSpec
+from .safe_text import code_path
 from .tasks import format_age, path_tail
 
 OUTPUT_MAX_CHARS = 3500
@@ -55,7 +56,11 @@ def counts(added: Any, removed: Any, unknown: bool = False) -> str:
 
 
 def display_root(root: str) -> str:
-    """Root as ``…/parent/name`` (or ``~``), never a full home path."""
+    """Root as inline code ``…/parent/name`` (or ``~``), never a full home path."""
+    return code_path(_short_root(root))
+
+
+def _short_root(root: str) -> str:
     path = Path(root)
     home = Path(os.path.expanduser("~"))
     if path == home:
@@ -92,7 +97,7 @@ def _edits(n: Any) -> str:
 
 
 def file_line(entry: dict[str, Any], now: float) -> str:
-    rel = _one_line(entry.get("rel") or entry.get("path"), LINE_PATH_CHARS)
+    rel = code_path(_one_line(entry.get("rel") or entry.get("path"), LINE_PATH_CHARS))
     stats = counts(entry.get("added"), entry.get("removed"), bool(entry.get("removed_unknown")))
     return (
         f"{stats}  {rel}  ({_edits(entry.get('ops'))} · by {_by(entry)} · "
@@ -182,7 +187,7 @@ def render_detail(
 ) -> str:
     stats = counts(entry.get("added"), entry.get("removed"), bool(entry.get("removed_unknown")))
     lines = [
-        _one_line(entry.get("rel") or entry.get("path"), 200),
+        code_path(_one_line(entry.get("rel") or entry.get("path"), 200)),
         f"project: {project_name(entry)} ({display_root(str(entry.get('root') or ''))})",
         f"captured: {_edits(entry.get('ops'))} · {stats}"
         f" · first {_clock(entry.get('first_at'), now)}"
@@ -271,7 +276,7 @@ def render_lookup(
     if len(candidates) == 1:
         return render_detail(candidates[0], now, store, numstat)
     if len(candidates) > 1:
-        names = ", ".join(f"{project_name(f)}/{f.get('rel')}" for f in candidates[:10])
+        names = ", ".join(code_path(f"{project_name(f)}/{f.get('rel')}") for f in candidates[:10])
         more = f" and {len(candidates) - 10} more" if len(candidates) > 10 else ""
         return (
             f"'{shown}' is ambiguous: {len(candidates)} files match ({names}{more}). "

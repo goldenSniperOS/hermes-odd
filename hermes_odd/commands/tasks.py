@@ -9,7 +9,7 @@ not ported: Hermes' native ``todo`` is used instead (see
 ``skills/odd-feature-tracking``).
 
 Projects come from :func:`hermes_odd.projects.resolve_projects`. Output uses
-no Markdown and stays under :data:`OUTPUT_MAX_CHARS` so a Telegram reply
+no Markdown beyond inline code and stays under :data:`OUTPUT_MAX_CHARS` so a Telegram reply
 never needs splitting; the CLI and TUI show the same text.
 """
 
@@ -23,6 +23,7 @@ from pathlib import Path
 from ..feature_docs import MAX_FILES, FeatureDoc, list_feature_docs
 from ..projects import Project, ProjectStore, resolve_projects
 from .registry import CommandSpec
+from .safe_text import code_path
 
 OUTPUT_MAX_CHARS = 3500
 MORE_RESERVE = 60
@@ -151,7 +152,7 @@ def render_overview(projects: list[ProjectDocs], now: float) -> str:
     header = [f"ODD features: {len(projects)} {noun_p} · {features} {noun_f}"]
     blocks: list[str] = []
     for entry in projects:
-        blocks.append(f"\n{entry.project.name} ({path_tail(entry.project.root)})")
+        blocks.append(f"\n{entry.project.name} ({code_path(path_tail(entry.project.root))})")
         for doc in entry.docs:
             blocks.append(_feature_block(doc, now))
         if entry.skipped:
@@ -160,7 +161,7 @@ def render_overview(projects: list[ProjectDocs], now: float) -> str:
 
 
 def render_detail(entry: ProjectDocs, doc: FeatureDoc, now: float) -> str:
-    rel = f"{path_tail(entry.project.root)}/odd/tasks/{doc.path.name}"
+    rel = code_path(f"{path_tail(entry.project.root)}/odd/tasks/{doc.path.name}")
     if doc.error:
         return f"⚠ {doc.feature}: unreadable ({doc.error})\nfile: {rel}"
     lines = [

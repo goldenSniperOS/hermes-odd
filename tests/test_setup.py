@@ -803,7 +803,7 @@ class CommandTests(HomeCase):
         register(ctx)
         self.assertIn("odd-setup", ctx.commands)
         listing = ctx.commands["odd-commands"]["handler"]("")
-        self.assertIn("Setup:\n- /odd-setup", listing)
+        self.assertIn("Setup:\n- `/odd-setup`", listing)
         hint = ctx.commands["odd-setup"]["args_hint"]
         self.assertTrue(hint.startswith("["))
 

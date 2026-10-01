@@ -2,7 +2,7 @@
 
 Concept port of the gentle-shell Gentle Agents card: one compact block per
 ``delegate_task`` child, a detail view per id, and an ``all`` history. The
-text uses no Markdown and stays under :data:`OUTPUT_MAX_CHARS` so a
+text uses no Markdown beyond inline code and stays under :data:`OUTPUT_MAX_CHARS` so a
 Telegram reply (4096 characters) never needs splitting; the CLI and TUI show
 the same text.
 """
