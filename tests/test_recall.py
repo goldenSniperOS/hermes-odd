@@ -16,6 +16,7 @@ from fake_context import ensure_repo_on_path
 ensure_repo_on_path()
 
 from hermes_odd.recall import (  # noqa: E402
+    DISABLED_LABEL,
     ENGRAM_DEFAULT_URL,
     HEALTH_TIMEOUT_SECONDS,
     MAX_STATE_BYTES,
@@ -24,6 +25,7 @@ from hermes_odd.recall import (  # noqa: E402
     Recall,
     RecallInfo,
     age_text,
+    display_url,
     engram_health,
     engram_mcp_configured,
     engram_url,
@@ -31,6 +33,7 @@ from hermes_odd.recall import (  # noqa: E402
     load_global_config,
     provider_of,
     read_state,
+    recall_enabled,
 )
 
 # The real ``GET /health`` body of the Engram service.
@@ -252,6 +255,10 @@ class EngramHealthTests(unittest.TestCase):
         self.assertEqual(engram_url({"ENGRAM_URL": "   "}), ENGRAM_DEFAULT_URL)
         self.assertEqual(engram_url({"ENGRAM_URL": " http://h:1/ "}), "http://h:1")
 
+    def test_display_url_drops_credentials_query_and_fragment(self) -> None:
+        self.assertEqual(display_url("https://u:p@h:9/x?token=s#f"), "https://h:9/x")
+        self.assertEqual(display_url(ENGRAM_DEFAULT_URL), ENGRAM_DEFAULT_URL)
+
 
 class FakeClock:
     def __init__(self) -> None:
@@ -279,6 +286,24 @@ class RecallTests(HomeCase):
         for provider in (None, "", "honcho"):
             with self.subTest(provider=provider):
                 self.assertFalse(RecallInfo(provider, False, None).active)
+
+    def test_recall_enabled_false_means_not_active(self) -> None:
+        for value in (False, 0, "false", " No ", "OFF", "0"):
+            with self.subTest(value=value):
+                config = {"memory": {"provider": "recall", "recall": {"enabled": value}}}
+                info = self.make(config_source=lambda c=config: c).info()
+                self.assertFalse(info.active)
+                self.assertTrue(info.disabled)
+                self.assertEqual(info.provider_label, DISABLED_LABEL)
+        for value in (True, 1, "true", "yes", None):
+            with self.subTest(value=value):
+                config = {"memory": {"provider": "recall", "recall": {"enabled": value}}}
+                self.assertTrue(self.make(config_source=lambda c=config: c).info().active)
+        for config in ({"memory": {"provider": "recall"}}, {"memory": {"recall": 7}}, None):
+            with self.subTest(config=config):
+                self.assertTrue(recall_enabled(config))
+        off = {"memory": {"provider": "", "recall": {"enabled": False}}}
+        self.assertFalse(self.make(config_source=lambda: off).info().disabled)
 
     def test_info_fails_soft(self) -> None:
         def boom():
@@ -319,6 +344,14 @@ class RecallTests(HomeCase):
         opener = FakeOpener()
         self.make(opener=opener, environ={"ENGRAM_URL": "http://h:9"}).health()
         self.assertEqual(opener.calls[0][0], "http://h:9/health")
+
+    def test_cached_health_never_probes(self) -> None:
+        recall = self.make()
+        self.assertIsNone(recall.cached_health())
+        self.assertEqual(recall.probes, 0)
+        health = recall.health()
+        self.assertEqual(recall.cached_health(), health)
+        self.assertEqual(recall.probes, 1)
 
 
 if __name__ == "__main__":

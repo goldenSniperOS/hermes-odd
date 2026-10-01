@@ -46,8 +46,8 @@ def build_registry(
     ``/odd-doctor``; ``prober`` is the cached gentle-ai prober they share with
     ``/odd-review-mode`` (which resolves projects like ``/odd-tasks``).
     ``setup`` feeds ``/odd-setup``; without one an in-memory setup is used.
-    ``recall`` (the read-only hermes-recall view, health TTL-cached) is shared
-    by ``/odd-status`` and ``/odd-doctor``.
+    ``recall`` (the read-only hermes-recall view; only ``/odd-doctor`` probes
+    Engram, TTL-cached) is shared by ``/odd-status`` and ``/odd-doctor``.
     ``/odd-soul`` works on the Hermes home's ``SOUL.md``.
     """
     agents = agent_store if agent_store is not None else AgentStore()

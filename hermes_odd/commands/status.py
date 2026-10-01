@@ -22,7 +22,7 @@ from ..changes import ChangeStore
 from ..probes import Prober, is_below
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
-from ..recall import Recall, age_text
+from ..recall import Recall, last_text
 from ..runtime import RuntimeInfo
 from .changes import counts
 from .doctor import display_path, supported_text
@@ -69,27 +69,16 @@ def _features_line(project_store: ProjectStore | None, cwd: list[Path] | None) -
 
 
 def _memory_line(recall: Recall, now: float) -> str:
-    """One line: provider, cached Engram health and the last memory recall saved."""
+    """One line: provider and the last memory recall saved. Never probes Engram:
+    hermes-recall's ``/recall`` owns its health."""
     info = recall.info()
     if info.provider is None:
         return "Memory: unknown"
+    if info.disabled:
+        return f"Memory: {info.provider_label}"
     if not info.active:
-        return f"Memory: {info.provider[:40] or 'builtin'} (hermes-recall not active)"
-    health = recall.health()  # TTL-cached
-    if health.ok:
-        engram = f"Engram {health.version} ✓" if health.version else "Engram ✓"
-    else:
-        engram = f"Engram ✗ {health.reason or 'down'}"
-    last = info.last
-    if last is None:
-        memory = "last: none yet"
-    else:
-        where = ", ".join(
-            part for part in (last.project[:40], age_text(last.updated_at, now)) if part
-        )
-        memory = f"last #{last.memory_id} {last.action[:20] or 'recorded'}"
-        memory += f" ({where})" if where else ""
-    return f"Memory: recall · {engram} · {memory}"
+        return f"Memory: {info.provider_label} (hermes-recall not active)"
+    return f"Memory: recall · {last_text(info.last, now)} · details: /recall"
 
 
 class Status:

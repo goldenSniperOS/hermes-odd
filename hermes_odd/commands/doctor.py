@@ -31,7 +31,7 @@ from ..probes import (
 )
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
-from ..recall import HEALTH_TIMEOUT_SECONDS, Recall
+from ..recall import HEALTH_TIMEOUT_SECONDS, Recall, display_url, last_text
 from ..runtime import RuntimeInfo
 from .registry import CommandSpec
 from .tasks import path_tail
@@ -448,37 +448,44 @@ RECALL_DUPLICATE = (
 )
 
 
-def check_memory(recall: Recall, budget: float) -> Check:
-    """Recall provider and Engram health; the probe runs only within ``budget``."""
+def check_memory(recall: Recall, budget: float, now: float) -> Check:
+    """The memory provider. With recall active hermes-recall owns Engram health
+    (``/recall``), so nothing is probed. Otherwise a configured
+    ``mcp_servers.engram`` gets ``GET /health``: a fresh cached result is used
+    as is, a real probe runs only within ``budget``."""
     info = recall.info()
     if info.provider is None:
         return Check(OK, "memory", "memory provider unknown (config unavailable)")
-    if not info.active:
-        value = info.provider[:40] or "builtin"
-        return Check(
-            OK,
-            "memory",
-            f"builtin memory (memory.provider: {value}); "
-            "optional: hermes-recall for automatic Engram recall",
-        )
-    level, hints = OK, []
-    if budget < HEALTH_TIMEOUT_SECONDS:
-        level = WARN
-        finding = "recall provider active; Engram health not probed (doctor time budget spent)"
-        hints.append("run /odd-doctor again")
+    if info.active:
+        finding = f"recall provider active; {last_text(info.last, now)}; Engram details: /recall"
+        if info.engram_mcp_configured:
+            return Check(
+                WARN,
+                "memory",
+                f"{finding}; {RECALL_DUPLICATE}",
+                "optional: hermes mcp remove engram, then restart",
+            )
+        return Check(OK, "memory", finding)
+    if info.disabled:
+        finding = f"{info.provider_label}; builtin memory"
     else:
-        health = recall.health()
-        if health.ok:
-            finding = f"recall provider active; Engram {health.version or '?'} at {recall.url()}"
-        else:
-            level = WARN
-            finding = f"recall provider active; Engram {health.reason or 'down'} at {recall.url()}"
-            hints.append("start it: engram serve")
+        finding = f"builtin memory (memory.provider: {info.provider_label})"
+    level, hint = OK, ""
     if info.engram_mcp_configured:
-        level = WARN
-        finding += "; " + RECALL_DUPLICATE
-        hints.append("optional: hermes mcp remove engram, then restart")
-    return Check(level, "memory", finding, "; ".join(hints))
+        health = recall.cached_health()
+        if health is None and budget >= HEALTH_TIMEOUT_SECONDS:
+            health = recall.health()
+        where = display_url(recall.url())
+        if health is None:
+            level, hint = WARN, "run /odd-doctor again"
+            finding += "; Engram health not probed (doctor time budget spent)"
+        elif health.ok:
+            finding += f"; Engram {health.version or '?'} at {where}"
+        else:
+            level, hint = WARN, "start it: engram serve"
+            finding += f"; Engram {health.reason or 'down'} at {where}"
+    finding += "; optional: hermes-recall for automatic Engram recall"
+    return Check(level, "memory", finding, hint)
 
 
 # -- report ----------------------------------------------------------------
@@ -499,7 +506,7 @@ class Doctor:
         runtime: RuntimeInfo | None = None,
         prober: Prober | None = None,
         *,
-        home: Callable[[], Path] = soul_mod.hermes_home,
+        home: Callable[[], Path] | None = None,
         lock_loader: Callable[[], dict[str, Any]] = upstream_mod.load_lock,
         version_of: Callable[[], str | None] = hermes_version,
         clock: Callable[[], float] = time.time,
@@ -511,6 +518,11 @@ class Doctor:
         self.runtime = runtime
         self.project_store = project_store
         self.prober = prober if prober is not None else Prober()
+        # One home source: an injected recall's home, so SOUL.md and
+        # recall/state.json are read from the same Hermes profile.
+        if home is None:
+            shared = getattr(recall, "home", None)
+            home = shared if callable(shared) else soul_mod.hermes_home
         self._home = home
         self.recall = recall if recall is not None else Recall(home=lambda: Path(self._home()))
         self._lock_loader = lock_loader
@@ -547,7 +559,7 @@ class Doctor:
         guarded.append(("plugin surface", lambda: check_plugin(self.runtime)))
         guarded.append(("upstream lock", lambda: check_lock(self._lock_loader, self._clock())[0]))
         guarded.append(("Hermes", lambda: check_hermes(self.runtime, self._version_of)))
-        guarded.append(("memory", lambda: check_memory(self.recall, remaining())))
+        guarded.append(("memory", lambda: check_memory(self.recall, remaining(), self._clock())))
         for name, run in guarded:
             try:
                 results.append(run())

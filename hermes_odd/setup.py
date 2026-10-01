@@ -64,7 +64,7 @@ from . import personas
 from . import soul as soul_mod
 from . import soul_persona as sp
 from .agents import MemoryBackend, resolve_backend
-from .recall import PROVIDER_RECALL, load_global_config, provider_of
+from .recall import PROVIDER_RECALL, load_global_config, provider_of, recall_enabled
 
 logger = logging.getLogger("hermes_odd")
 
@@ -169,7 +169,7 @@ class Setup:
         self._scanner = scanner
         self._now = now
         self._clock = clock
-        self._recall_active = recall_active or recall_provider_active
+        self._recall_active = recall_active if recall_active is not None else recall_provider_active
 
     # -- record ------------------------------------------------------------
 
@@ -517,9 +517,11 @@ def codegraph_available(home: Path | None = None) -> bool:
 
 
 def recall_provider_active() -> bool:
-    """``memory.provider`` in Hermes' global config is ``recall``. Never raises."""
+    """The recall provider is active: ``memory.provider`` is ``recall`` and
+    ``memory.recall.enabled`` is not false. Never raises."""
     try:
-        return provider_of(load_global_config()) == PROVIDER_RECALL
+        config = load_global_config()
+        return provider_of(config) == PROVIDER_RECALL and recall_enabled(config)
     except Exception:  # noqa: BLE001
         return False
 

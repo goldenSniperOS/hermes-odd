@@ -14,6 +14,9 @@ owns. This module only reads:
   "updated_at": ISO-8601 str}``.
 * Engram's ``GET /health``, capped at :data:`HEALTH_TIMEOUT_SECONDS` and
   cached for :data:`HEALTH_CACHE_TTL_SECONDS` (like :class:`hermes_odd.probes.Prober`).
+  Only ``/odd-doctor`` probes, and only when recall is not active but an
+  ``mcp_servers.engram`` entry is: with recall active, hermes-recall owns
+  Engram health (its ``/recall`` view).
 
 Nothing here raises: every failure degrades to ``None`` or ``ok=False``.
 """
@@ -26,6 +29,7 @@ import os
 import threading
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -36,6 +40,8 @@ from typing import Any
 from . import soul as soul_mod
 
 PROVIDER_RECALL = "recall"
+DISABLED_LABEL = "recall (disabled: memory.recall.enabled false)"
+FALSE_WORDS = frozenset({"false", "no", "off", "0"})
 ENGRAM_DEFAULT_URL = "http://127.0.0.1:7437"
 HEALTH_TIMEOUT_SECONDS = 1.5
 HEALTH_CACHE_TTL_SECONDS = 30.0
@@ -63,10 +69,23 @@ class RecallInfo:
     provider: str | None  # None: config unknown; "": builtin memory only
     engram_mcp_configured: bool
     last: LastMemory | None
+    recall_enabled: bool = True  # False: memory.recall.enabled is false
+
+    @property
+    def disabled(self) -> bool:
+        """``recall`` is the provider but ``memory.recall.enabled`` turns it off."""
+        return self.provider == PROVIDER_RECALL and not self.recall_enabled
 
     @property
     def active(self) -> bool:
-        return self.provider == PROVIDER_RECALL
+        return self.provider == PROVIDER_RECALL and self.recall_enabled
+
+    @property
+    def provider_label(self) -> str:
+        """The provider for display: at most 40 chars, ``builtin`` when empty."""
+        if self.disabled:
+            return DISABLED_LABEL
+        return (self.provider or "")[:40] or "builtin"
 
 
 @dataclass(frozen=True)
@@ -123,6 +142,22 @@ def provider_of(config: Mapping[str, Any] | None) -> str | None:
     return value.strip().lower() if isinstance(value, str) else None
 
 
+def recall_enabled(config: Mapping[str, Any] | None) -> bool:
+    """``False`` only when ``memory.recall.enabled`` is false (``False``, ``0`` or
+    ``"false"``/``"no"``/``"off"``/``"0"``); missing or anything else is ``True``."""
+    try:
+        memory = config.get("memory") if isinstance(config, Mapping) else None
+        section = memory.get("recall") if isinstance(memory, Mapping) else None
+        if not isinstance(section, Mapping) or "enabled" not in section:
+            return True
+        value = section.get("enabled")
+    except Exception:  # noqa: BLE001
+        return True
+    if isinstance(value, str):
+        return value.strip().lower() not in FALSE_WORDS
+    return value is not False and not (type(value) is int and value == 0)
+
+
 def engram_mcp_configured(config: Mapping[str, Any] | None) -> bool:
     """Whether the config declares an ``mcp_servers.engram`` entry."""
     try:
@@ -152,11 +187,30 @@ def age_text(updated_at: str, now: float) -> str:
     return "just now"
 
 
+def last_text(last: LastMemory | None, now: float) -> str:
+    """``"last #761 saved (hermes-odd, 3m ago)"`` or ``"last: none yet"``."""
+    if last is None:
+        return "last: none yet"
+    where = ", ".join(part for part in (last.project[:40], age_text(last.updated_at, now)) if part)
+    text = f"last #{last.memory_id} {last.action[:20] or 'recorded'}"
+    return text + (f" ({where})" if where else "")
+
+
 def engram_url(environ: Mapping[str, str] | None = None) -> str:
     """``ENGRAM_URL`` when set and non-empty, else :data:`ENGRAM_DEFAULT_URL`."""
     env = os.environ if environ is None else environ
     value = str(env.get("ENGRAM_URL", "") or "").strip().rstrip("/")
     return value or ENGRAM_DEFAULT_URL
+
+
+def display_url(url: str) -> str:
+    """``url`` without userinfo, query or fragment, so no credential reaches a chat."""
+    try:
+        parts = urllib.parse.urlsplit(str(url))
+        netloc = parts.netloc.rpartition("@")[2]
+        return urllib.parse.urlunsplit((parts.scheme, netloc, parts.path, "", "")) or "?"
+    except Exception:  # noqa: BLE001
+        return "?"
 
 
 def fetch_health(url: str, timeout: float) -> bytes:
@@ -210,7 +264,7 @@ class Recall:
         clock: Callable[[], float] = time.monotonic,
         ttl: float = HEALTH_CACHE_TTL_SECONDS,
     ) -> None:
-        self._home = home
+        self.home = home  # the Hermes home source; /odd-doctor shares it
         self._config_source = config_source
         self._opener = opener
         self._environ = environ
@@ -227,10 +281,12 @@ class Recall:
         except Exception:  # noqa: BLE001
             config = None
         try:
-            last = read_state(self._home())
+            last = read_state(self.home())
         except Exception:  # noqa: BLE001 - home resolution failed
             last = None
-        return RecallInfo(provider_of(config), engram_mcp_configured(config), last)
+        return RecallInfo(
+            provider_of(config), engram_mcp_configured(config), last, recall_enabled(config)
+        )
 
     def url(self) -> str:
         try:
@@ -238,13 +294,21 @@ class Recall:
         except Exception:  # noqa: BLE001
             return ENGRAM_DEFAULT_URL
 
-    def health(self) -> EngramHealth:
-        """``GET /health`` on :meth:`url`, cached per URL for ``ttl`` seconds."""
-        url = self.url()
+    def cached_health(self, url: str | None = None) -> EngramHealth | None:
+        """The fresh cached result for ``url`` (default :meth:`url`); never probes."""
+        url = self.url() if url is None else url
         with self._lock:
             hit = self._cache.get(url)
             if hit is not None and self._clock() - hit[0] < self._ttl:
                 return hit[1]
+        return None
+
+    def health(self) -> EngramHealth:
+        """``GET /health`` on :meth:`url`, cached per URL for ``ttl`` seconds."""
+        url = self.url()
+        hit = self.cached_health(url)
+        if hit is not None:
+            return hit
         self.probes += 1
         result = engram_health(url, self._opener)
         with self._lock:
