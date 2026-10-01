@@ -24,7 +24,9 @@ from hermes_odd import register  # noqa: E402
 from hermes_odd.commands.registry import CommandSpec  # noqa: E402
 from hermes_odd.commands.safe_text import TRUNCATED, code_path, gateway_safe  # noqa: E402
 
-# Copy of the gateway scanner. The gateway lists deliverable extensions
+# Copy of the gateway scanner: Hermes 0.21.0 ``gateway/platforms/base.py``
+# ``BasePlatformAdapter.extract_local_files`` (RealScannerTests compares it
+# with the real one when Hermes is importable). The gateway lists deliverable extensions
 # (images, video, audio, documents incl. .md/.json/.txt/.yaml); any extension
 # is a superset, because /odd-changes can show files of every kind.
 GATEWAY_EXT = r"[A-Za-z0-9]+"
@@ -152,6 +154,42 @@ class SafeTextTests(unittest.TestCase):
         self.assertTrue(text.endswith(TRUNCATED))
         self.assertEqual(text.count("`") % 2, 0)
 
+    def test_cap_closes_a_fenced_block_it_cuts(self) -> None:
+        text = "Head\n```\n" + "".join(f"line {i}\n" for i in range(40)) + "```\nTail"
+        out = gateway_safe(text, max_chars=120)
+        self.assertLessEqual(len(out), 120)
+        self.assertTrue(out.endswith("\n```" + TRUNCATED), out)
+        body = out[: -len(TRUNCATED)]
+        self.assertEqual(body.count("```"), 2)
+        self.assertTrue(
+            all(line.startswith(("Head", "```", "line ")) for line in body.splitlines())
+        )
+
+    def test_cap_cuts_at_a_line_boundary(self) -> None:
+        out = gateway_safe("".join(f"row {i} /odd-doctor\n" for i in range(20)), max_chars=100)
+        self.assertLessEqual(len(out), 100)
+        self.assertRegex(
+            out[: -len(TRUNCATED)], r"\A(row \d+ `/odd-doctor`\n)*row \d+ `/odd-doctor`\Z"
+        )
+
+    def test_failure_text_is_short_and_hides_home(self) -> None:
+        class Weird(Exception):
+            def __str__(self) -> str:
+                raise RuntimeError("broken __str__")
+
+        def long_error(raw_args: str) -> str:
+            raise OSError(os.path.expanduser("~/x/SOUL.md") + " " + "z" * 500)
+
+        def weird(raw_args: str) -> str:
+            raise Weird
+
+        with self.assertLogs("hermes_odd", level="WARNING"):
+            out = CommandSpec(name="odd_long", description="x", handler=long_error).handler("")
+            odd = CommandSpec(name="odd_weird", description="x", handler=weird).handler("")
+        self.assertTrue(out.startswith("`/odd-long` failed: OSError: `~/x/SOUL.md` z"), out)
+        self.assertLess(len(out), 260)
+        self.assertEqual(odd, "`/odd-weird` failed: Weird: ?")
+
     def test_failure_text_wraps_the_exception_path(self) -> None:
         def broken(raw_args: str) -> str:
             raise OSError("cannot read /tmp/x/SOUL.md")
@@ -160,6 +198,36 @@ class SafeTextTests(unittest.TestCase):
         with self.assertLogs("hermes_odd", level="WARNING"):
             out = spec.handler("")
         self.assertEqual(out, "`/odd-broken` failed: OSError: cannot read `/tmp/x/SOUL.md`")
+
+
+class RealScannerTests(unittest.TestCase):
+    """Pin the copy above to the real Hermes scanner (skipped without Hermes)."""
+
+    def test_copy_matches_real_extract_local_files(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            tmp = os.path.realpath(raw)
+            with mock.patch.dict(os.environ, {"HOME": tmp, "HERMES_HOME": tmp}):
+                try:
+                    from gateway.platforms.base import BasePlatformAdapter
+                except Exception as exc:  # noqa: BLE001 - Hermes not installed
+                    self.skipTest(f"Hermes gateway not importable: {exc}")
+                for name in ("SOUL.md", "a.json", "b.txt"):
+                    Path(tmp, name).write_text("x", encoding="utf-8")
+                samples = (
+                    f"see {tmp}/SOUL.md and {tmp}/a.json",
+                    f"`{tmp}/SOUL.md` and ```\n{tmp}/b.txt\n```",
+                    f"https://x.org{tmp}/a.json ./{tmp}/b.txt ~/b.txt",
+                    f"bad {tmp}/missing.md",
+                )
+                for text in samples:
+                    real, _cleaned = BasePlatformAdapter.extract_local_files(text)
+                    with self.subTest(text=text):
+                        self.assertEqual(
+                            [os.path.expanduser(p) for p in existing(gateway_paths(text))], real
+                        )
+                        self.assertEqual(
+                            BasePlatformAdapter.extract_local_files(gateway_safe(text))[0], []
+                        )
 
 
 if __name__ == "__main__":

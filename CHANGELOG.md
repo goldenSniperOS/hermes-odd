@@ -27,6 +27,12 @@ and the project uses [Semantic Versioning](https://semver.org/).
   provider is active, and `hermes-odd:engram-protocol` gains a "With the
   recall provider" section.
 
+### Fixed
+
+- Command replies keep file paths and command names in inline code, so
+  gateways never auto-attach files (Telegram sent `SOUL.md` as a document)
+  and Telegram does not create half links such as `/odd`.
+
 ## [0.6.0] - 2026-09-29
 
 **Breaking:** receipt-driven development (RDD) is removed. Since gentle-ai

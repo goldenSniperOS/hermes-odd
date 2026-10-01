@@ -21,6 +21,7 @@ from __future__ import annotations
 import re
 
 TRUNCATED = "\n… truncated"
+_FENCE_CLOSE = "\n```"
 
 # Inline code as the gateway sees it, plus fenced blocks (never touched).
 _CODE_RE = re.compile(r"```[\s\S]*?```|`[^`\n]+`")
@@ -52,13 +53,24 @@ def _protect(text: str) -> str:
 
 
 def gateway_safe(text: str, max_chars: int | None = None) -> str:
-    """Wrap bare paths and command references; keep ``max_chars`` if given."""
+    """Wrap bare paths and command references; keep ``max_chars`` if given.
+
+    The cap applies after wrapping (which adds backticks). A longer reply is
+    cut at a line boundary when one lies in the second half, then ends with
+    ``TRUNCATED``. A fenced block cut open is closed; an inline code span cut
+    open is dropped from its backtick on.
+    """
     safe = _protect(text)
     if max_chars is None or len(safe) <= max_chars:
         return safe
-    cut = safe[: max(0, max_chars - len(TRUNCATED))]
-    # Never leave a cut-open code span: drop everything from its backtick on.
+    budget = max(0, max_chars - len(TRUNCATED) - len(_FENCE_CLOSE))
+    cut = safe[:budget]
+    newline = cut.rfind("\n")
+    if newline >= budget // 2:
+        cut = cut[:newline]
     stray = _CODE_RE.sub(lambda m: " " * len(m.group(0)), cut).find("`")
+    if stray >= 0 and cut.startswith("```", stray) and "\n" in cut[stray:]:
+        return cut.rstrip() + _FENCE_CLOSE + TRUNCATED
     if stray >= 0:
         cut = cut[:stray]
     return cut.rstrip() + TRUNCATED
