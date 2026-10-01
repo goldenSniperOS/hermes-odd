@@ -135,6 +135,13 @@ template's `upstream-port` and `needs-triage` labels itself
 Setup has three steps: install a few binaries from the Gentle AI™
 ecosystem, install the plugin, then answer the first-run setup in chat.
 
+> [!TIP]
+> Prefer to let the agent do it? Paste the prompt from
+> [Install with an agent](docs/install-with-an-agent.md) into a chat with
+> your Hermes agent. It covers a fresh machine, a machine where gentle-ai is
+> already installed for other agents, and a machine where gentle-ai was
+> installed for Hermes (SOUL.md cleanup).
+
 ### 1. What to install from Gentle AI (binaries only)
 
 hermes-odd needs only the **binaries** from the Gentle AI ecosystem, not the
