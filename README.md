@@ -133,7 +133,8 @@ template's `upstream-port` and `needs-triage` labels itself
 ## Install
 
 Setup has three steps: install a few binaries from the Gentle AI™
-ecosystem, install the plugin, then answer the first-run setup in chat.
+ecosystem, install the plugin, then answer the first-run setup in chat. A
+fourth step, automatic Engram memory, is optional but recommended.
 
 > [!TIP]
 > Prefer to let the agent do it? Paste the prompt from
@@ -226,6 +227,27 @@ backup. Details are in [First-run setup](#first-run-setup). Finish with:
 
 It reports the health of the plugin, `SOUL.md` and the gentle-ai binary.
 
+### 4. Automatic Engram memory (hermes-recall), optional but recommended
+
+[hermes-recall](https://github.com/goldenSniperOS/hermes-recall) is a
+separate, Engram™-compatible memory provider for Hermes. With it, Engram
+recall and capture run on every turn without the model deciding, a 🧠 line
+shows when memories were recalled, and `/odd-status` shows the last memory
+id. Selecting it replaces any other memory provider, so an agent installing
+it must ask the user before changing `memory.provider`:
+
+```bash
+hermes plugins install goldenSniperOS/hermes-recall
+hermes config set memory.provider recall
+```
+
+The rest (the Engram server, removing a now-duplicate Engram MCP server,
+restarting) is in hermes-recall's own
+[Install](https://github.com/goldenSniperOS/hermes-recall#install) section
+and [install prompt](https://github.com/goldenSniperOS/hermes-recall/blob/main/docs/install-with-an-agent.md).
+After the restart, `/odd-doctor` and `/odd-status` report it on their memory
+line.
+
 ## Updating
 
 A plugin installed with `hermes plugins install` is a git checkout in
@@ -275,8 +297,8 @@ Telegram's command menu shows (`/odd_commands`).
 
 | Command | What it does |
 |---|---|
-| `/odd-status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), and the supported upstream versions |
-| `/odd-doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, and Hermes itself |
+| `/odd-status` | One compact message: hermes-odd version, prompt section size, skills, subagents (running / finished in 24 h), changes in 24 h, ODD features and open tasks, the gentle-ai binary version against the supported minimum (✓ / ✗), the supported upstream versions, and a memory line (with hermes-recall: `Memory: recall · last #N <action> (<project>, <age>) · details: /recall`) |
+| `/odd-doctor` | Read-only health report, one `✓ / ⚠ / ✗  check: finding` line per check with a fix hint: every `gentle-ai` on `PATH` and its version (flags a binary below the minimum or shadowing another), `SOUL.md` size, gentle-ai managed blocks and whether Hermes truncates it (and which blocks it drops), the plugin's section, skills, hooks and state, the upstream lock, Hermes itself, and memory (hermes-recall active and its last memory id, a warning when an Engram MCP server duplicates its tools; without it, the Engram MCP server's health) |
 | `/odd-commands` | Lists hermes-odd commands, grouped |
 
 `/odd-agents` records only metadata, from Hermes' `subagent_start`,
@@ -306,12 +328,28 @@ shown. `write_file` replaces a whole file, so its removed lines are unknown
 and show as `−?`. Entries are kept for 7 days, at most 200 files.
 
 `/odd-status` runs no subprocess except a `gentle-ai version` probe, cached
-for 60 s. `/odd-doctor` runs only `gentle-ai version` (no shell, minimal
+for 60 s; it never probes Engram. `/odd-doctor` runs only `gentle-ai version` (no shell, minimal
 environment, 3 s timeout, cached for 60 s); it never runs `gentle-ai install` or `sync`.
+When hermes-recall is not active but an Engram MCP server is configured, it
+also calls Engram's `/health` (1.5 s timeout, cached for 30 s).
 It measures `SOUL.md` and reads only the model name, base URL and context
 length keys of `config.yaml` and `context_length_cache.yaml` to compute
-Hermes' truncation cap; `.env`, `auth.json` and other secrets are never
+Hermes' truncation cap, plus the memory provider settings and hermes-recall's
+state file (`recall/state.json`) for the memory line; `.env`, `auth.json` and other secrets are never
 read, SOUL content is never printed, and paths under your home show as `~/…`.
+
+### Telegram command menu
+
+Hermes registers at most 60 commands in Telegram's menu by default, and the
+built-in commands fill it, so the `/odd_*` commands may be missing from the
+menu. Typing a command always works, menu or not. To show them, raise the cap
+and/or put them first (`priority_mode` defaults to `prepend`), then send
+`/restart`:
+
+```bash
+hermes config set platforms.telegram.extra.command_menu.max_commands 100
+hermes config set platforms.telegram.extra.command_menu.priority '["odd_commands","odd_status","odd_doctor","odd_tasks","odd_agents","odd_changes","odd_setup","odd_soul"]'
+```
 
 ## First-run setup
 

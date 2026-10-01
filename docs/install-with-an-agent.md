@@ -37,6 +37,7 @@ HARD RULES
 - Do not edit ~/.hermes/config.yaml by hand; use `hermes` CLI commands.
 - Only touch the active Hermes profile.
 - If a command needs a password, sudo, or a credential, stop and ask me.
+- Ask me before changing memory.provider.
 
 STEP 0 - Detect the starting point and tell me which one applies:
   - `gentle-ai version` and `engram --version` (missing = not installed)
@@ -82,8 +83,21 @@ STEP 6 - First-run setup: run /odd_setup (CLI: /odd-setup).
   cleanup. In starting point C, choose the cleanup. Wait for my answers.
   Never change SOUL.md without my explicit confirmation; show the dry-run first.
 
+STEP 7 - Optional, recommended: automatic Engram memory (hermes-recall).
+  Offer it to me: hermes-recall (https://github.com/goldenSniperOS/hermes-recall)
+  is a separate, Engram-compatible memory provider that recalls and captures
+  memory on every turn. Selecting it replaces any other memory provider.
+  Only if I say yes:
+    hermes plugins install goldenSniperOS/hermes-recall
+    hermes config set memory.provider recall
+  For the rest (Engram server, the Engram MCP server question, restart),
+  follow the steps of hermes-recall's own install prompt:
+  https://github.com/goldenSniperOS/hermes-recall/blob/main/docs/install-with-an-agent.md
+  After the restart, run /odd_doctor and /odd_status (CLI: /odd-doctor,
+  /odd-status) and show me their memory lines.
+
 Finish with a short summary: starting point, installed versions, doctor
-result (ok / warn / fail counts), and anything still pending.
+result (ok / warn / fail counts), memory provider, and anything still pending.
 ````
 
 ## After the install
@@ -91,3 +105,5 @@ result (ok / warn / fail counts), and anything still pending.
 - Update later with `hermes plugins update hermes-odd`, then restart.
 - Run `/odd_doctor` at any time to check the plugin, `SOUL.md` and the
   gentle-ai binary.
+- hermes-recall (step 7) is optional; you can add it later from its
+  [install prompt](https://github.com/goldenSniperOS/hermes-recall/blob/main/docs/install-with-an-agent.md).

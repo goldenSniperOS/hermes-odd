@@ -6,6 +6,27 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Awareness of the optional, Engram-compatible
+  [hermes-recall](https://github.com/goldenSniperOS/hermes-recall) memory
+  provider, read from Hermes' config and its `recall/state.json` (never
+  imported): a memory check in `/odd-doctor` (recall active and its last
+  memory id, a warning when `mcp_servers.engram` duplicates its tools, an
+  Engram `/health` probe when recall is not active but the Engram MCP server
+  is configured) and a memory line in `/odd-status` (last memory id, no
+  probe). `memory.recall.enabled: false` counts as not active.
+- Docs: hermes-recall as an optional, recommended install step (README and
+  the install prompt, linking to hermes-recall's own install docs), the
+  Telegram command menu cap and priority, and "Reading the recall provider"
+  in `docs/design.md`.
+
+### Changed
+
+- The prompt's memory pointer switches to a recall variant while the
+  provider is active, and `hermes-odd:engram-protocol` gains a "With the
+  recall provider" section.
+
 ## [0.6.0] - 2026-09-29
 
 **Breaking:** receipt-driven development (RDD) is removed. Since gentle-ai

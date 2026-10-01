@@ -100,7 +100,7 @@ gateway.
       CLI + `rdd-review` skill: honest RDD on Hermes (native immutable review unavailable
       for this runtime -> report per candidate, continue under ordinary policy) + optional
       4R advisory review via `delegate_task`, clearly labeled as receipt-less.
-- [ ] T8 CLOSED WON'T-DO: native `odd_review` facade. gentle-ai upstream (5ffb65fc)
+- [x] T8 CLOSED WON'T-DO: native `odd_review` facade. gentle-ai upstream (5ffb65fc)
       limits RDD to runtimes with a native review transport (claude-code, opencode,
       codex, pi); Hermes is excluded by design. The capability manifest is unchanged.
       Upstream exclusion recorded in SUPPORTED.md. No Discussion filed (user dropped it).

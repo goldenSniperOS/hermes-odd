@@ -641,6 +641,31 @@ something.
   `gentle-ai install` for Hermes or `gentle-ai sync --agent hermes` re-adds
   the blocks.
 
+### Reading the recall provider (`hermes_odd/recall.py`)
+
+[hermes-recall](https://github.com/goldenSniperOS/hermes-recall) is a
+separate, exclusive Engram-compatible `MemoryProvider` plugin. hermes-odd
+never imports `hermes_recall` and never writes anything it owns; it reads:
+
+- the global config through Hermes' cached
+  `hermes_cli.config.load_config_readonly`: `memory.provider`,
+  `memory.recall.enabled` (`false` counts as not active) and whether an
+  `mcp_servers.engram` entry exists. Outside Hermes the config is unknown;
+  hermes-odd parses no YAML.
+- `<hermes_home>/recall/state.json`, a frozen contract owned by
+  hermes-recall: `last_memory_id` (int), `last_action` (str), `project`
+  (str), `updated_at` (ISO 8601 UTC). A missing or malformed file degrades
+  to "no last memory".
+
+With recall active, the provider owns Engram health and details, so the
+memory line ends with `details: /recall` instead of repeating them;
+`/odd-doctor` only adds a warning when `mcp_servers.engram` duplicates the
+provider's tools. Without it, `/odd-doctor` probes Engram `/health` when an
+Engram MCP server is configured; `/odd-status` never probes. The prompt's
+memory pointer switches to its recall variant while the provider is active,
+and the `hermes-odd:engram-protocol` skill has a "With the recall provider"
+section.
+
 ### Privacy and limits
 
 Never read: `.env`, `auth.json`, credentials. Paths under the home show as
