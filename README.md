@@ -268,6 +268,9 @@ hermes plugins install goldenSniperOS/hermes-odd --ref <40-char-commit-sha> --fo
 Restart the Hermes CLI or gateway afterwards. Release notes on GitHub list
 the exact commit of each release.
 
+hermes-recall installs into `~/.hermes/plugins/recall`, so its update command
+is `hermes plugins update recall`.
+
 ## Commands
 
 Commands answer with plain text and never call the model, so the output is

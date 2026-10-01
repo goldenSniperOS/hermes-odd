@@ -6,6 +6,8 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-01
+
 ### Added
 
 - Awareness of the optional, Engram-compatible
@@ -364,7 +366,8 @@ First release: the ODD foundation. Viewer commands (`/odd_agents`, `/odd_tasks`,
   `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `docs/design.md` and an
   isolated end-to-end smoke (`scripts/smoke_e2e.py`).
 
-[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/goldenSniperOS/hermes-odd/compare/v0.4.0...v0.5.0

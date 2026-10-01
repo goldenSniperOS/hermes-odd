@@ -57,7 +57,7 @@ when the Engram MCP server duplicates the provider's tools.
       (`/odd_doctor`) so Telegram links the whole command. Tests.
 - [x] T7 Docs: Telegram menu cap (`platforms.telegram.extra.command_menu.max_commands`
       and `priority`) in README; close stale T8 checkbox in hermes-odd-port.md.
-- [ ] T8 Release v0.7.0 (blocked until hermes-recall v0.1.0 is public).
+- [x] T8 Release v0.7.0 (unblocked: hermes-recall v0.1.1 public).
 
 ## Progress
 
@@ -94,10 +94,12 @@ acknowledged; advisory findings handled in follow-up commits.
 | `36dfe5f` | T4 prompt pointer + skill | `review-0860f22bd6dbd010` medium |
 | `0f60889` | defer Engram details to `/recall`, `memory.recall.enabled`, review fixes | `review-cca2bcd58fd0aaf6` high |
 | `48fac91` + `b87fdd9` | T5, T7 docs; T6 gateway-safe replies | `review-f8fbb529aa31d43b` high |
+| `a735a9d` + `dfbcea5` + `38cd904` | reply-wrapper hardening; install-scanner fix (a privilege-escalation word blocked GitHub installs of main `4d7b07b`) + regression test; evidence | `review-6b6f6dd067ec697c` high |
 
 Checks: real `hermes --cli` pty test of all 8 commands on v0.6.0; live Engram 2.0.0
 probe through the Hermes venv; unittest suite green on python3.11; ruff clean.
 
 ## Next step
 
-Hardening of the T6 reply wrapper (review advisories), then T8 release v0.7.0.
+v0.7.0 released; remaining advisory suggestions (install-scanner test git error
+handling, minor readability) are later work.
