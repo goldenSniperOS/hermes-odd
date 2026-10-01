@@ -6,6 +6,7 @@ from ..agents import AgentStore, MemoryBackend
 from ..changes import ChangeStore
 from ..probes import Prober
 from ..projects import ProjectStore
+from ..recall import Recall
 from ..runtime import RuntimeInfo
 from ..setup import Setup
 from .agents import make_odd_agents
@@ -32,6 +33,7 @@ def build_registry(
     runtime: RuntimeInfo | None = None,
     prober: Prober | None = None,
     setup: Setup | None = None,
+    recall: Recall | None = None,
 ) -> CommandRegistry:
     """Return the registry holding every odd command.
 
@@ -44,11 +46,14 @@ def build_registry(
     ``/odd-doctor``; ``prober`` is the cached gentle-ai prober they share with
     ``/odd-review-mode`` (which resolves projects like ``/odd-tasks``).
     ``setup`` feeds ``/odd-setup``; without one an in-memory setup is used.
+    ``recall`` (the read-only hermes-recall view, health TTL-cached) is shared
+    by ``/odd-status`` and ``/odd-doctor``.
     ``/odd-soul`` works on the Hermes home's ``SOUL.md``.
     """
     agents = agent_store if agent_store is not None else AgentStore()
     changes = change_store if change_store is not None else ChangeStore(agent_store=agent_store)
     shared_prober = prober if prober is not None else Prober()
+    shared_recall = recall if recall is not None else Recall()
     registry = CommandRegistry()
     registry.add(make_odd_agents(agents))
     registry.add(make_odd_tasks(project_store))
@@ -57,8 +62,16 @@ def build_registry(
         make_odd_setup(SetupCommand(setup if setup is not None else Setup(backend=MemoryBackend())))
     )
     registry.add(make_odd_soul(SoulCommand()))
-    registry.add(make_odd_status(Status(runtime, shared_prober, agents, changes, project_store)))
-    registry.add(make_odd_doctor(Doctor(runtime, shared_prober, project_store=project_store)))
+    registry.add(
+        make_odd_status(
+            Status(runtime, shared_prober, agents, changes, project_store, recall=shared_recall)
+        )
+    )
+    registry.add(
+        make_odd_doctor(
+            Doctor(runtime, shared_prober, project_store=project_store, recall=shared_recall)
+        )
+    )
     registry.add(make_odd_commands(registry))
     return registry
 

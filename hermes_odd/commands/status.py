@@ -10,6 +10,7 @@ or text is copied. Output stays under :data:`OUTPUT_MAX_CHARS`.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ from ..changes import ChangeStore
 from ..probes import Prober, is_below
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
+from ..recall import Recall, age_text
 from ..runtime import RuntimeInfo
 from .changes import counts
 from .doctor import display_path, supported_text
@@ -66,6 +68,30 @@ def _features_line(project_store: ProjectStore | None, cwd: list[Path] | None) -
     return f"ODD features: {features} · {open_tasks} open tasks ({len(projects)} {noun})"
 
 
+def _memory_line(recall: Recall, now: float) -> str:
+    """One line: provider, cached Engram health and the last memory recall saved."""
+    info = recall.info()
+    if info.provider is None:
+        return "Memory: unknown"
+    if not info.active:
+        return f"Memory: {info.provider[:40] or 'builtin'} (hermes-recall not active)"
+    health = recall.health()  # TTL-cached
+    if health.ok:
+        engram = f"Engram {health.version} ✓" if health.version else "Engram ✓"
+    else:
+        engram = f"Engram ✗ {health.reason or 'down'}"
+    last = info.last
+    if last is None:
+        memory = "last: none yet"
+    else:
+        where = ", ".join(
+            part for part in (last.project[:40], age_text(last.updated_at, now)) if part
+        )
+        memory = f"last #{last.memory_id} {last.action[:20] or 'recorded'}"
+        memory += f" ({where})" if where else ""
+    return f"Memory: recall · {engram} · {memory}"
+
+
 class Status:
     def __init__(
         self,
@@ -77,9 +103,13 @@ class Status:
         *,
         lock_loader: Callable[[], dict[str, Any]] = upstream_mod.load_lock,
         cwd_candidates: list[Path] | None = None,
+        recall: Recall | None = None,
+        clock: Callable[[], float] = time.time,
     ):
         self.runtime = runtime
         self.prober = prober if prober is not None else Prober()
+        self.recall = recall if recall is not None else Recall()
+        self._clock = clock
         self.agent_store = agent_store
         self.change_store = change_store
         self.project_store = project_store
@@ -124,6 +154,7 @@ class Status:
             ("Changes", lambda: _changes_line(self.change_store)),
             ("ODD features", lambda: _features_line(self.project_store, self._cwd)),
             ("gentle-ai", lambda: self._binary_line(lock)),
+            ("Memory", lambda: _memory_line(self.recall, self._clock())),
             (
                 "Upstream",
                 lambda: f"Upstream: {supported_text(lock)}" if lock else "Upstream: lock ✗",

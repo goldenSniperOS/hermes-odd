@@ -189,6 +189,8 @@ class AgeTextTests(unittest.TestCase):
             with self.subTest(stamp=stamp):
                 self.assertEqual(age_text(stamp, EPOCH), "")
         self.assertEqual(age_text(STATE["updated_at"], "now"), "")
+        for now in (float("inf"), float("-inf"), float("nan")):
+            self.assertEqual(age_text(STATE["updated_at"], now), "")
 
 
 class FakeOpener:
@@ -231,6 +233,7 @@ class EngramHealthTests(unittest.TestCase):
             (TimeoutError(), "timeout"),
             (urllib.error.URLError(TimeoutError()), "timeout"),
             (urllib.error.URLError(ConnectionRefusedError()), "unreachable"),
+            (urllib.error.HTTPError("u", 500, "err", None, None), "bad response"),
             (ConnectionResetError(), "unreachable"),
             (RuntimeError("anything"), "unreachable"),
         ]

@@ -31,6 +31,7 @@ from ..probes import (
 )
 from ..projects import ProjectStore
 from ..prompt import SECTION_ID, SECTION_MAX_CHARS
+from ..recall import HEALTH_TIMEOUT_SECONDS, Recall
 from ..runtime import RuntimeInfo
 from .registry import CommandSpec
 from .tasks import path_tail
@@ -439,6 +440,47 @@ def check_hermes(runtime: RuntimeInfo | None, version_of: Callable[[], str | Non
     return Check(OK, "Hermes", finding)
 
 
+# -- 7. memory (optional hermes-recall provider) ----------------------------
+
+RECALL_DUPLICATE = (
+    "mcp_servers.engram is configured too: duplicate Engram tools "
+    "(the MCP server's mcp__engram__* next to the provider's mem_*)"
+)
+
+
+def check_memory(recall: Recall, budget: float) -> Check:
+    """Recall provider and Engram health; the probe runs only within ``budget``."""
+    info = recall.info()
+    if info.provider is None:
+        return Check(OK, "memory", "memory provider unknown (config unavailable)")
+    if not info.active:
+        value = info.provider[:40] or "builtin"
+        return Check(
+            OK,
+            "memory",
+            f"builtin memory (memory.provider: {value}); "
+            "optional: hermes-recall for automatic Engram recall",
+        )
+    level, hints = OK, []
+    if budget < HEALTH_TIMEOUT_SECONDS:
+        level = WARN
+        finding = "recall provider active; Engram health not probed (doctor time budget spent)"
+        hints.append("run /odd-doctor again")
+    else:
+        health = recall.health()
+        if health.ok:
+            finding = f"recall provider active; Engram {health.version or '?'} at {recall.url()}"
+        else:
+            level = WARN
+            finding = f"recall provider active; Engram {health.reason or 'down'} at {recall.url()}"
+            hints.append("start it: engram serve")
+    if info.engram_mcp_configured:
+        level = WARN
+        finding += "; " + RECALL_DUPLICATE
+        hints.append("optional: hermes mcp remove engram, then restart")
+    return Check(level, "memory", finding, "; ".join(hints))
+
+
 # -- report ----------------------------------------------------------------
 
 
@@ -464,11 +506,13 @@ class Doctor:
         monotonic: Callable[[], float] = time.monotonic,
         model_context: Callable[[Path], soul_mod.ModelContext] = soul_mod.model_context,
         project_store: ProjectStore | None = None,
+        recall: Recall | None = None,
     ):
         self.runtime = runtime
         self.project_store = project_store
         self.prober = prober if prober is not None else Prober()
         self._home = home
+        self.recall = recall if recall is not None else Recall(home=lambda: Path(self._home()))
         self._lock_loader = lock_loader
         self._version_of = version_of
         self._clock = clock
@@ -503,6 +547,7 @@ class Doctor:
         guarded.append(("plugin surface", lambda: check_plugin(self.runtime)))
         guarded.append(("upstream lock", lambda: check_lock(self._lock_loader, self._clock())[0]))
         guarded.append(("Hermes", lambda: check_hermes(self.runtime, self._version_of)))
+        guarded.append(("memory", lambda: check_memory(self.recall, remaining())))
         for name, run in guarded:
             try:
                 results.append(run())
@@ -542,6 +587,7 @@ __all__ = [
     "check_binary",
     "check_hermes",
     "check_lock",
+    "check_memory",
     "check_plugin",
     "check_soul",
     "display_path",

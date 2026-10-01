@@ -21,6 +21,7 @@ Nothing here raises: every failure degrades to ``None`` or ``ok=False``.
 from __future__ import annotations
 
 import json
+import math
 import os
 import threading
 import time
@@ -79,9 +80,13 @@ def read_state(home: Path | str | None) -> LastMemory | None:
     """Parse ``<home>/recall/state.json``; ``None`` on any problem."""
     try:
         path = Path(home) / "recall" / "state.json"
-        if not path.is_file() or path.stat().st_size > MAX_STATE_BYTES:
+        if not path.is_file():
             return None
-        data = json.loads(path.read_text(encoding="utf-8"))
+        with path.open("rb") as handle:  # bounded read: the size may change after a stat
+            raw = handle.read(MAX_STATE_BYTES + 1)
+        if len(raw) > MAX_STATE_BYTES:
+            return None
+        data = json.loads(raw.decode("utf-8"))
         memory_id = data["last_memory_id"]
         fields = (data["last_action"], data["project"], data["updated_at"])
     except Exception:  # noqa: BLE001 - missing, unreadable, malformed or not a dict
@@ -139,6 +144,8 @@ def age_text(updated_at: str, now: float) -> str:
         delta = float(now) - moment.timestamp()
     except Exception:  # noqa: BLE001
         return ""
+    if not math.isfinite(delta):  # int(inf) would raise below
+        return ""
     for unit, size in (("d", 86400), ("h", 3600), ("m", 60)):
         if delta >= size:
             return f"{int(delta // size)}{unit} ago"
@@ -180,6 +187,8 @@ def engram_health(base_url: str, opener: Opener = fetch_health) -> EngramHealth:
         body = opener(f"{base_url.rstrip('/')}/health", HEALTH_TIMEOUT_SECONDS)
     except TimeoutError:
         return EngramHealth(False, "timeout")
+    except urllib.error.HTTPError:  # the server answered, with an error status
+        return EngramHealth(False, "bad response")
     except urllib.error.URLError as exc:
         timed_out = isinstance(exc.reason, TimeoutError)
         return EngramHealth(False, "timeout" if timed_out else "unreachable")
