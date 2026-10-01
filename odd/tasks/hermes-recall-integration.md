@@ -51,7 +51,13 @@ when the Engram MCP server duplicates the provider's tools.
       budget test green.
 - [ ] T5 Docs: install-with-an-agent.md + README install section + CHANGELOG
       (Unreleased) + docs/design.md.
-- [ ] T6 Release v0.7.0 (blocked until hermes-recall v0.1.0 is public).
+- [ ] T6 Gateway-safe replies: wrap displayed file paths in inline code so the gateway
+      `extract_local_files` never auto-attaches them (Telegram received SOUL.md as a
+      document from `/odd_doctor`); command references use the underscore form
+      (`/odd_doctor`) so Telegram links the whole command. Tests.
+- [ ] T7 Docs: Telegram menu cap (`platforms.telegram.extra.command_menu.max_commands`
+      and `priority`) in README; close stale T8 checkbox in hermes-odd-port.md.
+- [ ] T8 Release v0.7.0 (blocked until hermes-recall v0.1.0 is public).
 
 ## Progress
 
@@ -60,10 +66,20 @@ when the Engram MCP server duplicates the provider's tools.
   (real `hermes --cli` in a pty). Telegram check pending: gateway pid 66612 started
   2026-09-23, before v0.6.0 was installed (2026-09-29); needs `/restart`.
 
+- 2026-10-01: Telegram check after `/restart`: `/odd_status` and `/odd_doctor` answer on
+  v0.6.0; found the SOUL.md auto-attachment and hyphen-link issues (T6). Menu: 60-slot
+  default cap hid all plugin commands; user approved `max_commands: 100` and an `odd_*`
+  priority list on the live profile. Setup: rioplatense persona written, gentle-ai persona
+  block removed (SOUL.md 9,862 -> 4,621 chars).
+- 2026-10-01: OpenCode writer stopped mid-T1 (uncommitted `recall.py` + tests). Policy
+  change from the user: no OpenCode; Pi subagents (or Hermes `delegate_task` when run
+  from Hermes) write the code.
+
 ## Evidence
 
-(commit ids recorded per task)
+- `e9bd705` feature doc; native review `review-009c52b6306ad5f7` approved (low,
+  non-executable), acknowledged.
 
 ## Next step
 
-T1-T5 delegated to one OpenCode writer.
+T1 via a Pi `gentle-ai-worker`: review and trim the leftover `recall.py`.
