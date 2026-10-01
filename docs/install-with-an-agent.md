@@ -36,7 +36,7 @@ HARD RULES
 - Do not run `gentle-ai sync` for any other agent either, unless I ask.
 - Do not edit ~/.hermes/config.yaml by hand; use `hermes` CLI commands.
 - Only touch the active Hermes profile.
-- If a command needs a password, sudo, or a credential, stop and ask me.
+- If a command needs a password, administrator rights, or a credential, stop and ask me.
 - Ask me before changing memory.provider.
 
 STEP 0 - Detect the starting point and tell me which one applies:

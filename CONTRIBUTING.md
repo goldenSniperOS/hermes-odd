@@ -45,6 +45,14 @@ never touches `~/.hermes`, no network, no model calls):
 ~/.hermes/hermes-agent/venv/bin/python scripts/smoke_e2e.py
 ```
 
+Before a release, run the Hermes install-scanner check with the Hermes venv
+interpreter (other interpreters skip it); `hermes plugins install` blocks the
+plugin when the scanner verdict is not `safe`:
+
+```bash
+~/.hermes/hermes-agent/venv/bin/python -m unittest tests.test_install_scanner -v
+```
+
 ## Workflow
 
 1. Open or pick an issue. Upstream changes use the **Upstream port request**
