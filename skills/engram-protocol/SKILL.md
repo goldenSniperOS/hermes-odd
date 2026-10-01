@@ -42,6 +42,16 @@ If no Engram tool is callable, say so once and continue; never claim
 something was saved. Hermes' built-in `memory` tool (MEMORY.md) is a
 different store.
 
+## With the recall provider
+
+When Hermes' memory provider is `recall` (the hermes-recall plugin),
+recall and passive capture are automatic: Engram context is injected every
+turn and turns are captured without a call. The tools are then the
+provider's plain `mem_*` tools (same names without the `mcp__engram__`
+prefix). Everything below still applies: save decisions and discoveries
+with What/Why/Where/Learned, reuse topic keys, write the session summary.
+If the Engram MCP server is also configured, prefer the provider's tools.
+
 ## Session start
 
 1. When the runtime gives a workspace directory, call

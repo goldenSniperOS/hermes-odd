@@ -74,13 +74,21 @@ SETUP_PENDING_LINE_MAX_CHARS = 200
 
 # Pointers to lazy skills, one line each, added by the setup preferences
 # (``engram_protocol``, ``codegraph_guidance``); both default to ``auto``.
+# The memory pointer has two mutually exclusive variants: the recall one
+# replaces the default while the hermes-recall provider is active.
 MEMORY_POINTER = (
     "Memory: with mcp__engram__* tools, load hermes-odd:engram-protocol before saving or searching."
+)
+MEMORY_POINTER_RECALL = (
+    "Memory: the recall provider injects Engram context every turn; "
+    "save decisions and discoveries per hermes-odd:engram-protocol."
 )
 CODEGRAPH_POINTER = (
     "Code structure: CodeGraph is present; load hermes-odd:codegraph before broad searches."
 )
-POINTER_LINES = (MEMORY_POINTER, CODEGRAPH_POINTER)
+# Every known pointer: the render allow-list. At most one memory variant is
+# rendered (the recall one wins).
+POINTER_LINES = (MEMORY_POINTER, MEMORY_POINTER_RECALL, CODEGRAPH_POINTER)
 POINTER_LINE_MAX_CHARS = 160
 
 
@@ -137,6 +145,8 @@ def make_section_callable(
                 pending = values[0]
                 if len(values) > 1:
                     pointers = tuple(p for p in values[1] if p in POINTER_LINES)
+                    if MEMORY_POINTER_RECALL in pointers:
+                        pointers = tuple(p for p in pointers if p != MEMORY_POINTER)
             except Exception:  # noqa: BLE001 - never skip the section
                 logger.debug("hermes-odd: setup inputs failed", exc_info=True)
                 pending, pointers = False, ()

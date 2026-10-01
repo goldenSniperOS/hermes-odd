@@ -38,8 +38,9 @@ Storage:
 Where each answer is applied: ``persona`` and ``verbosity`` as the single
 hermes-odd block at the top of ``SOUL.md`` (:mod:`hermes_odd.soul_persona`);
 ``engram_protocol`` (``auto``) as one prompt-section line pointing to the
-lazy skill ``hermes-odd:engram-protocol``; ``codegraph_guidance`` (``auto``)
-as one line pointing to ``hermes-odd:codegraph`` while CodeGraph is present
+lazy skill ``hermes-odd:engram-protocol`` (its recall variant while Hermes'
+``memory.provider`` is ``recall``); ``codegraph_guidance`` (``auto``) as one
+line pointing to ``hermes-odd:codegraph`` while CodeGraph is present
 (a ``codegraph`` binary on ``PATH`` or an ``mcp_servers.codegraph`` entry in
 Hermes' ``config.yaml``); ``soul_cleanup`` ``yes`` makes the setup skill
 show the ``odd_soul_apply`` dry run and apply it only after the user's
@@ -63,6 +64,7 @@ from . import personas
 from . import soul as soul_mod
 from . import soul_persona as sp
 from .agents import MemoryBackend, resolve_backend
+from .recall import PROVIDER_RECALL, load_global_config, provider_of
 
 logger = logging.getLogger("hermes_odd")
 
@@ -157,6 +159,7 @@ class Setup:
         scanner: Callable[[], sp.Scanner | None] = sp.hermes_scanner,
         now: Callable[[], str] = utc_now,
         clock: Callable[[], float] = time.time,
+        recall_active: Callable[[], bool] | None = None,
     ):
         self.ctx = ctx
         self._backend = backend if backend is not None else resolve_backend(ctx)
@@ -166,6 +169,7 @@ class Setup:
         self._scanner = scanner
         self._now = now
         self._clock = clock
+        self._recall_active = recall_active or recall_provider_active
 
     # -- record ------------------------------------------------------------
 
@@ -259,15 +263,22 @@ class Setup:
             return False, []
         pointers: list[str] = []
         try:
-            from .prompt import CODEGRAPH_POINTER, MEMORY_POINTER
+            from .prompt import CODEGRAPH_POINTER, MEMORY_POINTER, MEMORY_POINTER_RECALL
 
             if effective["engram_protocol"][0] != "off":
-                pointers.append(MEMORY_POINTER)
+                pointers.append(MEMORY_POINTER_RECALL if self.recall_active() else MEMORY_POINTER)
             if effective["codegraph_guidance"][0] != "off" and codegraph_available(self.home()):
                 pointers.append(CODEGRAPH_POINTER)
         except Exception:  # noqa: BLE001
             logger.debug("hermes-odd: skill pointers failed", exc_info=True)
         return pending, pointers
+
+    def recall_active(self) -> bool:
+        """Whether the hermes-recall provider is active; ``False`` on any failure."""
+        try:
+            return self._recall_active() is True
+        except Exception:  # noqa: BLE001
+            return False
 
     # -- transitions ---------------------------------------------------------
 
@@ -505,6 +516,14 @@ def codegraph_available(home: Path | None = None) -> bool:
         return False
 
 
+def recall_provider_active() -> bool:
+    """``memory.provider`` in Hermes' global config is ``recall``. Never raises."""
+    try:
+        return provider_of(load_global_config()) == PROVIDER_RECALL
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def _short(text: str, limit: int = 160) -> str:
     value = " ".join(str(text).split())
     return value if len(value) <= limit else value[: limit - 1] + "…"
@@ -522,5 +541,6 @@ __all__ = [
     "SOUL_CLEANUP_NEXT",
     "Setup",
     "codegraph_available",
+    "recall_provider_active",
     "valid",
 ]

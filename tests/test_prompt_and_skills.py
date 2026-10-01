@@ -98,6 +98,16 @@ class PromptSectionTests(unittest.TestCase):
 
 
 class SkillFileTests(unittest.TestCase):
+    def test_engram_protocol_covers_the_recall_provider(self) -> None:
+        text = (SKILLS_DIR / "engram-protocol" / "SKILL.md").read_text(encoding="utf-8")
+        _head, _sep, section = text.partition("## With the recall provider")
+        section = section.split("\n## ", 1)[0]
+        self.assertTrue(section)
+        for phrase in ("automatic", "plain `mem_*` tools", "topic keys", "prefer the provider"):
+            self.assertIn(phrase, section)
+        # hermes-recall covers the whole Engram tool set: no enumerated names.
+        self.assertNotRegex(section, r"`mem_[a-z]")
+
     def test_no_skill_claims_rdd_on_hermes(self) -> None:
         """T13: upstream excludes Hermes from RDD; skills only offer advisory review."""
         for path in sorted(SKILLS_DIR.glob("*/SKILL.md")):

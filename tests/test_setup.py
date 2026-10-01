@@ -34,6 +34,7 @@ from hermes_odd.plugin import register  # noqa: E402
 from hermes_odd.prompt import (  # noqa: E402
     CODEGRAPH_POINTER,
     MEMORY_POINTER,
+    MEMORY_POINTER_RECALL,
     ODD_SECTION,
     POINTER_LINE_MAX_CHARS,
     POINTER_LINES,
@@ -51,6 +52,7 @@ from hermes_odd.setup import (  # noqa: E402
     SCHEMA,
     STATE_KEY,
     Setup,
+    recall_provider_active,
 )
 from hermes_odd.setup_tool import (  # noqa: E402
     SCHEMA as TOOL_SCHEMA,
@@ -162,7 +164,14 @@ class SectionTests(TempHermesHome):
         self.assertEqual(text.count(SETUP_PENDING_LINE), 1)
 
     def test_every_combination_fits_the_budget(self) -> None:
-        pointer_sets = [(), (MEMORY_POINTER,), (CODEGRAPH_POINTER,), POINTER_LINES]
+        pointer_sets = [
+            (),
+            (MEMORY_POINTER,),
+            (MEMORY_POINTER_RECALL,),
+            (CODEGRAPH_POINTER,),
+            (MEMORY_POINTER, CODEGRAPH_POINTER),
+            (MEMORY_POINTER_RECALL, CODEGRAPH_POINTER),
+        ]
         sizes = []
         for pending, pointers in itertools.product((False, True), pointer_sets):
             text = build_odd_section(setup_pending=pending, pointers=pointers)
@@ -172,14 +181,21 @@ class SectionTests(TempHermesHome):
             self.assertNotIn("TDD mode:", text)
             for pointer in pointers:
                 self.assertEqual(text.count(pointer), 1)
-        # The largest combination: every pointer and the pending line.
-        biggest = build_odd_section(setup_pending=True, pointers=POINTER_LINES)
+        # The largest combination: the longer memory variant (the two are
+        # exclusive), the CodeGraph pointer and the pending line.
+        memory = max((MEMORY_POINTER, MEMORY_POINTER_RECALL), key=len)
+        biggest = build_odd_section(setup_pending=True, pointers=(memory, CODEGRAPH_POINTER))
         self.assertEqual(max(sizes), len(biggest))
         self.assertLessEqual(len(biggest), SECTION_BUDGET_CHARS)
 
     def test_pointer_lines_are_short_and_name_shipped_skills(self) -> None:
         shipped = {p.parent.name for p in (REPO_ROOT / "skills").glob("*/SKILL.md")}
-        expected = {MEMORY_POINTER: "engram-protocol", CODEGRAPH_POINTER: "codegraph"}
+        expected = {
+            MEMORY_POINTER: "engram-protocol",
+            MEMORY_POINTER_RECALL: "engram-protocol",
+            CODEGRAPH_POINTER: "codegraph",
+        }
+        self.assertEqual(set(POINTER_LINES), set(expected))
         for line, skill in expected.items():
             self.assertNotIn("\n", line)
             self.assertLessEqual(len(line), POINTER_LINE_MAX_CHARS)
@@ -203,6 +219,44 @@ class SectionTests(TempHermesHome):
         # A bogus pointer from a broken input is dropped; the section still renders.
         rendered = make_section_callable(None, lambda: (False, ["Injected line"]))({})
         self.assertEqual(rendered, ODD_SECTION.strip())
+        # The memory variants are exclusive even when an input sends both.
+        rendered = make_section_callable(None, lambda: (False, list(POINTER_LINES)))({})
+        self.assertNotIn(MEMORY_POINTER, rendered)
+        self.assertTrue(rendered.endswith(MEMORY_POINTER_RECALL + "\n" + CODEGRAPH_POINTER))
+
+    def test_recall_provider_swaps_the_memory_pointer(self) -> None:
+        ctx = ConfigContext()
+        mark_setup_complete(ctx.state)
+
+        def setup(active) -> Setup:
+            return Setup(ctx, home=lambda: self.temp_home, recall_active=active)
+
+        self.assertEqual(setup(lambda: True).section_inputs(), (False, [MEMORY_POINTER_RECALL]))
+        self.assertEqual(setup(lambda: False).section_inputs(), (False, [MEMORY_POINTER]))
+
+        def broken() -> bool:
+            raise RuntimeError("config unreadable")
+
+        self.assertEqual(setup(broken).section_inputs(), (False, [MEMORY_POINTER]))
+        # Byte-stable: the same inputs render the same section every time.
+        render = make_section_callable(None, setup(lambda: True).section_inputs)
+        self.assertEqual(render({"session_id": "a"}), render({"session_id": "b"}))
+        self.assertTrue(render({}).endswith(MEMORY_POINTER_RECALL))
+        ctx.settings["engram_protocol"] = "off"
+        self.assertEqual(setup(lambda: True).section_inputs(), (False, []))
+
+    def test_recall_detection_reads_memory_provider(self) -> None:
+        cases = [
+            ({"memory": {"provider": "Recall"}}, True),
+            ({"memory": {"provider": "honcho"}}, False),
+            ({}, False),
+            (None, False),
+        ]
+        for config, active in cases:
+            with mock.patch("hermes_odd.setup.load_global_config", return_value=config):
+                self.assertIs(recall_provider_active(), active, config)
+        with mock.patch("hermes_odd.setup.load_global_config", side_effect=RuntimeError):
+            self.assertFalse(recall_provider_active())
 
     def test_section_states_the_default_test_first_policy(self) -> None:
         # Upstream gentle-ai 55e3abf1 / gentle-shell a76e6f2: one default
