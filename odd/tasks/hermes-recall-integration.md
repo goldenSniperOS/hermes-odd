@@ -43,19 +43,19 @@ when the Engram MCP server duplicates the provider's tools.
 
 ## Tasks
 
-- [ ] T1 Recall detection module: read `memory.provider`, `mcp_servers.engram`, the
+- [x] T1 Recall detection module: read `memory.provider`, `mcp_servers.engram`, the
       state file and Engram health; fail soft; unit tests.
-- [ ] T2 `/odd-doctor` recall check (provider, Engram health, duplicate MCP warning).
-- [ ] T3 `/odd-status` last memory id line.
-- [ ] T4 `MEMORY_POINTER` adapts to the recall provider (+ engram-protocol skill note);
+- [x] T2 `/odd-doctor` recall check (provider, Engram health, duplicate MCP warning).
+- [x] T3 `/odd-status` last memory id line.
+- [x] T4 `MEMORY_POINTER` adapts to the recall provider (+ engram-protocol skill note);
       budget test green.
-- [ ] T5 Docs: install-with-an-agent.md + README install section + CHANGELOG
+- [x] T5 Docs: install-with-an-agent.md + README install section + CHANGELOG
       (Unreleased) + docs/design.md.
-- [ ] T6 Gateway-safe replies: wrap displayed file paths in inline code so the gateway
+- [x] T6 Gateway-safe replies: wrap displayed file paths in inline code so the gateway
       `extract_local_files` never auto-attaches them (Telegram received SOUL.md as a
       document from `/odd_doctor`); command references use the underscore form
       (`/odd_doctor`) so Telegram links the whole command. Tests.
-- [ ] T7 Docs: Telegram menu cap (`platforms.telegram.extra.command_menu.max_commands`
+- [x] T7 Docs: Telegram menu cap (`platforms.telegram.extra.command_menu.max_commands`
       and `priority`) in README; close stale T8 checkbox in hermes-odd-port.md.
 - [ ] T8 Release v0.7.0 (blocked until hermes-recall v0.1.0 is public).
 
@@ -75,11 +75,29 @@ when the Engram MCP server duplicates the provider's tools.
   change from the user: no OpenCode; Pi subagents (or Hermes `delegate_task` when run
   from Hermes) write the code.
 
+- 2026-10-01: Overlap check with hermes-recall (its session confirmed): it owns Engram
+  health, URL resolution and `/recall`; hermes-odd only reads `state.json` and config,
+  owns the duplicate-MCP warning, and treats `memory.recall.enabled: false` as not
+  active. User decision: probe Engram only when recall is not active.
+- 2026-10-01: goldenSniperOS/hermes-recall v0.1.0 is public (released 06:51 UTC).
+
 ## Evidence
 
-- `e9bd705` feature doc; native review `review-009c52b6306ad5f7` approved (low,
-  non-executable), acknowledged.
+Native review per work unit (committed-only, explicit base), all approved and
+acknowledged; advisory findings handled in follow-up commits.
+
+| Commit | Task | Review |
+|---|---|---|
+| `e9bd705` | feature doc | `review-009c52b6306ad5f7` low |
+| `13a97a6` | T1 recall view | `review-dcb41d28479ca9a5` medium |
+| `900035e` | T2, T3 doctor/status | `review-6eab9528519fd065` high |
+| `36dfe5f` | T4 prompt pointer + skill | `review-0860f22bd6dbd010` medium |
+| `0f60889` | defer Engram details to `/recall`, `memory.recall.enabled`, review fixes | `review-cca2bcd58fd0aaf6` high |
+| `48fac91` + `b87fdd9` | T5, T7 docs; T6 gateway-safe replies | `review-f8fbb529aa31d43b` high |
+
+Checks: real `hermes --cli` pty test of all 8 commands on v0.6.0; live Engram 2.0.0
+probe through the Hermes venv; unittest suite green on python3.11; ruff clean.
 
 ## Next step
 
-T1 via a Pi `gentle-ai-worker`: review and trim the leftover `recall.py`.
+Hardening of the T6 reply wrapper (review advisories), then T8 release v0.7.0.
