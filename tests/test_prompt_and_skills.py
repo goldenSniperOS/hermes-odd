@@ -194,7 +194,8 @@ class PortableSkillTests(unittest.TestCase):
         text = (SKILLS_DIR / "chained-pr" / "SKILL.md").read_text(encoding="utf-8")
         menu = text[text.index("## 2. Oversized delivery menu") :]
         menu = menu[: menu.index("\n## 3.")]
-        order = [menu.index(f"(`{token}`)") for token in ("feature-branch-chain", "stacked-to-main", "single-pr")]
+        tokens = ("feature-branch-chain", "stacked-to-main", "single-pr")
+        order = [menu.index(f"(`{token}`)") for token in tokens]
         self.assertEqual(order, sorted(order))
         for token in (
             "least recommended",
@@ -362,7 +363,14 @@ class CanonicalProvenanceTests(unittest.TestCase):
         for text in (body, section, workflow):
             for token in ("at most 3 calls", "~10k tokens", "~2k tokens", "~150k"):
                 self.assertIn(token, text.replace("approximately ", "~"))
-            for gone in ("4+ files", "4 or more files", "20 tool calls", "1-3 known files", "1–3 files", "1-3 file"):
+            for gone in (
+                "4+ files",
+                "4 or more files",
+                "20 tool calls",
+                "1-3 known files",
+                "1–3 files",
+                "1-3 file",
+            ):
                 self.assertNotIn(gone, text)
 
     def test_work_stays_inside_the_project_root(self) -> None:
