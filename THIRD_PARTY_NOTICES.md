@@ -16,8 +16,8 @@ Buscaglia. See the README for the full notice.
 - Project: Gentle AI by Gentleman Programming (Alan Buscaglia)
 - URL: https://github.com/Gentleman-Programming/gentle-ai
 - Copyright: Copyright (c) 2025 Gentleman Programming
-- Pinned commit: d96a5d4f021b09d048958b518f550e1d8d629700 (`main` after v3.7.0;
-  no later release yet, see upstream/SUPPORTED.md)
+- Pinned commit: 5140c5f55baf91763198eb0bfca019c015e3b015 (`main` after v4.0.0,
+  see upstream/SUPPORTED.md)
 - License: MIT
 
 Files in this repository derived from gentle-ai:
@@ -93,8 +93,8 @@ SOFTWARE.
   Buscaglia / Gentleman Programming
 - URL: https://github.com/Gentleman-Programming/gentle-shell
 - Copyright: Copyright (c) 2025 Mario Zechner
-- Pinned commit: 4d2c3f5c7f11d3798c1115e34d08888bf46b314c (v3.7.0+276,
-  `git describe`: v3.7.0-276-g4d2c3f5)
+- Pinned commit: 1f345106ff2931383451d4e05ec76d1259471884 (v4.0.0+6,
+  `git describe`: v4.0.0-6-g1f345106)
 - License: MIT
 
 Files in this repository derived from gentle-shell:
@@ -103,6 +103,8 @@ Files in this repository derived from gentle-shell:
   `GENTLEMAN_PERSONA_PROMPT` and `NEUTRAL_PERSONA_PROMPT` in
   `extensions/gentle-ai.ts`)
 - `hermes_odd/prompt.py`
+- `skills/chained-pr/SKILL.md` (the oversized delivery menu of
+  `assets/orchestrator-delegation.md`, restated in hermes-odd's own words)
 - `skills/odd-delegation/SKILL.md`
 - `skills/odd-feature-tracking/SKILL.md`
 - `skills/odd-workflow/SKILL.md`

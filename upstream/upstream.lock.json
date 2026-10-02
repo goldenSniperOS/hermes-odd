@@ -1,33 +1,33 @@
 {
   "schema": "hermes-odd.upstream-lock/v1",
-  "updated": "2026-09-29",
+  "updated": "2026-10-02",
   "notes": "Authoritative record of the upstream versions hermes-odd supports. sha256 values hash the file content at pinned_commit (git show <commit>:<path> | shasum -a 256). Human triage of upstream changes lives in upstream/SUPPORTED.md.",
   "upstreams": {
     "gentle-ai": {
       "repo": "https://github.com/Gentleman-Programming/gentle-ai",
-      "supported_release": "v3.7.0",
-      "pinned_commit": "d96a5d4f021b09d048958b518f550e1d8d629700",
-      "commit_date": "2026-09-29T01:34:26+02:00",
-      "release_tag_commit": "6dee8f833aec9e46015759c5065a9035795d9af1",
-      "release_note": "No release after v3.7.0 yet: the pin is main at d96a5d4 (T14 re-pin, 39 commits after a9e36e9; triage in upstream/SUPPORTED.md). The range moves the Go module to /v4 (a9f1390d) and adds Conductor, Kimi, OpenCode, Codex, Antigravity and sync fixes; RenderRouting(model.AgentHermes) and every Hermes-managed SOUL block are byte-identical to a9e36e9. Earlier: SDD retired (e219644b), applicable test-first (55e3abf1), receipt-driven development limited to runtimes with a native review transport (5ffb65fc; Hermes gets ODD only). The v3.7.0 tag object points at 6dee8f8, not on the rewritten main history. The binary pins below stay 3.7.0 (the latest release).",
+      "supported_release": "v4.0.0",
+      "pinned_commit": "5140c5f55baf91763198eb0bfca019c015e3b015",
+      "commit_date": "2026-10-02T15:03:14+02:00",
+      "release_tag_commit": "ff77164d4f56f1665b22fb6fac51c2ccbb769400",
+      "release_note": "Supported release v4.0.0 (\"SDD Retires, ODD Leads, Module Path Moves to /v4\", tag ff77164d); the pin is main at 5140c5f5, 3 commits after the tag (T15 re-pin, 34 commits after d96a5d4; triage in upstream/SUPPORTED.md). Ported in T15: the evidence-budget delegation rules (991c3d06), the only change to RenderRouting(model.AgentHermes) and to the Hermes orchestrator asset; the Hermes-managed SOUL block names and markers are unchanged. Earlier: SDD retired (e219644b), applicable test-first (55e3abf1), receipt-driven development limited to runtimes with a native review transport (5ffb65fc; Hermes gets ODD only). The binary minimum stays 3.7.0 because hermes-odd only runs the `gentle-ai version` probe, whose output format v4.0.0 keeps; v4.0.0 is tested.",
       "binary": {
         "name": "gentle-ai",
         "min_version": "3.7.0",
-        "tested_version": "3.7.0",
+        "tested_version": "4.0.0",
         "used_for": "the read-only `gentle-ai version` probe of /odd-status and /odd-doctor; never `gentle-ai install` or `gentle-ai sync` for Hermes"
       }
     },
     "gentle-shell": {
       "repo": "https://github.com/Gentleman-Programming/gentle-shell",
-      "supported_release": "v3.7.0",
-      "pinned_commit": "4d2c3f5c7f11d3798c1115e34d08888bf46b314c",
-      "commit_date": "2026-09-28T21:02:58-03:00",
-      "release_tag_commit": "59257bff7023b44837cd4ff3edc3807f777be458",
-      "describe": "v3.7.0-276-g4d2c3f5",
-      "release_note": "Pinned 276 commits after the v3.7.0 tag (package.json still 3.7.0); T14 triaged the 68 commits after b756b4f in upstream/SUPPORTED.md (ported: the changes-view sanitizing concept, 69c9f665). gentle-pi 3.7.0 pins the gentle-ai 3.7.0 binary (scripts/gentle-ai-installer.mjs INSTALLER_VERSION).",
+      "supported_release": "v4.0.0",
+      "pinned_commit": "1f345106ff2931383451d4e05ec76d1259471884",
+      "commit_date": "2026-10-02T13:15:33-05:00",
+      "release_tag_commit": "1f35ab1e4ff78f41ce6102cd961e7889a9f1cf69",
+      "describe": "v4.0.0-6-g1f345106",
+      "release_note": "Pinned 6 commits after the v4.0.0 tag (package.json 4.0.0); T15 triaged the 90 commits after 4d2c3f5 in upstream/SUPPORTED.md (ported: the evidence budget 14bd2356, the project-root boundary e2d85a47 as guidance, the localized single-PR option 2843a599). gentle-pi 4.0.0 pins the gentle-ai 4.0.0 binary (scripts/gentle-ai-installer.mjs INSTALLER_VERSION).",
       "npm": {
         "package": "gentle-pi",
-        "version": "3.7.0"
+        "version": "4.0.0"
       }
     }
   },
@@ -35,7 +35,7 @@
     "odd": {
       "status": "ported",
       "description": "Compact always-on ODD prompt section and the lazy odd-* skills; canonical gentle-ai routing render for Hermes vendored for drift comparison.",
-      "port_notes": "T11: the default applicable test-first policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell a76e6f2/80375c6) replaces the configured TDD mode in the prompt section step 6, hermes-odd:odd-workflow section 6 and the odd-delegation mission template; the setup TDD choice is retired. From the ODD-only Hermes orchestrator (internal/assets/hermes/orchestrator.md with the (ODD only) shared sections, fb4b59a7/1ba7d888/5ffb65fc) hermes-odd ports, in its own words, the risk-proportionate Delegated Verification Gate (odd-delegation section 3), the checking rules (normalize before checks, one quick check, one scoped correction, needs-your-decision; odd-workflow section 6), one launch per distinct task and the parent-selected memory context. Not ported: the Provider Defect Handoff (removed for non-RDD runtimes), the plain-chat-only blocking prompt route (hermes-odd uses clarify, verified), the claim that children inherit no toolsets (verified wrong for current Hermes) and the ~/.hermes/skills skill-path scan (hermes-odd passes qualified skill_view names).",
+      "port_notes": "T11: the default applicable test-first policy (gentle-ai 55e3abf1/f2cecbae, gentle-shell a76e6f2/80375c6) replaces the configured TDD mode in the prompt section step 6, hermes-odd:odd-workflow section 6 and the odd-delegation mission template; the setup TDD choice is retired. From the ODD-only Hermes orchestrator (internal/assets/hermes/orchestrator.md with the (ODD only) shared sections, fb4b59a7/1ba7d888/5ffb65fc) hermes-odd ports, in its own words, the risk-proportionate Delegated Verification Gate (odd-delegation section 3), the checking rules (normalize before checks, one quick check, one scoped correction, needs-your-decision; odd-workflow section 6), one launch per distinct task and the parent-selected memory context. Not ported: the Provider Defect Handoff (removed for non-RDD runtimes), the plain-chat-only blocking prompt route (hermes-odd uses clarify, verified), the claim that children inherit no toolsets (verified wrong for current Hermes) and the ~/.hermes/skills skill-path scan (hermes-odd passes qualified skill_view names). T15: the evidence budget (gentle-ai 991c3d06, gentle-shell 14bd2356) replaces the 1-3 / 4+ file counts and the ~20 tool call backstop in the prompt section and hermes-odd:odd-workflow: one inline batch of at most 3 calls and ~10k tokens, a read-only explorer child returning at most ~2k tokens with path:line evidence, an advisory ~150k parent-context backstop and bounded shell output. The project-root boundary of gentle-shell e2d85a47 is stated as guidance (Hermes has no guard hook); a code review never replaces functional checks (8cc8eb03).",
       "local_files": [
         "hermes_odd/prompt.py",
         "skills/odd-workflow/SKILL.md",
@@ -47,27 +47,27 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/routing.go",
-          "sha256": "c0d27114eaaf44c1c2897e87beb12566e274ed6a8358f34204940f83937d215a"
+          "sha256": "3efa40adabe81e5857c3d7135be67c592eb4b5d3a8a69e04e361e0bd3fbb89f4"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/agents/capabilitymanifest/manifest.go",
-          "sha256": "d8dd0a89253264bcfe3214e3333ef7df5d4b3108f1761dccc64f9114b87a196f"
+          "sha256": "3f48622e25e00c59f24442930ebc5c66191e90f84157322a1fc0e2019e73090b"
         },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
+          "sha256": "92f760425c4d3b367ec62ec42f1c4ba1441f74ed1d72be42a7ed0f8af7314e05"
         },
         {
           "upstream": "gentle-shell",
           "path": "assets/orchestrator.md",
-          "sha256": "4584f3fbced98220b73a360a79c9c891b49b0c6e272a1bacbf44111a2ffa07f5"
+          "sha256": "126416168d326cee81a46349786f891e9dfc3ef4148e47d63127f4d715f91b0d"
         },
         {
           "upstream": "gentle-shell",
           "path": "assets/orchestrator-delegation.md",
-          "sha256": "25bf0147aee45b4d48607024d8bdb48d5c198380e5198f5067874738e9e49cba"
+          "sha256": "f6657fd94d50117cc2ebb8b512116183f1b1894abeea835542a7a6c10a77af83"
         },
         {
           "upstream": "gentle-shell",
@@ -87,12 +87,12 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/assets/skills/_shared/odd-orchestrator-sections.md",
-          "sha256": "2581e4e98be9e61cc4b8dd2f97c6d335474ea0ae151adc14de2f1c54c89f1464"
+          "sha256": "f75b016c2964bdf45d7f4f76cdeeaa401e1e7d26737370a96c00dd2481fa5508"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/assets/hermes/orchestrator.md",
-          "sha256": "af652859f9dffb72ce8373d0f94b956e8f5f8fa864db1fab9a1ee48a3c78412a"
+          "sha256": "0e9534bbffd3b5bc589473488995a48be71afadc314d880eace947f6014a72be"
         },
         {
           "upstream": "gentle-ai",
@@ -129,7 +129,7 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
+          "sha256": "92f760425c4d3b367ec62ec42f1c4ba1441f74ed1d72be42a7ed0f8af7314e05"
         },
         {
           "upstream": "gentle-shell",
@@ -139,7 +139,7 @@
         {
           "upstream": "gentle-shell",
           "path": "lib/native-review-cli.ts",
-          "sha256": "df4bb0bf0a3f1614fc953ba6c39889755de31614099bf290bc5579d02e3dfc9c"
+          "sha256": "539a8fb17eb30cefe7c781d4ec9da238e9c7ee64ff736dbafa7d5b8c4813d8f7"
         },
         {
           "upstream": "gentle-shell",
@@ -169,12 +169,12 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/agents/capabilitymanifest/manifest.go",
-          "sha256": "d8dd0a89253264bcfe3214e3333ef7df5d4b3108f1761dccc64f9114b87a196f"
+          "sha256": "3f48622e25e00c59f24442930ebc5c66191e90f84157322a1fc0e2019e73090b"
         },
         {
           "upstream": "gentle-ai",
           "path": "internal/cli/review_transport_capability.go",
-          "sha256": "a29372eca86edfe0c29520909fdd8b60e99ef807a0b797c33237dfa860df63d0"
+          "sha256": "3233fee5b40c7acdd25786716e7cf8722bf0e98553a8cf37edc002a1f379e3f1"
         },
         {
           "upstream": "gentle-ai",
@@ -244,7 +244,7 @@
         {
           "upstream": "gentle-shell",
           "path": "scripts/gentle-ai-installer.mjs",
-          "sha256": "3b897818fbf8aef7ef22c9c11c5f8a8118453fbcb67d69ea1c8cf7d608d20547"
+          "sha256": "bc2da0585026fa538f0c6ae0cf50463767c175b71d0dfdb582a88cbe894c84ca"
         }
       ]
     },
@@ -272,17 +272,17 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
+          "sha256": "92f760425c4d3b367ec62ec42f1c4ba1441f74ed1d72be42a7ed0f8af7314e05"
         },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-agents.ts",
-          "sha256": "ae4519a785297cce343c9e9d00e6070430c61343b9a502c032e8699176133388"
+          "sha256": "fd16d6545fe6aad31401adbea8265c2f931e4834ae7657fc2ff96cd879a36a19"
         },
         {
           "upstream": "gentle-shell",
           "path": "lib/agents-protocol.ts",
-          "sha256": "1ea31b7baa19c1a871fed80c4622106cd0f93b449b74b0ef265e9d90340f7c6c"
+          "sha256": "7472cd6e010ad6ac61d54ad13c0e45139b9e4004daa3b2a5e8a077689ddb89b9"
         },
         {
           "upstream": "gentle-shell",
@@ -292,22 +292,22 @@
         {
           "upstream": "gentle-shell",
           "path": "docs/gentle-agents-activity.md",
-          "sha256": "84e11467c4458b64a1995960d91a5f2d82a100cdd7932f281f7d9b79ffa26e9b"
+          "sha256": "cfff4dc1e9d9bacedd05d460666b12f1c2bd28501034e91b5e24a1c01e8a7dbe"
         },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-shell.ts",
-          "sha256": "1413f73b9b0e877f4dcf4ce1a6bcdfb7bc3795c18e8e8c137b9606da5ddaf0ef"
+          "sha256": "5f94322105e1d6ff031c0228cd06297a0b488dfb2f0bcd9842d68eb377a3f8ff"
         },
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-todo.ts",
-          "sha256": "db4bcc80b9e41a23a37285e4dd31de67a496a72fef16aa7711cd601daec0b25d"
+          "sha256": "fa19194017929a4682c0975781547b487cdf0b66e6448d1c39687deff96bb39b"
         },
         {
           "upstream": "gentle-shell",
           "path": "docs/gentle-shell.md",
-          "sha256": "64a9b65835c73b8380637fb6a7f2baeeb7d6784d2f1e9917b064de3571342226"
+          "sha256": "bc889d15de286779f82db60002fc2796a1d8222371faa968e314caf924368bcd"
         },
         {
           "upstream": "gentle-shell",
@@ -317,7 +317,7 @@
         {
           "upstream": "gentle-shell",
           "path": "lib/shell-todo.ts",
-          "sha256": "8d63626c564cdad7af151b60f17cf24242eecc10a6048df420af0b9e0dea6c36"
+          "sha256": "9e5a392e57d8e0b3308dbe4e1e5f7398ea1bce3674f6d04281f279d03a59401b"
         },
         {
           "upstream": "gentle-shell",
@@ -337,7 +337,7 @@
         {
           "upstream": "gentle-shell",
           "path": "README.md",
-          "sha256": "6c95a68fcdfb8f56399c917d97ab01340c22e6cd1632fa6c062d678a56cc1d7a"
+          "sha256": "4fce73f6a639b403a5fb82578eb1e88a70aeadc68450156cc2a4baf769745d53"
         }
       ]
     },
@@ -368,7 +368,7 @@
         {
           "upstream": "gentle-shell",
           "path": "extensions/gentle-ai.ts",
-          "sha256": "f8cc6f2a971c0324f58693c10109ffb172e29467d2133b4e2ca06e53956f12bb"
+          "sha256": "92f760425c4d3b367ec62ec42f1c4ba1441f74ed1d72be42a7ed0f8af7314e05"
         }
       ]
     },
@@ -398,7 +398,7 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/inject.go",
-          "sha256": "ecd9ad4ff6c10f57d3f8933a1c445830ef379fbfef65223a91487b49d29fac2e"
+          "sha256": "e38dbbf784a2678bf592d5df934e039a881fd8c274da791520b6aec4a65117b0"
         },
         {
           "upstream": "gentle-ai",
@@ -413,7 +413,7 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/orchestrator.go",
-          "sha256": "47b4232c59194835a927be1b1bf9daae61dc8348dbf75df531c785ea96d2968a"
+          "sha256": "2b49263d8157a53953c0e92176d31f6c520937bf6e4e5bbf472776cfe981e80a"
         }
       ]
     },
@@ -421,7 +421,7 @@
       "status": "ported",
       "tasks": ["T10"],
       "description": "Portable gentle-ai workflow skills rebuilt for Hermes: hermes-odd:judgment-day (blind dual review, advisory), hermes-odd:work-unit-commits (ODD commit closure) and hermes-odd:chained-pr (400-line review budget, delivery and chain strategies).",
-      "port_notes": "T10: behavior-only ports in hermes-odd's own words; no upstream skill text is copied. The upstream skill files declare `license: Apache-2.0` in their frontmatter while both upstream repositories are MIT-licensed (LICENSE), so hermes-odd carries over behavior only and credits the MIT notices (THIRD_PARTY_NOTICES.md). Bound to Hermes: delegate_task (two blind read-only judges, one bounded fixer), clarify (one question before any fix; the chain strategy), terminal (git, gh), skill_view with qualified hermes-odd:<name> names (bare same-named skills in ~/.hermes/skills may carry workflows hermes-odd does not ship). Judgment-day is advisory (no receipt, no delivery authority) and replaces the advisory 4R of rdd-review for its target; findings reuse the rdd-review-lenses block. The commit and delivery rules moved out of skills/odd-workflow section 7 so each rule lives in one skill (routing.go is the shared source). The gentle-shell copies (skills/judgment-day, skills/work-unit-commits, skills/chained-pr) are not indexed; the default-branch check of gentle-shell 4014403 is restated in chained-pr.",
+      "port_notes": "T10: behavior-only ports in hermes-odd's own words; no upstream skill text is copied. The upstream skill files declare `license: Apache-2.0` in their frontmatter while both upstream repositories are MIT-licensed (LICENSE), so hermes-odd carries over behavior only and credits the MIT notices (THIRD_PARTY_NOTICES.md). Bound to Hermes: delegate_task (two blind read-only judges, one bounded fixer), clarify (one question before any fix; the chain strategy), terminal (git, gh), skill_view with qualified hermes-odd:<name> names (bare same-named skills in ~/.hermes/skills may carry workflows hermes-odd does not ship). Judgment-day is advisory (no receipt, no delivery authority) and replaces the advisory 4R of rdd-review for its target; findings reuse the rdd-review-lenses block. The commit and delivery rules moved out of skills/odd-workflow section 7 so each rule lives in one skill (routing.go is the shared source). The gentle-shell copies (skills/judgment-day, skills/work-unit-commits, skills/chained-pr) are not indexed; the default-branch check of gentle-shell 4014403 is restated in chained-pr. T15: chained-pr asks the oversized delivery menu of gentle-shell 2843a599 (assets/orchestrator-delegation.md, indexed here): feature-branch chain, stacked PRs to the verified default branch, one single PR least recommended, in the user's language; size exceptions follow the destination repository's policy.",
       "local_files": [
         "skills/judgment-day/SKILL.md",
         "skills/work-unit-commits/SKILL.md",
@@ -456,7 +456,12 @@
         {
           "upstream": "gentle-ai",
           "path": "internal/components/agentguidance/routing.go",
-          "sha256": "c0d27114eaaf44c1c2897e87beb12566e274ed6a8358f34204940f83937d215a"
+          "sha256": "3efa40adabe81e5857c3d7135be67c592eb4b5d3a8a69e04e361e0bd3fbb89f4"
+        },
+        {
+          "upstream": "gentle-shell",
+          "path": "assets/orchestrator-delegation.md",
+          "sha256": "f6657fd94d50117cc2ebb8b512116183f1b1894abeea835542a7a6c10a77af83"
         }
       ]
     }

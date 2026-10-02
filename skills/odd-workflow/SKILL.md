@@ -10,10 +10,11 @@ metadata:
     category: workflow
     related_skills: [odd-feature-tracking, odd-delegation, work-unit-commits, chained-pr]
 ---
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/components/agentguidance/routing.go -->
-<!-- derived-from: gentle-shell@4d2c3f5c7f11d3798c1115e34d08888bf46b314c assets/orchestrator-delegation.md -->
-<!-- derived-from: gentle-shell@4d2c3f5c7f11d3798c1115e34d08888bf46b314c assets/orchestrator-skills.md -->
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/_shared/odd-orchestrator-sections.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/orchestrator.md -->
+<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/orchestrator-delegation.md -->
+<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/orchestrator-skills.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/skills/_shared/odd-orchestrator-sections.md -->
 
 # ODD workflow for Hermes
 
@@ -41,16 +42,27 @@ Formal SDD is not provided by this plugin.
 
 Research findings and automatic pace never authorize a mutation.
 
+**Project boundary.** Keep session work inside the project root and its
+registered worktrees of the same clone. Before any read or write
+outside the project root, ask once, naming the absolute path. Consent is
+per target and per session: a script in the project that names an outside
+path is not standing consent. Hermes has no guard that enforces this; it is the
+parent's rule, and missions to children stay inside the same boundary.
+
 ## 2. Routing ladder
 
 Every authorized change takes exactly one route:
 
-- **Direct inline:** decide or verify from 1–3 files; one mechanical,
+- **Direct inline:** decide or verify within the evidence budget: one
+  parallel batch of at most 3 calls and ~10k tokens of evidence, using
+  bounded searches and line ranges, never whole large files. Never force
+  delegation for a small targeted question; one mechanical,
   already-understood file change with no research and no open design
   decision; `git`/`gh` state commands.
-- **Delegated direct:** one narrow mapping child when understanding needs 4+
-  files; one writer child for 2+ non-trivial files. Reading that prepares a
-  write and broad research also delegate.
+- **Delegated direct:** one read-only explorer child when the evidence is
+  larger, needs ~5+ sequential lookups or long-session mapping; one writer
+  child for 2+ non-trivial files. Reading that prepares a write and broad
+  research also delegate.
 
 File count, size or perceived risk never force a heavier route. Tests,
 builds and installs may still use a fresh per-action child without changing
@@ -63,8 +75,11 @@ before continuing; executing past it inline is a routing defect even if the
 work succeeds. These are parent rules: never pass them to a child as
 permission to orchestrate.
 
-1. **Mapping (4-file rule):** understanding needs 4 or more files -> one
-   read-only mapping child before deciding or writing.
+1. **Mapping (evidence budget):** evidence beyond one inline batch (at most
+   3 calls, ~10k tokens), ~5+ sequential lookups or long-session mapping ->
+   one read-only explorer child before deciding or writing. It returns a
+   handoff of at most ~2k tokens with `path:line` evidence; the parent
+   spot-checks once and never rereads the whole mapped evidence.
 2. **Writer (multi-file write rule):** 2 or more non-trivial files -> one
    bounded writer child. A mechanical second-file edit does not fire it.
 3. **Preparation:** reading that prepares a write, broad research, or
@@ -73,10 +88,12 @@ permission to orchestrate.
    failed merge recovery, confusing test command or environment workaround ->
    stop writes, capture `git status`, diagnose separately, then apply only
    confirmed recovery steps.
-5. **Long session:** about 20 tool calls, 5 exploratory reads or 2
-   non-mechanical edits without delegation -> delegate the next unit.
-6. **Verification:** executing check commands beyond a 1–3 file read-only
-   check goes to a verifier child, unless the writer already ran them under
+5. **Long session:** at ~150k parent-context tokens, pause and delegate the
+   next bounded unit. The figure is advisory: Hermes does not measure or
+   enforce it, so never claim it was observed. Keep shell output in the
+   parent bounded to counts, `--stat`, `tail` or summaries.
+6. **Verification:** full suites, builds, and check commands beyond a
+   read-only check within the evidence budget go to a verifier child, unless the writer already ran them under
    `## Verification`; how much verification a change gets follows its risk
    tier (`hermes-odd:odd-delegation` section 3). The parent still re-runs one
    reported command as a spot check before claiming done.
@@ -172,11 +189,12 @@ same-named bare skill (those may carry workflows this plugin does not ship):
   commit, Conventional Commit messages, the commit id as evidence, the
   advisory ~400-line per-task heuristic and the running line count.
 - `hermes-odd:chained-pr`: the per-feature delivery strategy (`ask-on-risk`,
-  `auto-chain`, `single-pr`, `exception-ok`), the chain strategy
-  (`stacked-to-main`, `feature-branch-chain`), slice boundaries and the `gh`
-  commands.
+  `auto-chain`, `single-pr`, `exception-ok`), the oversized delivery menu
+  (`feature-branch-chain`, `stacked-to-main`, or one `single-pr`, least
+  recommended), slice boundaries and the `gh` commands.
 - `hermes-odd:advisory-review-lenses`: the optional 4R advisory review of
   one work-unit commit or PR slice, only on request; it carries no receipt.
+  A code review never replaces applicable tests, builds or functional checks.
 - `hermes-odd:judgment-day`: only when the user asks for a dual or
   adversarial review; advisory, no receipt.
 

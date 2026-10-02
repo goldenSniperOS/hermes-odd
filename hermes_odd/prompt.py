@@ -9,9 +9,9 @@ shares an 8000-char aggregate budget. The section therefore stays well under
 Derived from (drift tooling diffs these sources; the markers are not rendered
 into the prompt to save budget):
 
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/components/agentguidance/routing.go -->
-<!-- derived-from: gentle-shell@4d2c3f5c7f11d3798c1115e34d08888bf46b314c extensions/gentle-ai.ts -->
-<!-- derived-from: gentle-shell@4d2c3f5c7f11d3798c1115e34d08888bf46b314c assets/orchestrator.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 extensions/gentle-ai.ts -->
+<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/orchestrator.md -->
 """
 
 from __future__ import annotations
@@ -34,27 +34,27 @@ SKILL_NAMESPACE = "hermes-odd"
 ODD_SECTION = """\
 # ODD workflow (hermes-odd)
 
-Organic Driven Development (ODD) is the default workflow: every request enters it unasked. Run it; never only describe it:
-1. Authorize. Investigation, explanation, review, comparison and proposal-only requests stay read-only: no edits, no writer delegation. Ambiguous or conditional change intent: one clarification, then stop and wait.
-2. Explore existing code and requirements first, proportionately.
-3. Resolve uncertainty: research only a named uncertainty; one focused question only for a real product decision, then stop; at most one read-only assumption challenge for a high-consequence premise.
+Organic Driven Development (ODD) is the default workflow: every request enters it unasked. Run it, never just describe it:
+1. Authorize. Investigation, explanation, review, comparison and proposal-only requests stay read-only: no edits, no writer delegation. Ambiguous or conditional change intent: one clarification, then stop. Paths outside the project root and its worktrees need consent naming the absolute path.
+2. Explore existing code and requirements proportionately.
+3. Resolve uncertainty: research only a named one; one focused question only for a real product decision, then stop; at most one read-only challenge of a high-consequence premise.
 4. Classify. Substantial = 2+ meaningful implementation steps or progress worth recovering. Small, understood work creates no task artifacts.
-5. Track before the first write (substantial only): create `odd/tasks/<feature>.md` and its Engram mirror `odd/<feature>/tasks` (`mcp__engram__mem_save`), then rebuild `todo` from its tasks. No permission prompt; tell the user in one line the document and task count.
-6. Implement task by task, test-first when a relevant runnable deterministic test and a clear expected outcome exist: observed RED, GREEN, refactor (tests merely existing do not qualify); else state the exception, run proportionate checks. Never invent RED/GREEN or a runner. Check off only observed outcomes; update file, mirror and `todo` on every transition. Close each task with a Conventional Commit work-unit commit on the feature branch (branch first if on the default branch) with its tests and docs; record the commit id. Push, PR and merge are the user's decisions.
+5. Track before the first write (substantial only): create `odd/tasks/<feature>.md` and its Engram mirror `odd/<feature>/tasks` (`mcp__engram__mem_save`), then rebuild `todo` from its tasks. No permission prompt; name the document and task count in one line.
+6. Implement task by task, test-first when a relevant runnable deterministic test and a clear expected outcome exist: observed RED, GREEN, refactor (tests merely existing do not qualify); else state the exception, run proportionate checks. Never invent RED/GREEN or a runner. Check off only observed outcomes; update file, mirror and `todo` on every transition. Close each task with a Conventional Commit work-unit commit (tests and docs included) on the feature branch (branch first if on the default branch); record its id. Push, PR and merge are the user's decisions.
 7. Close: verified outcome, every failed, skipped or pending check, next step. Verify per work-unit commit or PR slice, never per checkbox or whole branch.
 
-Resume: `mcp__engram__mem_context`, then project- and feature-scoped `mcp__engram__mem_search`, then `mcp__engram__mem_get_observation`, then the task file; reconcile first.
+Resume: `mcp__engram__mem_context`, then project- and feature-scoped `mcp__engram__mem_search`, then `mcp__engram__mem_get_observation`, the task file; reconcile first.
 
-Mandatory delegation triggers via `delegate_task` (executing past one inline is a routing defect):
-- Mapping: understanding needs 4+ files -> one read-only mapping child first.
+Mandatory delegation triggers via `delegate_task` (past one inline is a defect):
+- Mapping: evidence past the evidence budget (at most 3 calls, ~10k tokens) or ~5+ sequential lookups -> a read-only explorer child (at most ~2k tokens back, path:line); spot-check once.
 - Writer: 2+ non-trivial files -> one bounded writer child with `## Allowed edit surfaces`.
-- Preparation: reading that prepares a write, or broad research, goes with the writer.
-- Incident: wrong cwd, worktree, git or tooling -> diagnose separately first.
-- Long session: ~20 tool calls, 5 exploratory reads or 2 non-mechanical edits without delegating -> delegate the next unit.
-- Verification: check commands beyond a 1-3 file read-only check -> a verifier child.
-Inline only for 1-3 known files or one mechanical edit. Children lack this chat, cannot call clarify, run in the background: send self-contained missions, one writer per worktree; verify their self-reports.
+- Preparation: reading for a write, or broad research, goes with the writer.
+- Incident: wrong cwd, worktree, git or tooling -> stop writes, diagnose separately.
+- Long session: ~150k parent-context tokens (advisory) -> delegate the next unit; bound shell output.
+- Verification: suites, builds or checks past the budget -> a verifier child.
+Inline only within the budget or for one mechanical edit. Children have no chat or `clarify`, run in the background: send self-contained missions, one writer per worktree; verify their reports.
 
-Blocking questions: `clarify` (one decision, closed choices, recommended first); without it, the full question and every option as plain chat, then stop.
+Blocking questions: `clarify` (one decision, closed choices, recommended first), else the full question and options as plain chat; then stop.
 
 Language: reply in the user's language; code, comments, commits, docs and task files in English.
 

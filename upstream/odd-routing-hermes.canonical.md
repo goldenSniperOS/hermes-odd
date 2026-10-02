@@ -1,11 +1,11 @@
 <!-- hermes-odd:managed-odd-routing-canonical
 source_repo: https://github.com/Gentleman-Programming/gentle-ai
 source_path: internal/components/agentguidance/routing.go
-source_commit: d96a5d4f021b09d048958b518f550e1d8d629700
+source_commit: 5140c5f55baf91763198eb0bfca019c015e3b015
 render: agentguidance.RenderRouting(model.AgentHermes)
 agent_id: hermes
-generated_at: 2026-09-29T03:10:00Z
-block_sha256: 8f0fd320f0f1d99e8fc1d2a17626eee04f360b7f38dcd2fe96b47787f08860d5
+generated_at: 2026-10-02T18:25:56Z
+block_sha256: 1382df7097327bcf97632cefc34dc033074394f965a8f5e84ee835fe30a9d94f
 note: vendored verbatim for drift tracking; hermes-odd ports its ODD behavior in its own words. Since 5ffb65fc the Hermes render carries no RDD clauses (model.SupportsReceiptDrivenDevelopment).
 -->
 ## Implementation Routing
@@ -28,8 +28,8 @@ Resume an interrupted feature with `mem_context`, then project- and feature-scop
 
 After explicit change intent is established, route work for the requested outcome with the smallest useful topology. Every authorized change takes exactly one implementation route: direct inline or delegated direct.
 
-- **Direct inline:** decide or verify from 1–3 files inline. Keep one mechanical, already-understood file change inline only when it needs no research and has no unresolved design decision.
-- **Delegated direct:** delegate one narrow exploration when understanding needs 4+ files; delegate one writer for 2+ non-trivial files. Reading that prepares a write and broad research also delegate.
+- **Direct inline:** decide or verify with one parallel batch (1 maximum), at most 3 calls and approximately 10k tokens of evidence. Use bounded search/line ranges, not whole large files. Keep one mechanical, already-understood file change inline only when it needs no research and has no unresolved design decision.
+- **Delegated direct:** larger evidence, more than approximately 5 sequential lookups, or long-session mapping require one read-only explorer; delegate one writer for 2+ non-trivial files. Reading that prepares a write and broad research also delegate.
 - File count, changed lines, size, or perceived risk alone never forces a heavier route.
 - These are implementation routes, not a ban on per-action delegation. Tests, builds, installs, and verification actors may still use fresh workers without changing the selected route.
 
@@ -37,10 +37,11 @@ After explicit change intent is established, route work for the requested outcom
 
 These triggers are mandatory, not advisory. When one fires, stop and delegate through the runtime's subagent mechanism before continuing; executing past a fired trigger inline is a routing defect even if the work succeeds. Delegation keeps the parent context thin enough to orchestrate; it does not slow the work down.
 
-- **Mapping trigger:** when understanding the work requires 4 or more files, delegate one narrow exploration or mapping task before deciding or writing anything.
+- **Mapping trigger:** when evidence exceeds the inline batch budget, needs more than approximately 5 sequential lookups, or involves long-session mapping, delegate one read-only explorer before deciding or writing anything. Return a handoff of at most approximately 2k tokens with path:line evidence; use one parent spot check (1 maximum). Do not reread the entire mapped evidence.
 - **Writer trigger:** when implementation touches 2 or more non-trivial files, delegate one bounded writer instead of editing them inline. A mechanical second-file edit does not fire this trigger solely because an earlier file was touched; count non-trivial files in the current work.
 - **Preparation trigger:** reading that prepares a write, and broad research or context compression, delegate together with or ahead of the write instead of filling the parent context.
-- **Long-session backstop:** after about 20 tool calls, 5 exploratory reads, or 2 non-mechanical edits without any delegation, pause and delegate the next bounded unit of work.
+- **Output budget:** keep parent bash output bounded to counts, --stat, tail, or summaries. Delegate full suites and builds and return concise observed results, including failures.
+- **Long-session backstop:** at approximately 150k parent-context tokens, pause and delegate the next bounded unit. This is advisory context guidance, not mechanically observed or enforced; do not claim runtime telemetry or enforcement.
 - **Route declaration:** for substantial work, record the chosen route per task (inline or delegated) and the trigger evidence in the feature document, so skipped delegation is observable instead of silent.
 - These triggers only choose between direct inline and delegated direct inside the organic flow.
 

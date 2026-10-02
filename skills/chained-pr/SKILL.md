@@ -10,9 +10,10 @@ metadata:
     category: workflow
     related_skills: [work-unit-commits, odd-feature-tracking, odd-workflow]
 ---
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/chained-pr/SKILL.md -->
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/chained-pr/references/chaining-details.md -->
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/skills/chained-pr/SKILL.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/skills/chained-pr/references/chaining-details.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/orchestrator-delegation.md -->
 
 # Chained PRs (400-line review budget)
 
@@ -40,25 +41,43 @@ generated files excluded) and the running count.
 
 | Strategy | Over the budget |
 |---|---|
-| `ask-on-risk` (default) | Ask once for a chain strategy before the next work-unit commit. |
-| `auto-chain` | Slice automatically; ask only when no chain strategy is cached. |
-| `single-pr` | Keep one PR and require a size exception; never ask for a chain. |
+| `ask-on-risk` (default) | Ask once with the oversized delivery menu before the next work-unit commit. |
+| `auto-chain` | Slice automatically; ask the menu only when no chain strategy is cached. |
+| `single-pr` | Keep one PR under the destination's size policy; never ask for a chain. |
 | `exception-ok` | Keep one PR and record the accepted size exception; never ask for a chain. |
 
 Under the budget every strategy keeps one focused PR.
 
-## 2. Chain strategy (asked once, then cached)
+## 2. Oversized delivery menu (asked once, then cached)
 
-Ask with `clarify`, one question, recommended first:
+When a choice is needed, ask with `clarify`, one question with exactly these
+three outcomes, in this order:
 
-1. **Stacked PRs to the default branch** (`stacked-to-main`): each slice can
-   land on its own, in order.
-2. **Feature-branch chain** (`feature-branch-chain`): nothing may land until
-   the whole feature is integrated.
+1. **Feature-branch chain** (`feature-branch-chain`): a tracker branch;
+   nothing lands until the whole feature is integrated.
+2. **Stacked PRs to the default branch** (`stacked-to-main`): each slice
+   lands on its own, in order. Verify the destination's default branch
+   first; never assume its name.
+3. **One single PR, least recommended** (`single-pr`): say why: one
+   oversized PR loads the reviewer, delays feedback and couples rollback.
 
-Without `clarify`, send the full question and both options as plain chat and
-stop. Record the answer in the feature document and never mix strategies
-within one feature.
+Write the question, every label, description and recommendation marker in
+the user's language; only the strategy tokens stay in English. Without
+`clarify`, send the full question and all three options as plain chat and
+stop.
+
+The third answer sets the feature's delivery strategy to `single-pr` and
+ends chaining: `single-pr` is not a chain strategy, so clear the pending
+chain choice and ask no more chain questions. Never switch to `exception-ok`
+on your own. A single PR needs no tracker, chain diagram or chain context;
+record its whole scope in the feature document instead of slice boundaries.
+"Least recommended" applies only to this oversized menu, never to a focused
+PR under the budget. Follow the destination repository's documented size
+or contribution policy; ask for a size label only when that policy uses
+one. Choosing a shape never authorizes push, PR creation or merge.
+
+Record the answer in the feature document and never mix strategies within
+one feature.
 
 | | Stacked to default branch | Feature-branch chain |
 |---|---|---|
@@ -73,7 +92,7 @@ within one feature.
   blank lines, docs or tests, no compressing or restyling to fit.
 - One honest slicing pass. If no cohesive split fits, keep the best one,
   report the real line count and why it cannot shrink, and recommend a size
-  exception (the repository's `size:exception` label or its equivalent).
+  exception in the form the destination repository's policy defines.
 - One deliverable work unit per PR; its tests and docs travel with it. Each
   slice is a whole number of work-unit commits.
 - Every PR states where it starts, what it delivers, what it depends on,

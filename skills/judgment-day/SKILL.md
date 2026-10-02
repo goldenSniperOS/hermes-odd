@@ -10,8 +10,8 @@ metadata:
     category: workflow
     related_skills: [advisory-review-lenses, odd-delegation, work-unit-commits]
 ---
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/judgment-day/SKILL.md -->
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/skills/judgment-day/references/prompts-and-formats.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/skills/judgment-day/SKILL.md -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/skills/judgment-day/references/prompts-and-formats.md -->
 
 # Judgment-Day: blind dual review (advisory)
 

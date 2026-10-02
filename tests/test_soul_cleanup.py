@@ -611,7 +611,7 @@ class SkillTests(unittest.TestCase):
         fm, _body = parse_frontmatter(text)
         self.assertEqual(fm["name"], "engram-protocol")
         self.assertIn(
-            "<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 "
+            "<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 "
             "internal/assets/engram/protocol.md -->",
             text,
         )

@@ -135,6 +135,13 @@ gateway.
       and why, pending) in SUPPORTED.md; port what applies to Hermes (ODD behavior,
       routing re-render, viewers, SOUL-cleanup block changes); re-pin the lock; drift
       script exits 0. Each work unit natively reviewed from Pi. Then v0.6.0.
+- [x] T15 Upstream sync to v4.0.0: gentle-ai d96a5d4 -> 5140c5f5 (34 commits), gentle-shell
+      4d2c3f5 -> 1f345106 (90 commits). Port the evidence-budget delegation (991c3d06 /
+      14bd2356), the project-root boundary as guidance (e2d85a47) and the localized
+      single-PR option of the oversized delivery menu (2843a599); re-render the Hermes
+      routing, re-pin, triage every commit. Confirm no breaking change (version probe
+      output, SOUL markers). Route: delegated read-only triage (two explorers over dumped
+      logs/diffs), inline writes per work unit.
 
 ## Acceptance criteria
 
@@ -162,6 +169,17 @@ gateway.
 
 ## Progress
 
+- 2026-10-02: T15 done in four work units, 402 tests OK, drift checker clean: c3a88d7
+  evidence budget + project-root boundary (prompt section 3788/3800, odd-workflow), acfe4a2
+  chained-pr oversized delivery menu with the single-PR option, 71c87af re-pin to
+  gentle-ai v4.0.0 5140c5f5 / gentle-shell v4.0.0 1f345106 (124 commits triaged, render
+  at the old pin byte-identical, 25 of 63 source hashes changed), e058b43 advisory-review
+  follow-up (jd-judge-a, no blocking findings; two wording warnings fixed). No breaking
+  change: `gentle-ai version` still prints `gentle-ai X.Y.Z` (v4.0.0 binary probed), SOUL
+  block names and markers unchanged; binary minimum kept at 3.7.0, tested 4.0.0.
+  Native review NOT run: this Pi session still runs the gentle-pi 3.7.0 extension in
+  memory, which looks for the removed v3.7.0 binary (package-local v4.0.0 is installed);
+  review agents refuse without a controller lineage. Push and release held for it.
 - 2026-09-29: T14 done in two natively reviewed work units (Pi, committed ranges via
   temporary worktrees), both approved and acknowledged: 1524f40 /odd-changes
   control-character neutralizing, concept of gentle-shell 69c9f665
@@ -276,4 +294,5 @@ gateway.
 
 ## Next step
 
-v0.6.0 release (T13 + T14), then a real CLI pty test and a Telegram check.
+Restart Pi (gentle-pi 4.0.0), run the native review over c3a88d7..e058b43, then push
+`main` and release v0.8.0 (T15).

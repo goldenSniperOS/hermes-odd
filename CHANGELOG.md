@@ -6,6 +6,28 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Delegation follows an evidence budget instead of file counts (gentle-ai
+  `991c3d06`, gentle-shell `14bd2356`): the parent reads inline only one
+  batch of at most 3 calls and ~10k tokens; larger evidence or ~5+
+  sequential lookups go to a read-only explorer child that returns at most
+  ~2k tokens with `path:line` evidence. The ~20 tool call backstop becomes an
+  advisory ~150k parent-context backstop, and shell output stays bounded.
+  Applies to the prompt section and `hermes-odd:odd-workflow`.
+- Reads and writes outside the project root and its worktrees need consent
+  naming the absolute path (guidance from gentle-shell `e2d85a47`; Hermes has
+  no guard hook).
+- `hermes-odd:chained-pr` asks one oversized delivery menu in the user's
+  language: feature-branch chain, stacked PRs to the verified default branch,
+  or one single PR (least recommended); size exceptions follow the
+  destination repository's policy (gentle-shell `2843a599`).
+- Upstream re-pin (T15): gentle-ai v4.0.0 (`5140c5f5`) and gentle-shell
+  v4.0.0 / npm `gentle-pi` 4.0.0 (`1f345106`); every commit is triaged in
+  `upstream/SUPPORTED.md`. No breaking change for hermes-odd: the
+  `gentle-ai version` output and the managed SOUL block names are unchanged.
+  The binary minimum stays 3.7.0; 4.0.0 is tested.
+
 ## [0.7.0] - 2026-10-01
 
 ### Added

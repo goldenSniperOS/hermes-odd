@@ -10,7 +10,7 @@ metadata:
     category: workflow
     related_skills: [odd-workflow, odd-delegation]
 ---
-<!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/components/communitytool/codegraph_guidance.go -->
+<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/components/communitytool/codegraph_guidance.go -->
 
 # CodeGraph (Hermes)
 

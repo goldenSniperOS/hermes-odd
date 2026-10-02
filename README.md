@@ -99,9 +99,9 @@ The canonical gentle-ai routing render for Hermes is vendored in
 
 ## Upstream compatibility
 
-hermes-odd supports **gentle-ai v3.7.0** (binary >= 3.7.0) and **gentle-shell
-v3.7.0** (npm `gentle-pi` 3.7.0), pinned to exact upstream commits (both on
-`main` after v3.7.0, since neither has a newer release) in
+hermes-odd supports **gentle-ai v4.0.0** (binary >= 3.7.0, tested 4.0.0) and
+**gentle-shell v4.0.0** (npm `gentle-pi` 4.0.0), pinned to exact upstream
+commits (both on `main` just after v4.0.0) in
 [`upstream/upstream.lock.json`](upstream/upstream.lock.json).
 [`upstream/SUPPORTED.md`](upstream/SUPPORTED.md) has the support matrix per
 component (ODD, review, viewers, persona, SOUL cleanup,

@@ -20,9 +20,9 @@ No upstream sentence is copied; the ``derived-from`` comments below are for
 drift tracking and are never rendered into the block.
 """
 
-# <!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/hermes/persona-gentleman.md -->  # noqa: E501
-# <!-- derived-from: gentle-ai@d96a5d4f021b09d048958b518f550e1d8d629700 internal/assets/hermes/persona-neutral.md -->  # noqa: E501
-# <!-- derived-from: gentle-shell@4d2c3f5c7f11d3798c1115e34d08888bf46b314c extensions/gentle-ai.ts -->  # noqa: E501
+# <!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/hermes/persona-gentleman.md -->  # noqa: E501
+# <!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/hermes/persona-neutral.md -->  # noqa: E501
+# <!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 extensions/gentle-ai.ts -->  # noqa: E501
 
 from __future__ import annotations
 

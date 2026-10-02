@@ -403,7 +403,7 @@ class LockAndHermesTests(unittest.TestCase):
         now = 1_790_000_000.0  # 2026-09-21T...
         check, data = check_lock(lambda: lock, now)
         self.assertIsNotNone(data)
-        self.assertIn("gentle-ai v3.7.0 @d96a5d4 · gentle-shell v3.7.0 @4d2c3f5", check.finding)
+        self.assertIn("gentle-ai v4.0.0 @5140c5f · gentle-shell v4.0.0 @1f34510", check.finding)
         check, _ = check_lock(lambda: lock, now + 90 * 86400)
         self.assertEqual(check.level, WARN)
         self.assertIn("upstream/SUPPORTED.md", check.hint)
@@ -549,7 +549,7 @@ class StatusTests(unittest.TestCase):
         self.assertIn("Changes (24 h): 2 files · +5 −≥1", text)
         self.assertIn("ODD features: 1 · 2 open tasks (1 project)", text)
         self.assertIn("gentle-ai: 3.7.0 ✓ min 3.7.0 (`~/go/bin/gentle-ai`)", text)
-        self.assertIn("Upstream: gentle-ai v3.7.0", text)
+        self.assertIn("Upstream: gentle-ai v4.0.0", text)
         self.assertIn("Problems? /odd-doctor", text)
         # T13: RDD lines removed from status
         self.assertNotIn("RDD:", text)

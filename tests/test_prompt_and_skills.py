@@ -75,9 +75,9 @@ class PromptSectionTests(unittest.TestCase):
             "mcp__engram__mem_get_observation",
             "odd/tasks/<feature>.md",
             "odd/<feature>/tasks",
-            "4+ files",
+            "evidence budget",
             "2+ non-trivial files",
-            "~20 tool calls",
+            "~150k",
         ]:
             self.assertIn(token, self.section)
         # T13: RDD references removed from the prompt section
@@ -187,6 +187,23 @@ class PortableSkillTests(unittest.TestCase):
             with self.subTest(skill=path.parent.name):
                 bare = [m.group(1) for m in BARE_REF_RE.finditer(body)]
                 self.assertEqual(bare, [], "reference hermes-odd:<name>, not a bare skill")
+
+    def test_oversized_delivery_menu_offers_a_single_pr_last(self) -> None:
+        # gentle-shell 2843a599: three ordered outcomes in the user's language,
+        # the single PR least recommended and outside the chain strategies.
+        text = (SKILLS_DIR / "chained-pr" / "SKILL.md").read_text(encoding="utf-8")
+        menu = text[text.index("## 2. Oversized delivery menu") :]
+        menu = menu[: menu.index("\n## 3.")]
+        order = [menu.index(f"(`{token}`)") for token in ("feature-branch-chain", "stacked-to-main", "single-pr")]
+        self.assertEqual(order, sorted(order))
+        for token in (
+            "least recommended",
+            "user's language",
+            "not a chain strategy",
+            "Never switch to `exception-ok`",
+            "destination repository's",
+        ):
+            self.assertIn(token, menu)
 
     def test_judgment_day_is_advisory_and_bounded(self) -> None:
         raw = (SKILLS_DIR / "judgment-day" / "SKILL.md").read_text(encoding="utf-8")
@@ -332,6 +349,37 @@ class CanonicalProvenanceTests(unittest.TestCase):
         self.assertIn("Test-first: applies, runner <exact command> | exception:", delegation)
         # T13: RDD review line removed from the prompt section
         self.assertNotIn("no native RDD review on Hermes", section)
+
+    def test_routing_uses_the_evidence_budget(self) -> None:
+        # gentle-ai 991c3d06 / gentle-shell 14bd2356: an evidence budget
+        # replaces the 1-3 / 4+ file counts and the tool-call backstop.
+        raw = (REPO_ROOT / "upstream" / "odd-routing-hermes.canonical.md").read_text(
+            encoding="utf-8"
+        )
+        body = raw.partition("\n-->\n")[2]
+        section = build_odd_section()
+        workflow = (SKILLS_DIR / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        for text in (body, section, workflow):
+            for token in ("at most 3 calls", "~10k tokens", "~2k tokens", "~150k"):
+                self.assertIn(token, text.replace("approximately ", "~"))
+            for gone in ("4+ files", "4 or more files", "20 tool calls", "1-3 known files", "1–3 files", "1-3 file"):
+                self.assertNotIn(gone, text)
+
+    def test_work_stays_inside_the_project_root(self) -> None:
+        # gentle-shell e2d85a47: work outside the project root needs explicit,
+        # per-target consent. Hermes has no guard hook, so this is guidance.
+        section = build_odd_section()
+        workflow = (SKILLS_DIR / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("outside the project root", section)
+        self.assertIn("absolute path", section)
+        for token in (
+            "outside the project root",
+            "absolute path",
+            "same clone",
+            "per target",
+            "not standing consent",
+        ):
+            self.assertIn(token, workflow)
 
 
 if __name__ == "__main__":
