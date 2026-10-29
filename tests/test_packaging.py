@@ -51,6 +51,15 @@ class VersionSurfaceTests(unittest.TestCase):
 
 
 class PyprojectTests(unittest.TestCase):
+    def test_dev_extra_admits_hermes_pinned_pytest(self) -> None:
+        # Hermes resolves enabled plugins' extras against its own pins (pytest
+        # 9.x since 2026.10); an upper bound below that makes `hermes plugins
+        # enable` refuse the plugin with a DependencyConflict.
+        dev = PYPROJECT["project"]["optional-dependencies"]["dev"]
+        pytest_spec = next(s for s in dev if s.startswith("pytest"))
+        upper = re.search(r"<\s*(\d+)", pytest_spec)
+        self.assertTrue(upper is None or int(upper.group(1)) >= 10, pytest_spec)
+
     def test_name_and_entry_point(self) -> None:
         project = PYPROJECT["project"]
         self.assertEqual(project["name"], "hermes-odd")
