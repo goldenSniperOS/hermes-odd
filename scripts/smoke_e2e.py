@@ -469,10 +469,10 @@ def run_tasks_viewer(manager, temp_home: Path, baseline_section: str) -> None:
     listing = command["handler"]("")
     check("demo-project (" in listing, "/odd-tasks lists the recorded project")
     check("1/2 demo" in listing, "/odd-tasks shows the demo feature progress")
-    check("next: T2 Show it in /odd-tasks" in listing, "/odd-tasks shows the next task")
+    check("next: T2 Show it in `/odd-tasks`" in listing, "/odd-tasks shows the next task")
     detail = command["handler"]("demo")
     check("✓ T1 Create the demo repository" in detail, "detail marks the done task")
-    check("○ T2 Show it in /odd-tasks  ← next" in detail, "detail marks the next task")
+    check("○ T2 Show it in `/odd-tasks`  ← next" in detail, "detail marks the next task")
     check("Next step: T2 show it." in detail, "detail shows the next step")
     print("---- /odd-tasks output ----")
     print(listing)
@@ -570,11 +570,11 @@ def run_changes_viewer(manager, temp_home: Path) -> None:
     listing = command["handler"]("")
     check("changes-project (" in listing, "/odd-changes groups by the git project")
     check(
-        "+3 −?  src/notes.txt  (1 edit · by main" in listing,
+        "+3 −?  `src/notes.txt`  (1 edit · by main" in listing,
         "/odd-changes lists the write_file with +3 −? (overwrite)",
     )
     check(
-        "+2 −1  src/app.py  (1 edit · by sa-5e0e5e0e" in listing,
+        "+2 −1  `src/app.py`  (1 edit · by sa-5e0e5e0e" in listing,
         "/odd-changes lists the subagent patch with +2 −1",
     )
     check("missing.py" not in listing, "a failed patch leaves no row")
@@ -692,7 +692,7 @@ def run_soul_cleanup(manager, temp_home: Path, loaded) -> None:
     command = manager._plugin_commands.get("odd-soul")
     check(command is not None, "/odd-soul is registered")
     listing = manager._plugin_commands[COMMAND_KEY]["handler"]("")
-    check("- /odd-soul" in listing, "/odd-commands lists /odd-soul")
+    check("- `/odd-soul`" in listing, "/odd-commands lists /odd-soul")
     check("odd_soul_apply" in loaded.manifest.provides_tools, "manifest lists odd_soul_apply")
     check("odd_soul_apply" in manager._plugin_tool_names, "odd_soul_apply is a plugin tool")
 
@@ -738,7 +738,7 @@ def run_soul_cleanup(manager, temp_home: Path, loaded) -> None:
     check("nothing to do" in again, "second apply is a no-op")
 
     listing = command["handler"]("restore")
-    check("1. SOUL.md.hermes-odd-bak-" in listing, "/odd-soul restore lists the backup")
+    check("1. `SOUL.md.hermes-odd-bak-" in listing, "/odd-soul restore lists the backup")
     restored = command["handler"]("restore 1")
     check("SOUL.md restored from" in restored, "/odd-soul restore 1 restores")
     check(soul.read_text(encoding="utf-8") == CLEANUP_SOUL, "restore round-trips the original")
@@ -758,13 +758,16 @@ def install_gate() -> None:
     blocks any "dangerous" plugin_guard verdict (one critical finding, tests
     included). Scan a copy of the tracked files, which is what a clone holds.
     """
-    from hermes_cli import plugins_cmd
     from tools.plugin_guard import scan_plugin
+
+    try:  # Hermes moved the constant out of plugins_cmd (2026.10)
+        from hermes_cli.plugins_manifest import SUPPORTED_MANIFEST_VERSION as supported
+    except ImportError:
+        from hermes_cli.plugins_cmd import _SUPPORTED_MANIFEST_VERSION as supported
 
     manifest = (REPO / "plugin.yaml").read_text(encoding="utf-8")
     match = re.search(r"(?m)^manifest_version:\s*(\d+)\s*$", manifest)
     check(match is not None, "plugin.yaml declares manifest_version")
-    supported = plugins_cmd._SUPPORTED_MANIFEST_VERSION
     check(int(match.group(1)) <= supported, f"manifest_version <= installer's {supported}")
 
     listed = subprocess.run(
