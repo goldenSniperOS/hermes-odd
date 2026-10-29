@@ -97,16 +97,78 @@ class PromptSectionTests(unittest.TestCase):
         self.assertEqual(PENDING_SKILLS & shipped_skill_names(), set())
 
 
+def flat(text: str) -> str:
+    """Collapse whitespace so phrases match across Markdown line wraps."""
+    return " ".join(text.split())
+
+
+def recall_section(skill: str) -> str:
+    """A skill's ``## With the recall provider`` section, flattened, or ``""``."""
+    text = (SKILLS_DIR / skill / "SKILL.md").read_text(encoding="utf-8")
+    _head, sep, section = text.partition("## With the recall provider")
+    return flat(section.split("\n## ", 1)[0]) if sep else ""
+
+
 class SkillFileTests(unittest.TestCase):
     def test_engram_protocol_covers_the_recall_provider(self) -> None:
-        text = (SKILLS_DIR / "engram-protocol" / "SKILL.md").read_text(encoding="utf-8")
-        _head, _sep, section = text.partition("## With the recall provider")
-        section = section.split("\n## ", 1)[0]
+        section = recall_section("engram-protocol")
         self.assertTrue(section)
-        for phrase in ("automatic", "plain `mem_*` tools", "topic keys", "prefer the provider"):
+        for phrase in (
+            "automatic",
+            "plain `mem_*` tools",
+            "topic keys",
+            "prefer the provider",
+            # hermes-recall v0.5.0: session and project are injected, Engram v3
+            # mem_update needs the owning project, finalize closes the session.
+            "injects the session id and project",
+            "`mem_update`",
+            "`expected_project`",
+            "`mem_get_observation`",
+            "`mem_session_finalize`",
+        ):
             self.assertIn(phrase, section)
-        # hermes-recall covers the whole Engram tool set: no enumerated names.
-        self.assertNotRegex(section, r"`mem_[a-z]")
+        self.assertNotIn("mcp__engram__", section.replace("`mcp__engram__` prefix", ""))
+
+    def test_engram_protocol_names_expected_project_for_mem_update(self) -> None:
+        text = (SKILLS_DIR / "engram-protocol" / "SKILL.md").read_text(encoding="utf-8")
+        row_start = "| `mcp__engram__mem_update`"
+        table_row = next(ln for ln in text.splitlines() if ln.startswith(row_start))
+        self.assertIn("`expected_project`", table_row)
+        topic_keys = text[text.index("## Topic keys") :].split("\n## ", 1)[0]
+        self.assertIn("`expected_project`", topic_keys)
+
+    def test_feature_tracking_covers_the_recall_provider(self) -> None:
+        text = flat((SKILLS_DIR / "odd-feature-tracking" / "SKILL.md").read_text(encoding="utf-8"))
+        section = recall_section("odd-feature-tracking")
+        self.assertTrue(section)
+        for phrase in (
+            "plain `mem_*`",
+            "`mem_save`",
+            "`mem_search`",
+            "`mem_get_observation`",
+            "`mem_context`",
+            "`mem_update`",
+            "`expected_project`",
+            "`mem_review`",
+            "injects the session and project",
+            "mirror pending",
+        ):
+            self.assertIn(phrase, section)
+        # The MCP binding stays for setups without recall.
+        self.assertIn("`mcp__engram__mem_save`", text)
+        self.assertIn("`mcp__engram__mem_update` — `id`, `expected_project`", text)
+
+    def test_delegation_routes_child_memory_through_the_parent_with_recall(self) -> None:
+        text = flat((SKILLS_DIR / "odd-delegation" / "SKILL.md").read_text(encoding="utf-8"))
+        for phrase in (
+            "With the recall provider",
+            "refuses writes outside the primary agent",
+            "final summary",
+            "the parent saves them with `mem_save`",
+        ):
+            self.assertIn(phrase, text)
+        # The MCP instruction stays for setups where the tools reach the child.
+        self.assertIn("`mcp__engram__mem_save`", text)
 
     def test_no_skill_claims_rdd_on_hermes(self) -> None:
         """T13: upstream excludes Hermes from RDD; skills only offer advisory review."""

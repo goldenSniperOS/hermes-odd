@@ -368,7 +368,8 @@ form (buttons on Telegram):
    question is asked as free text with the four options listed.
 2. **Answer style** — short first, or detailed.
 3. **Engram memory protocol** — auto (a prompt line points to
-   `hermes-odd:engram-protocol` when `mcp__engram__*` tools exist) or off.
+   `hermes-odd:engram-protocol` when `mcp__engram__*` tools or the recall
+   provider's `mem_*` tools exist) or off.
 4. **SOUL cleanup of gentle-ai blocks** — yes (the agent shows the dry-run
    plan through the `odd_soul_apply` tool and applies it only after your
    explicit yes), later (`/odd-soul` whenever you want), or no.

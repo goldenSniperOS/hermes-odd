@@ -48,6 +48,11 @@ bounded unit and never orchestrate.
   do not search it. When `mcp__engram__*` tools reach the child, ask it to
   save significant discoveries, decisions or fixes with
   `mcp__engram__mem_save` (project `<name>`) before returning.
+- With the recall provider (Hermes memory provider `recall`), children can
+  only read memory: recall refuses writes outside the primary agent. Ask the
+  child to return significant discoveries, decisions and fixes in its final
+  summary (the Key Learnings block); the parent saves them with `mem_save`
+  after verifying them.
 
 ### Mission template
 

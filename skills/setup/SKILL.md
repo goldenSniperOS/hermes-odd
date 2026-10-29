@@ -60,7 +60,7 @@ dry-run plan, and nothing is written without a second, explicit yes.
     },
     {
       "question": "Engram memory protocol?",
-      "choices": ["Auto (when mcp__engram__* tools exist)", "Off"]
+      "choices": ["Auto (when mcp__engram__* or recall mem_* tools exist)", "Off"]
     },
     {
       "question": "Clean the gentle-ai blocks out of SOUL.md (dry-run plan first, backup, your yes before writing)?",

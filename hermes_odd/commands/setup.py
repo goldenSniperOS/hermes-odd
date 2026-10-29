@@ -53,7 +53,7 @@ def _value_label(key: str, value: str) -> str:
     if key == "persona":
         return personas.LABELS.get(value, value)
     if key == "engram_protocol" and value == "auto":
-        return "auto (when mcp__engram__* tools exist)"
+        return "auto (when mcp__engram__* or recall mem_* tools exist)"
     if key == "codegraph_guidance" and value == "auto":
         return "auto (when CodeGraph is on PATH or configured)"
     return value

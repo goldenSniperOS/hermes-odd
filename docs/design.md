@@ -664,7 +664,10 @@ provider's tools. Without it, `/odd-doctor` probes Engram `/health` when an
 Engram MCP server is configured; `/odd-status` never probes. The prompt's
 memory pointer switches to its recall variant while the provider is active,
 and the `hermes-odd:engram-protocol` skill has a "With the recall provider"
-section.
+section. `hermes-odd:odd-feature-tracking` and `hermes-odd:odd-delegation`
+have one too: the provider's tools are plain `mem_*` names, it injects the
+session and project, and it refuses writes outside the primary agent, so
+children return discoveries for the parent to save.
 
 ### Privacy and limits
 

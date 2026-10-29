@@ -28,6 +28,21 @@ and the project uses [Semantic Versioning](https://semver.org/).
   `gentle-ai version` output and the managed SOUL block names are unchanged.
   The binary minimum stays 3.7.0; 4.0.0 is tested.
 
+### Fixed
+
+- Skills follow hermes-recall v0.5.0, whose `recall` provider exposes
+  Engram's agent tools as plain `mem_*` tools (no Engram MCP server):
+  `hermes-odd:odd-feature-tracking` gains a "With the recall provider"
+  section (mirror and resume use `mem_*`; the mirror is pending only when
+  neither `mcp__engram__*` nor recall's tools exist);
+  `hermes-odd:odd-delegation` has children return discoveries in their
+  final summary for the parent to save, since recall refuses child writes;
+  `hermes-odd:engram-protocol` notes that recall injects the session and
+  project, that `mem_update` needs `expected_project`, and that
+  `mem_session_finalize` closes the session.
+- The setup's Engram option reads "auto (when mcp__engram__* or recall
+  mem_* tools exist)".
+
 ## [0.7.0] - 2026-10-01
 
 ### Added

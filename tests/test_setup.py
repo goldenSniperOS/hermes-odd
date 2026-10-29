@@ -453,6 +453,12 @@ class ToolSchemaTests(unittest.TestCase):
             self.assertNotIn("unset", props[key]["enum"])
         json.dumps(TOOL_SCHEMA)  # serializable
 
+    def test_engram_auto_wording_covers_the_recall_provider(self) -> None:
+        description = TOOL_SCHEMA["parameters"]["properties"]["engram_protocol"]["description"]
+        self.assertIn("auto (when mcp__engram__* or recall mem_* tools exist)", description)
+        skill = SKILL.read_text(encoding="utf-8")
+        self.assertIn('"Auto (when mcp__engram__* or recall mem_* tools exist)"', skill)
+
     def test_register_adds_the_tool(self) -> None:
         ctx = FakeContext()
         register(ctx)
@@ -678,7 +684,8 @@ class CommandTests(HomeCase):
         for token in (
             "Persona: not chosen · default · SOUL.md",
             "Answer style: short · default · inside the SOUL.md persona block",
-            "Engram protocol: auto (when mcp__engram__* tools exist) · default · prompt section",
+            "Engram protocol: auto (when mcp__engram__* or recall mem_* tools exist) · default"
+            " · prompt section",
             "CodeGraph guidance: auto (when CodeGraph is on PATH or configured) · default",
             "/odd-soul",
             "a gentle-ai persona block coexists",

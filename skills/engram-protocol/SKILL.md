@@ -33,7 +33,7 @@ substitute it):
 | `mcp__engram__mem_search` | keyword search (`query`, `project`, `type`, `match_mode`, `all_projects`, `limit`) |
 | `mcp__engram__mem_get_observation` | full, untruncated content of one result (`id`) |
 | `mcp__engram__mem_save` | save one observation (see the format below) |
-| `mcp__engram__mem_update` | fix a known observation by `id` |
+| `mcp__engram__mem_update` | fix a known observation by `id` and `expected_project` (its owning project) |
 | `mcp__engram__mem_suggest_topic_key` | ask for a stable key when unsure |
 | `mcp__engram__mem_review` | lifecycle review, when the server has it |
 | `mcp__engram__mem_session_summary` | end-of-session summary |
@@ -51,6 +51,13 @@ provider's plain `mem_*` tools (same names without the `mcp__engram__`
 prefix). Everything below still applies: save decisions and discoveries
 with What/Why/Where/Learned, reuse topic keys, write the session summary.
 If the Engram MCP server is also configured, prefer the provider's tools.
+
+Recall injects the session id and project: never pass a session id or
+register a session yourself. `mem_update` needs `expected_project`, the
+project that owns the observation; read it with `mem_get_observation`
+first. When the user ends or hands off the session, write the summary,
+then call `mem_session_finalize` to close it. Subagents, cron jobs and
+flushes can only read: recall refuses their writes.
 
 ## Session start
 
@@ -107,7 +114,9 @@ Never save secrets, credentials, tokens, private keys or personal data.
 - Different topics never overwrite each other: give each its own key.
 - The same topic evolving reuses its `topic_key` (the save upserts).
 - Unsure about the key: call `mcp__engram__mem_suggest_topic_key` first.
-- Correcting one known observation: `mcp__engram__mem_update` with its `id`.
+- Correcting one known observation: `mcp__engram__mem_update` with its `id`
+  and `expected_project` (the project that owns it, from
+  `mem_get_observation`).
 
 ## Search before asking
 

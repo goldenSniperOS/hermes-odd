@@ -74,7 +74,7 @@ SCHEMA: dict[str, Any] = {
             "engram_protocol": {
                 "type": "string",
                 "enum": list(INPUT_VALUES["engram_protocol"]),
-                "description": "auto (when mcp__engram__* tools exist) or off.",
+                "description": "auto (when mcp__engram__* or recall mem_* tools exist) or off.",
             },
             "soul_cleanup": {
                 "type": "string",

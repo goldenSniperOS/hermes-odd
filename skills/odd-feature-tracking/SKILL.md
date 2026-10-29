@@ -37,12 +37,25 @@ server configured as `engram`:
   `all_projects`, `limit`.
 - `mcp__engram__mem_get_observation` — `id`; returns the full content.
 - `mcp__engram__mem_context` — recent project context.
-- `mcp__engram__mem_update` — `id` plus changed fields.
+- `mcp__engram__mem_update` — `id`, `expected_project` (the project that
+  owns the observation) plus changed fields.
 - `mcp__engram__mem_review` — lifecycle review, when present.
 
-If the server has another name, substitute it. If no Engram tool is callable,
-say so and mark the mirror pending; never claim persistence. Hermes' built-in
-`memory` tool (MEMORY.md) is not the feature mirror.
+If the server has another name, substitute it. Hermes' built-in `memory`
+tool (MEMORY.md) is not the feature mirror.
+
+## With the recall provider
+
+When Hermes' memory provider is `recall` (the hermes-recall plugin), the
+Engram tools are the provider's plain `mem_*` names, without the
+`mcp__engram__` prefix. The mirror and resume steps below use `mem_save`,
+`mem_search`, `mem_get_observation`, `mem_context`, `mem_update` (with
+`expected_project`; read it with `mem_get_observation` first) and
+`mem_review`. Recall injects the session and project; never pass a session
+id. Recall refuses writes from children, so the parent writes the mirror.
+
+Only when neither `mcp__engram__*` nor recall's `mem_*` tools are callable,
+say so and mark the mirror pending; never claim persistence.
 
 ## When to create it
 
