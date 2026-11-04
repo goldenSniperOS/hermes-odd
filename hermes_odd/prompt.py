@@ -34,27 +34,26 @@ SKILL_NAMESPACE = "hermes-odd"
 ODD_SECTION = """\
 # ODD workflow (hermes-odd)
 
-Organic Driven Development (ODD) is the default workflow: every request enters it unasked. Run it, never just describe it:
-1. Authorize. Investigation, explanation, review, comparison and proposal-only requests stay read-only: no edits, no writer delegation. Ambiguous or conditional change intent: one clarification, then stop. Paths outside the project root and its worktrees need consent naming the absolute path.
+Organic Driven Development (ODD) runs on every request, unasked; run it, never just describe it:
+1. Authorize. Investigation, review, comparison and proposal-only requests stay read-only. Ambiguous or conditional change intent: one clarification, then stop. Paths outside the project root need consent naming the absolute path.
 2. Explore existing code and requirements proportionately.
 3. Resolve uncertainty: research only a named one; one focused question only for a real product decision, then stop; at most one read-only challenge of a high-consequence premise.
 4. Classify. Substantial = 2+ meaningful implementation steps or progress worth recovering. Small, understood work creates no task artifacts.
-5. Track before the first write (substantial only): create `odd/tasks/<feature>.md` and its Engram mirror `odd/<feature>/tasks` (`mcp__engram__mem_save`), then rebuild `todo` from its tasks. No permission prompt; name the document and task count in one line.
-6. Implement task by task, test-first when a relevant runnable deterministic test and a clear expected outcome exist: observed RED, GREEN, refactor (tests merely existing do not qualify); else state the exception, run proportionate checks. Never invent RED/GREEN or a runner. Check off only observed outcomes; update file, mirror and `todo` on every transition. Close each task with a Conventional Commit work-unit commit (tests and docs included) on the feature branch (branch first if on the default branch); record its id. Push, PR and merge are the user's decisions.
-7. Close: verified outcome, every failed, skipped or pending check, next step. Verify per work-unit commit or PR slice, never per checkbox or whole branch.
+5. Track before the first write (substantial only): create `odd/tasks/<feature>.md` and its Engram mirror `odd/<feature>/tasks` (`mcp__engram__mem_save`), then rebuild `todo` from its tasks. Unasked; name the document and task count.
+6. Implement task by task, test-first when a relevant runnable deterministic test and a clear expected outcome exist: observed RED, GREEN, refactor (tests merely existing do not qualify); else state the exception, run proportionate checks. Never invent RED/GREEN or a runner. Check off only observed outcomes; update file, mirror and `todo` on every transition. Commit each task as a work unit on the feature branch; record its id. Push, PR and merge are the user's.
+7. Close: verified outcome, every failed, skipped or pending check, next step. Verify per work-unit commit or PR slice, never per checkbox.
 
 Resume: `mcp__engram__mem_context`, then project- and feature-scoped `mcp__engram__mem_search`, then `mcp__engram__mem_get_observation`, the task file; reconcile first.
 
-Mandatory delegation triggers via `delegate_task` (past one inline is a defect):
-- Mapping: evidence past the evidence budget (at most 3 calls, ~10k tokens) or ~5+ sequential lookups -> a read-only explorer child (at most ~2k tokens back, path:line); spot-check once.
-- Writer: 2+ non-trivial files -> one bounded writer child with `## Allowed edit surfaces`.
-- Preparation: reading for a write, or broad research, goes with the writer.
-- Incident: wrong cwd, worktree, git or tooling -> stop writes, diagnose separately.
-- Long session: ~150k parent-context tokens (advisory) -> delegate the next unit; bound shell output.
-- Verification: suites, builds or checks past the budget -> a verifier child.
-Inline only within the budget or for one mechanical edit. Children have no chat or `clarify`, run in the background: send self-contained missions, one writer per worktree; verify their reports.
+Delegation triggers (`delegate_task`): no trigger holds by default; in doubt, work inline. Once one truly holds, delegate:
+- Mapping: past the evidence budget (at most 3 calls, ~10k tokens) or ~5+ sequential lookups -> a read-only explorer child (~2k tokens back, path:line); spot-check once.
+- Writer, only for a named reason: 2+ independent units (code+tests+docs), disjoint surfaces, ~100+ changed lines each, launched together, or the long-session backstop; never task size or file count. One writer per unit, with `## Allowed edit surfaces`.
+- Incident: wrong cwd, worktree, git or tooling -> stop writes, diagnose apart.
+- Long session: ~150k context tokens (advisory) -> delegate the next unit; bound shell output.
+- Verification: only a change that names a high-risk item gets an independent verifier child; else focused test and suite inline. High risk: (1) data or effects that cannot be rebuilt, (2) security, (3) changing consumed contracts, (4) concurrency, (5) delivery or CI, (6) no test catches a regression.
+Close code changes with `Risk: item N (reason)` or `Risk: none`. Children have no chat: send self-contained missions; verify reports.
 
-Blocking questions: `clarify` (one decision, closed choices, recommended first), else the full question and options as plain chat; then stop.
+Blocking questions: `clarify` (one decision, closed choices, recommended first), else plain chat; then stop.
 
 Language: reply in the user's language; code, comments, commits, docs and task files in English.
 

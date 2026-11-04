@@ -113,19 +113,43 @@ change must touch plus directories where new files are authorized.
   `hermes-odd:odd-workflow`. Relay a writer's `interaction_required`
   about surfaces the same way.
 
-## 3. Verifying a writer (risk-proportionate)
+## 3. Verifying a change (risk-proportionate)
 
-Judge the tier from what the change touches; an unclear tier is high.
+Judge the tier from what the change touches. A change is **high risk**
+when a mistake would be hard to detect, hard to undo, or reaches beyond the
+change; it touches:
+
+1. data or irreversible effects that cannot be rebuilt: migrations,
+   changing or deleting existing stored data, persisted format changes (not
+   saving new records, nor a dev or test database a seed or backup
+   rebuilds);
+2. security: auth, permissions, credentials, secrets, guards, sandbox;
+3. contracts others consume: changing or removing a public API, CLI flags,
+   config formats, published exports, or mirrored prompts others already
+   consume (not adding a flag, command or optional field; requested changes
+   are not high risk by themselves, unrequested breaks in shared code are);
+4. concurrency: locks, races, async ordering;
+5. delivery or environment: installers, release, CI, deploy, dependencies;
+6. no test would catch a regression in what changes.
+
+Count "unclear" as high only when a bounded look cannot tell whether items
+1-5 apply.
 
 | Tier | What it covers | Verification |
 |---|---|---|
 | Passive | documentation, images, comments with no executable effect | structural readback only |
-| Medium | an ordinary behavior change covered by focused tests | the writer runs `## Verification` in the foreground and reports `<command>: <observed result>`; add a verifier child only when the writer ran on a small or low-effort model |
-| High or unclear | security, credentials, data loss, concurrency, migrations, installers, public contracts, anything unclear | writer self-verification plus an independent read-only verifier child that re-runs the commands and reads the diff without the writer's context |
+| Medium | an ordinary behavior change covered by focused tests | whoever made the change runs its focused test and suite (a writer runs `## Verification` in the foreground and reports `<command>: <observed result>`); no separate verifier, whatever model wrote it |
+| High | only when the parent names the high-risk item the change touches | that self-verification plus an independent read-only verifier child that re-runs the commands and reads the diff without the writer's context |
 
-- A small or low-effort writer model raises the tier by one.
+- The verifier runs only for a named item: never for task size, an unclear
+  change, or the model or effort that wrote it. An unclear change keeps
+  self-verification until the parent names the item that applies.
+- When several deliveries of one feature were written inline, run one
+  verifier at the feature's end; verify per unit only when that unit names
+  a high-risk item.
+- Verifier blockers get one correction batch and one recheck limited to
+  them; blockers still open become one **Needs your decision** result.
 - The parent spot check (re-run one reported command before delivery) stays
   in every tier.
-- Record per task the tier applied and the checks observed. Never assume low
-  risk without evidence; a verifier that cannot run is reported as
-  unavailable, never as a pass.
+- Record per task the tier applied and the checks observed. A verifier that
+  cannot run is reported as unavailable, never as a pass.

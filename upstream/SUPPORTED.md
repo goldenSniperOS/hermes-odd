@@ -28,6 +28,16 @@ Notes:
   markers are unchanged, and only the evidence-budget rules change the
   Hermes routing render. The binary minimum stays 3.7.0 because hermes-odd
   only runs the version probe; 4.0.0 is tested.
+- **Unpinned port from v4.3.1 (2026-11-03).** The conditional delegation
+  triggers of gentle-ai v4.2.0, as the v4.3.1 Hermes orchestrator and
+  routing render state them, are ported ahead of a full re-pin: no trigger
+  holds by default; a writer only for a named reason (2+ independent units
+  of ~100+ changed lines launched together, or the long-session backstop);
+  an independent verifier only for a named high-risk item, item 1 limited to
+  data that cannot be rebuilt. Pins, hashes and the canonical render stay at
+  v4.0.0 until a re-pin triages every commit. Review lenses and the 1.3/1.4
+  review contract are RDD (not applicable since `5ffb65fc`); the Gentle Shell
+  installer and the Copilot adapter are gentle-pi only.
 - **gentle-ai tag vs history.** The `v3.7.0` tag points at `6dee8f8`, which is
   not on gentle-ai's current `main` (its history was rewritten to drop the
   `.engram/` directory); `f182ea2` (the pin until T11) is its main-history

@@ -51,54 +51,53 @@ parent's rule, and missions to children stay inside the same boundary.
 
 ## 2. Routing ladder
 
-Every authorized change takes exactly one route:
+Every authorized change takes one route. **Direct inline** is the default,
+for small work and for tracked work with no writer reason: decide or verify
+within the evidence budget (one parallel batch of at most 3 calls and ~10k
+tokens, bounded searches and line ranges); one understood change stays
+inline even across files, and its focused test and suite run inline once
+each. **Delegated direct** applies only when a trigger below truly holds.
+File count, task size or perceived risk alone never force it; tests,
+builds and installs may still use a per-action child.
 
-- **Direct inline:** decide or verify within the evidence budget: one
-  parallel batch of at most 3 calls and ~10k tokens of evidence, using
-  bounded searches and line ranges, never whole large files. Never force
-  delegation for a small targeted question; one mechanical,
-  already-understood file change with no research and no open design
-  decision; `git`/`gh` state commands.
-- **Delegated direct:** one read-only explorer child when the evidence is
-  larger, needs ~5+ sequential lookups or long-session mapping; one writer
-  child for 2+ non-trivial files. Reading that prepares a write and broad
-  research also delegate.
+### Delegation triggers
 
-File count, size or perceived risk never force a heavier route. Tests,
-builds and installs may still use a fresh per-action child without changing
-the route.
+Parent rules, never passed to a child. Each holds only when its condition
+truly holds; no trigger holds by default, and when in doubt work inline.
+Once one holds, call `delegate_task` before continuing, then re-evaluate
+the task size.
 
-### Mandatory delegation triggers
-
-Mandatory, not advisory. When one fires, stop and call `delegate_task`
-before continuing; executing past it inline is a routing defect even if the
-work succeeds. These are parent rules: never pass them to a child as
-permission to orchestrate.
-
-1. **Mapping (evidence budget):** evidence beyond one inline batch (at most
-   3 calls, ~10k tokens), ~5+ sequential lookups or long-session mapping ->
-   one read-only explorer child before deciding or writing. It returns a
-   handoff of at most ~2k tokens with `path:line` evidence; the parent
-   spot-checks once and never rereads the whole mapped evidence.
-2. **Writer (multi-file write rule):** 2 or more non-trivial files -> one
-   bounded writer child. A mechanical second-file edit does not fire it.
-3. **Preparation:** reading that prepares a write, broad research, or
-   context compression goes with or ahead of the writer.
+1. **Mapping:** beyond the evidence budget (at most 3 calls, ~10k tokens),
+   ~5+ sequential lookups or long-session mapping -> one read-only explorer
+   child returning at most ~2k tokens with `path:line` evidence; spot-check
+   once. Never explore files you will read anyway before writing inline.
+2. **Writer (named reason only):** one bounded writer per unit for (a) two
+   or more independent units of behavior (code, tests and docs together)
+   with disjoint edit surfaces, each several files or
+   roughly 100+ changed lines (a child spends minutes reading first), launched
+   together; or (b) the long-session backstop. Dependent or smaller units
+   run inline, one after another. Never for task size or file count.
+3. **Preparation:** reading that prepares a delegated write, and broad
+   research, go with that writer; an inline write reads inline.
 4. **Incident:** wrong `cwd`, accidental repository or worktree mutation,
-   failed merge recovery, confusing test command or environment workaround ->
-   stop writes, capture `git status`, diagnose separately, then apply only
-   confirmed recovery steps.
-5. **Long session:** at ~150k parent-context tokens, pause and delegate the
-   next bounded unit. The figure is advisory: Hermes does not measure or
-   enforce it, so never claim it was observed. Keep shell output in the
-   parent bounded to counts, `--stat`, `tail` or summaries.
-6. **Verification:** full suites, builds, and check commands beyond a
-   read-only check within the evidence budget go to a verifier child, unless the writer already ran them under
-   `## Verification`; how much verification a change gets follows its risk
-   tier (`hermes-odd:odd-delegation` section 3). The parent still re-runs one
-   reported command as a spot check before claiming done.
+   failed merge recovery or a confusing environment -> stop writes, capture
+   `git status`, diagnose separately, apply only confirmed recovery steps.
+5. **Long session:** at ~150k parent-context tokens (advisory; Hermes does
+   not measure it), delegate the next bounded unit. Bound shell output to
+   counts, `--stat`, `tail` or summaries.
+6. **Verification:** only a change whose Risk line names a high-risk item
+   gets an independent verifier child, after its own checks; size, an
+   unclear change or the writer's model never add one. Otherwise its
+   focused test and suite run inline (tiers: `hermes-odd:odd-delegation`
+   section 3). The parent re-runs one reported command before claiming done.
 7. **Route declaration:** for substantial work record the route per task
-   (inline or delegated) and the trigger evidence in the feature document.
+   and the trigger evidence in the feature document.
+
+**Risk line.** Close every code change with `Risk: item N (reason)` or
+`Risk: none`, per the high-risk list in `hermes-odd:odd-delegation`
+section 3 (item 1: only data or effects that cannot be rebuilt). A diff
+that changes shared code (options, parsers, helpers) other behavior uses
+is item 3.
 
 If `delegate_task` is unavailable, stop the complex work and say so; never
 silently continue inline.

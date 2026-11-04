@@ -40,8 +40,8 @@ Receipted review does not run on Hermes (see
 - **Always on:** one system prompt section, `hermes-odd-workflow` (about
   3.5k characters; a test caps it at 3,800 of the 4,000 Hermes allows per
   section and 8,000 across all plugins). It carries the ODD protocol, the
-  mandatory `delegate_task` triggers, the feature-tracking and resume
-  rules, the default test-first policy, blocking-question and language
+  conditional `delegate_task` triggers (none holds by default), the
+  high-risk list and Risk line, the feature-tracking and resume rules, the default test-first policy, blocking-question and language
   rules, and pointers to the skills below.
 - **Lazy skills** (loaded only on demand with `skill_view`; plugin skills
   never enter the always-on skills index):
@@ -50,8 +50,9 @@ Receipted review does not run on Hermes (see
     and the test-first policy, and pointers to the commit, delivery and
     review skills.
   - `hermes-odd:odd-delegation` — `delegate_task` mechanics, mission
-    template, allowed edit surfaces for writers, risk-proportionate
-    verification of a writer's work.
+    template, allowed edit surfaces for writers, the high-risk list and
+    risk-proportionate verification (an independent verifier only for a
+    named high-risk item).
   - `hermes-odd:odd-feature-tracking` — feature document template,
     Engram™ mirror (`mcp__engram__*` tools), resume protocol, `todo`
     projection.

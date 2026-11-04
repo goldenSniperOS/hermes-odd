@@ -76,10 +76,27 @@ class PromptSectionTests(unittest.TestCase):
             "odd/tasks/<feature>.md",
             "odd/<feature>/tasks",
             "evidence budget",
-            "2+ non-trivial files",
             "~150k",
         ]:
             self.assertIn(token, self.section)
+
+    def test_section_triggers_are_conditional(self) -> None:
+        """gentle-ai v4.2.0: no trigger holds by default; in doubt, work inline."""
+        self.assertIn("no trigger holds by default", self.section)
+        self.assertIn("in doubt, work inline", self.section)
+        self.assertNotIn("Mandatory delegation triggers", self.section)
+        self.assertNotIn("past one inline is a defect", self.section)
+
+    def test_section_writer_needs_a_named_reason(self) -> None:
+        self.assertIn("2+ independent units", self.section)
+        self.assertIn("~100+ changed lines", self.section)
+        self.assertIn("never task size or file count", self.section)
+        self.assertNotIn("2+ non-trivial files", self.section)
+
+    def test_section_verifier_only_for_named_high_risk_item(self) -> None:
+        self.assertIn("names a high-risk item", self.section)
+        self.assertIn("cannot be rebuilt", self.section)
+        self.assertNotIn("-> a verifier child", self.section)
         # T13: RDD references removed from the prompt section
         self.assertNotIn("RDD switch", self.section)
         self.assertNotIn("rdd-review", self.section)
@@ -169,6 +186,20 @@ class SkillFileTests(unittest.TestCase):
             self.assertIn(phrase, text)
         # The MCP instruction stays for setups where the tools reach the child.
         self.assertIn("`mcp__engram__mem_save`", text)
+
+    def test_odd_workflow_triggers_follow_v4_3(self) -> None:
+        text = (SKILLS_DIR / "odd-workflow" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("no trigger holds by default", text)
+        self.assertIn("roughly 100+ changed lines", text)
+        self.assertIn("cannot be rebuilt", text)
+        self.assertNotIn("non-trivial files", text)
+        self.assertNotIn("Mandatory, not advisory.", text)
+
+    def test_odd_delegation_verifier_only_for_named_item(self) -> None:
+        text = (SKILLS_DIR / "odd-delegation" / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("names the high-risk item", text)
+        self.assertNotIn("raises the tier", text)
+        self.assertNotIn("High or unclear", text)
 
     def test_no_skill_claims_rdd_on_hermes(self) -> None:
         """T13: upstream excludes Hermes from RDD; skills only offer advisory review."""
