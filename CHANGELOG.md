@@ -6,6 +6,24 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-04
+
+### Changed
+
+- Delegation triggers are conditional (gentle-ai v4.2.0, ported from the
+  v4.3.1 Hermes orchestrator and routing render): no trigger holds by
+  default, and in doubt the parent works inline. A writer child needs a
+  named reason: two or more independent units of behavior with disjoint
+  edit surfaces, each roughly 100+ changed lines, launched together, or the
+  long-session backstop; task size and file count never delegate, and the
+  old "2+ non-trivial files" writer trigger is gone. An independent verifier
+  child runs only for a change whose Risk line names a high-risk item;
+  otherwise the change's focused test and suite run inline, and a small
+  writer model no longer raises the tier. High-risk item 1 now covers only
+  data or effects that cannot be rebuilt. Applies to the prompt section,
+  `hermes-odd:odd-workflow` and `hermes-odd:odd-delegation` (which now
+  carries the high-risk list). The upstream pins are unchanged.
+
 ## [0.7.2] - 2026-10-29
 
 ### Fixed
