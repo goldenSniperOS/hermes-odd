@@ -6,6 +6,45 @@ and the project uses [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-16
+
+### Changed
+
+- Upstream re-pinned to gentle-ai `1ab243c` (v4.5.0 + 3) and gentle-shell
+  `a1c4463` (gentle-pi v4.8.0 + 10): every lock hash recomputed, the
+  `RenderRouting(model.AgentHermes)` canonical re-vendored, derived-from
+  markers moved, and the triage recorded in `upstream/SUPPORTED.md`.
+- Authorized work continues without asking per step: a pending child is a
+  wait, and only a real human decision, an explicit stop, a denial or a
+  spent limit stops the work it covers (gentle-ai #6145, gentle-shell
+  #3286). A short "yes" approves the immediately preceding concrete
+  proposal, never publish or destructive steps (#5850).
+- Task size is small or large by the resume test (understood, contained
+  risk, resumable from the request plus `git diff`); "substantial" is gone.
+  Small work gets no feature document, mirror or commits unless asked.
+- Writers: launched together in one turn, every launch carries
+  `## Allowed edit surfaces`, a rejected launch is repaired once, and
+  parallel writers share one tree with disjoint surfaces, a parent-owned
+  git and one seam check (#6070, #6084). Children resume without
+  re-reading, return compact reports and get only matching skills (#6090).
+- Verification by change kind; the verifier does not re-run the writer's
+  suite (#6072, gentle-shell #3101).
+- Feature tracking: the file is the source, the mirror is refreshed once
+  per task transition, no reconciliation scripts or replayed writes, and
+  the document is Specs / Tasks / Log with hand-off by reference (#6073).
+- Test-first adds one RED test per requested rule, a previous-behavior test
+  per touched command and a scratch differential check for shared code.
+- `hermes-odd:engram-protocol`: save once per request before the final
+  answer (#6069), resolve the project before the first read (#2022), and
+  keep `mem_save` content one plain string (#5663).
+- `hermes-odd:codegraph`: worktrees beside the repository root, the explicit
+  working directory is the init target, and `codegraph sync -q` runs before
+  CLI reads (#4151).
+- `hermes-odd:work-unit-commits`: reviewable ~400-line slices, a high-risk
+  unit gets its own commit, a user's line limit is a ceiling (#6071).
+- `hermes-odd:advisory-review-lenses` runs on an explicit request even when
+  no rule would offer it (#6091).
+
 ## [0.8.0] - 2026-11-04
 
 ### Changed

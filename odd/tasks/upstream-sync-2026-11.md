@@ -103,7 +103,7 @@ native review, Pi tools (`ask_user_choice`, codemode, `gentle_review*`) or
 - [x] T1 [S1,S2] Triage pin..main guidance diffs and map each to a hermes-odd target — inline/explore — no commit
 - [x] T2 [S1,S3] Port behavior rules (prompt + odd-* skills + engram-protocol), tests first — delegated (context backstop) — commit a21df73; RED 11/11, GREEN 423 OK, ruff clean; section 3455 / full 3789
 - [x] T3 [S2] Re-pin lock + SUPPORTED.md triage log — delegated (context backstop) — commit c3d4412; 423 OK, drift script clean
-- [ ] T2b [S1] Port Engram #2022/#5663 and CodeGraph #4151/12c1a157/e6a6e949/69da4962 guidance (found by T3 triage), tests first — inline — commit <this>
+- [x] T2b [S1] Port Engram #2022/#5663 and CodeGraph #4151/12c1a157/e6a6e949/69da4962 guidance (found by T3 triage), tests first — inline — commit 8f6ceea; RED 3/3, GREEN 426 OK, smoke OK
 - [ ] T4 [S4] Release prep v0.9.0, CI — inline — commit
 
 ## Log
