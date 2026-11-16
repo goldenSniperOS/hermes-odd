@@ -23,8 +23,10 @@ gentle-ai wrote into `SOUL.md`; `/odd-soul` moves it here.
 ## Worktree placement
 
 - Create Git worktrees that may need CodeGraph under the user's home
-  directory, preferably as a sibling:
-  `<repo-parent>/<repo-name>-worktrees/<worktree-name>`. Never put a
+  directory, as a sibling of the repository root:
+  `<repo-parent>/<repo-name>-worktrees/<worktree-name>`, where
+  `<repo-parent>` is the immediate parent directory of the repository root
+  (`~/Projects/Rust/foo` -> `~/Projects/Rust/foo-worktrees/<name>`). Never put a
   CodeGraph-dependent worktree under `/tmp` or `/var/tmp`; generic
   temporary-work guidance does not override this.
 - Every worktree needs its own `.codegraph/` index. Never copy, symlink or
@@ -49,7 +51,13 @@ gentle-ai wrote into `SOUL.md`; `/odd-soul` moves it here.
 
 ## Required order for structural questions
 
-1. Resolve the project root: `git rev-parse --show-toplevel || pwd`.
+1. Resolve the project root. For initialization the explicit working
+   directory is authoritative: check its own `.git` (directory or worktree
+   file) and `.codegraph/` before looking at ancestors, and never replace it
+   with an enclosing repository. If it is not a Git root, stop and explain
+   that it needs `git -C <cwd> init`; never retry initialization against the
+   parent, and never initialize Git just to answer a question. Only for an
+   already-selected repository use `git rev-parse --show-toplevel || pwd`.
 2. Confirm it is a real project or workspace. Do not ask before
    initializing CodeGraph in a real project. Never initialize it in `$HOME`,
    temporary directories or non-project folders (`codegraph init` refuses a
@@ -60,11 +68,15 @@ gentle-ai wrote into `SOUL.md`; `/odd-soul` moves it here.
    `codegraph init <project-root>` once (it builds the initial index).
 5. A missing `.codegraph/` is the trigger to initialize, not a reason to
    skip CodeGraph.
-6. After initialization use the MCP tools, or the read-only CLI commands
+6. Freshness: MCP auto-sync needs a running daemon with an active file
+   watcher; CLI intelligence commands read the index as-is and do not
+   auto-sync. Before CLI reads, and after edits, run
+   `codegraph sync -q <project-root>`. If sync fails, do not trust the index:
+   say so and use normal file tools. A present `.codegraph/` alone does not
+   prove freshness. For MCP, sync only when the watcher is disabled or stale
+   files do not refresh on their own.
+7. After initialization use the MCP tools, or the read-only CLI commands
    when the MCP tools are absent.
-7. After edits rely on the watcher's auto-sync. Run `codegraph sync` only
-   when the watcher is disabled or CodeGraph reports stale files that do not
-   refresh on their own.
 8. Fall back to ordinary file tools only after initialization or use
    fails, and say briefly why.
 

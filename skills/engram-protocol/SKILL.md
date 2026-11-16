@@ -61,9 +61,24 @@ flushes can only read: recall refuses their writes.
 
 ## Session start
 
-1. When the runtime gives a workspace directory, call
-   `mcp__engram__mem_current_project` with it and keep the project name for
-   every read and search.
+1. Before the first `mem_context`, `mem_search` or `mem_review`, call
+   `mcp__engram__mem_current_project` and wait for its result (never in
+   parallel). Pass the workspace directory as `cwd` only when its schema
+   accepts it. Apply the first matching case and stop there:
+   - the workspace is unknown, the returned `cwd` is missing or different,
+     or the call fails: skip the initial project-scoped reads and tell the
+     user Engram resolved a different or unknown directory;
+   - `available_projects` is non-empty or `project_source` is `ambiguous`:
+     ask the user to choose one value; it names a workspace, so never pass
+     it as `project`. Re-resolve only with that repository's directory as
+     `cwd`, else skip the initial reads;
+   - `project` is empty: skip the initial reads. Never invent a project
+     name and never fall back to an all-projects search;
+   - otherwise pass the exact returned `project` to every read and search.
+   Search outside that project only when the user explicitly asks to recall
+   across projects or from a named other project; that never changes the
+   current project. With the recall provider the project is injected:
+   skip this step.
 2. Use only a session id the runtime already registered. Never invent,
    derive or register one; when none is available, leave `session_id` out
    of the calls instead of guessing.
@@ -101,11 +116,14 @@ something? If yes, save it before your final answer.
 - `topic_key`: a stable key for a topic that evolves, such as
   `architecture/auth-model`.
 - `session_id`: only the registered one (see Session start).
-- `content`, four short parts:
+- `content` (required): one plain string, never an object or a list,
+  with four short parts inside it:
   - **What**: one sentence, what was done;
   - **Why**: what motivated it (request, bug, performance);
   - **Where**: files or paths affected;
   - **Learned**: gotchas and surprises (omit when none).
+  For example `"What: Fixed N+1 query in UserList. Why: 200ms overhead.
+  Where: internal/repo/user_list.go. Learned: preload() avoids it."`
 
 Prompt capture: leave `capture_prompt` unset for normal saves. Set it to
 `false` only for automated artifacts (generated reports, caches, registry

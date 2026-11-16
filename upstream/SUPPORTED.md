@@ -177,12 +177,12 @@ gentle-ai, not ported:
 | `6e02c6ed` destination repository contribution policy in `branch-pr` and `issue-creation` (#5907) | not portable (skills hermes-odd does not ship); `hermes-odd:chained-pr` already defers size exceptions to the destination repository (T15) |
 | Upstream docs, ODD evidence, baselines, tests, CI, bench: `docs(odd)`, `test(guidance)`, `test(agentguidance)` baselines, `ci`, `bench`, `qual`, `readme`, donations (`a9c446bd`) | not portable (upstream development tooling) |
 
-gentle-ai, pending (portable guidance outside the T2 port map):
+gentle-ai, ported in T2b (portable guidance outside the T2 port map):
 
 | Commits | Decision |
 |---|---|
-| Engram protocol: `1c76e86a` resolve the project before scoped search (#2022), `4bae61e2` `mem_save` content as a single JSON string (#5663) | pending: follow-up for `hermes-odd:engram-protocol` |
-| CodeGraph guidance: `bc27d9e0` nested worktree placement (#4151), `12c1a157` explicit initialization workspace, `e6a6e949`, `69da4962` fresh index (`codegraph sync -q`) before CLI reads | pending: follow-up for `hermes-odd:codegraph` |
+| Engram protocol: `1c76e86a` resolve the project before scoped search (#2022), `4bae61e2` `mem_save` content as a single JSON string (#5663) | ported (T2b): `hermes-odd:engram-protocol` Session start resolves the project first (unknown/ambiguous/empty cases skip initial reads, explicit cross-project recall only); `content` is one plain string with an example |
+| CodeGraph guidance: `bc27d9e0` nested worktree placement (#4151), `12c1a157` explicit initialization workspace, `e6a6e949`, `69da4962` fresh index (`codegraph sync -q`) before CLI reads | ported (T2b): `hermes-odd:codegraph` sibling worktree under the immediate repo parent, the explicit working directory is the init target (no parent retry), `codegraph sync -q <project-root>` before CLI reads |
 
 gentle-shell, ported:
 

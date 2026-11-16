@@ -641,5 +641,43 @@ class CanonicalProvenanceTests(unittest.TestCase):
             self.assertIn(token, workflow)
 
 
+class UpstreamSync202611LateTests(unittest.TestCase):
+    """T2b: Engram and CodeGraph guidance found by the T16 triage."""
+
+    def setUp(self) -> None:
+        self.engram = (SKILLS_DIR / "engram-protocol" / "SKILL.md").read_text(encoding="utf-8")
+        self.codegraph = (SKILLS_DIR / "codegraph" / "SKILL.md").read_text(encoding="utf-8")
+
+    def test_engram_resolves_project_before_first_read(self) -> None:
+        # gentle-ai 1c76e86a (#2022)
+        flat = " ".join(self.engram.split())
+        for token in (
+            "wait for its result",
+            "`available_projects`",
+            "never pass it as `project`",
+            "Never invent a project name",
+            "explicitly asks to recall",
+        ):
+            self.assertIn(token, flat)
+
+    def test_engram_content_is_one_string(self) -> None:
+        # gentle-ai 4bae61e2 (#5663)
+        flat = " ".join(self.engram.split())
+        self.assertIn("one plain string", flat)
+        self.assertIn('"What: ', flat)
+
+    def test_codegraph_worktree_init_target_and_fresh_cli_reads(self) -> None:
+        # gentle-ai bc27d9e0 (#4151), 12c1a157, e6a6e949, 69da4962
+        flat = " ".join(self.codegraph.split())
+        for token in (
+            "immediate parent directory of the repository root",
+            "working directory is authoritative",
+            "never retry initialization against the parent",
+            "codegraph sync -q <project-root>",
+            "do not auto-sync",
+        ):
+            self.assertIn(token, flat)
+
+
 if __name__ == "__main__":
     unittest.main()
