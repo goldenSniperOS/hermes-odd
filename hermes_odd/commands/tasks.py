@@ -33,8 +33,9 @@ DETAIL_TASK_CHARS = 110
 
 EMPTY_TEXT = (
     "No ODD feature documents found.\n"
-    "ODD creates odd/tasks/<feature>.md in the project for substantial work "
-    "(two or more implementation steps). Documents show up here once a Hermes "
+    "ODD creates odd/tasks/<feature>.md in the project for large work "
+    "(work that could not be resumed from the request and git diff alone). "
+    "Documents show up here once a Hermes "
     "session has run in that project, or when Hermes runs from inside it."
 )
 

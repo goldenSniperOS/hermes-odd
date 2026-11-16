@@ -34,32 +34,30 @@ SKILL_NAMESPACE = "hermes-odd"
 ODD_SECTION = """\
 # ODD workflow (hermes-odd)
 
-Organic Driven Development (ODD) runs on every request, unasked; run it, never just describe it:
-1. Authorize. Investigation, review, comparison and proposal-only requests stay read-only. Ambiguous or conditional change intent: one clarification, then stop. Paths outside the project root need consent naming the absolute path.
-2. Explore existing code and requirements proportionately.
-3. Resolve uncertainty: research only a named one; one focused question only for a real product decision, then stop; at most one read-only challenge of a high-consequence premise.
-4. Classify. Substantial = 2+ meaningful implementation steps or progress worth recovering. Small, understood work creates no task artifacts.
-5. Track before the first write (substantial only): create `odd/tasks/<feature>.md` and its Engram mirror `odd/<feature>/tasks` (`mcp__engram__mem_save`), then rebuild `todo` from its tasks. Unasked; name the document and task count.
-6. Implement task by task, test-first when a relevant runnable deterministic test and a clear expected outcome exist: observed RED, GREEN, refactor (tests merely existing do not qualify); else state the exception, run proportionate checks. Never invent RED/GREEN or a runner. Check off only observed outcomes; update file, mirror and `todo` on every transition. Commit each task as a work unit on the feature branch; record its id. Push, PR and merge are the user's.
-7. Close: verified outcome, every failed, skipped or pending check, next step. Verify per work-unit commit or PR slice, never per checkbox.
+Organic Driven Development (ODD) runs on every request unasked; run it, never just describe it:
+1. Authorize. Investigation, review, comparison and proposal-only requests stay read-only. Ambiguous or conditional intent: one clarification, then stop. A short "yes" approves the immediately preceding concrete proposal, never publish or destructive steps. Paths outside the project root need consent naming the absolute path.
+2. Explore code and requirements proportionately.
+3. Resolve uncertainty: research only a named one; ask only a real product decision (`clarify`, recommended first, else chat), then stop; at most one read-only challenge of a high-consequence premise.
+4. Classify. Small = understood, contained risk, resumable from request plus `git diff`; large only when that resume test fails, never by counts.
+5. Track before the first write (large only): create `odd/tasks/<feature>.md` and its Engram mirror `odd/<feature>/tasks` (`mcp__engram__mem_save`), then `todo`. Unasked; name it and its task count.
+6. Implement task by task, test-first when a relevant runnable deterministic test and a clear expected outcome exist: observed RED, GREEN, refactor (tests merely existing do not qualify); else state the exception, run proportionate checks. Never invent RED/GREEN or a runner. Check off only observed outcomes; the file is the source, mirror and `todo` follow each task transition. Commit each task as a work unit on the feature branch (record its id); push, PR, merge are the user's.
+7. Close: verified outcome, every failed, skipped or pending check, next step. Authorized steps continue unasked; a pending child is a wait; only a human decision, explicit stop, denial or spent limit stops the work it covers. Verify per work-unit commit or PR slice, never per checkbox.
 
-Resume: `mcp__engram__mem_context`, then project- and feature-scoped `mcp__engram__mem_search`, then `mcp__engram__mem_get_observation`, the task file; reconcile first.
+Resume: `mcp__engram__mem_context`, scoped `mcp__engram__mem_search`, `mcp__engram__mem_get_observation`, task file; reconcile first.
 
-Delegation triggers (`delegate_task`): no trigger holds by default; in doubt, work inline. Once one truly holds, delegate:
-- Mapping: past the evidence budget (at most 3 calls, ~10k tokens) or ~5+ sequential lookups -> a read-only explorer child (~2k tokens back, path:line); spot-check once.
-- Writer, only for a named reason: 2+ independent units (code+tests+docs), disjoint surfaces, ~100+ changed lines each, launched together, or the long-session backstop; never task size or file count. One writer per unit, with `## Allowed edit surfaces`.
-- Incident: wrong cwd, worktree, git or tooling -> stop writes, diagnose apart.
-- Long session: ~150k context tokens (advisory) -> delegate the next unit; bound shell output.
-- Verification: only a change that names a high-risk item gets an independent verifier child; else focused test and suite inline. High risk: (1) data or effects that cannot be rebuilt, (2) security, (3) changing consumed contracts, (4) concurrency, (5) delivery or CI, (6) no test catches a regression.
-Close code changes with `Risk: item N (reason)` or `Risk: none`. Children have no chat: send self-contained missions; verify reports.
+Delegation triggers (`delegate_task`): no trigger holds by default; in doubt, work inline. Once one holds, delegate:
+- Mapping: past the evidence budget (at most 3 calls, ~10k tokens) or ~5+ sequential lookups -> read-only explorer (~2k tokens, path:line); spot-check once.
+- Writer, only for a named reason: 2+ independent units (code+tests+docs), disjoint surfaces, ~100+ changed lines each, launched together in one turn, or the long-session backstop; never task size or file count. One per unit, each launch with `## Allowed edit surfaces`.
+- Incident (wrong cwd, worktree, git, tooling): stop writes, diagnose apart.
+- Long session: ~150k context tokens (advisory) -> delegate the next unit.
+- Verification: only a change that names a high-risk item gets a verifier child; else test and suite inline. High risk: (1) data or effects that cannot be rebuilt, (2) security, (3) changing consumed contracts, (4) concurrency, (5) delivery or CI, (6) untested change.
+Close code changes with `Risk: item N (reason)` or `Risk: none`. Children have no chat: self-contained missions; verify reports.
 
-Blocking questions: `clarify` (one decision, closed choices, recommended first), else plain chat; then stop.
-
-Language: reply in the user's language; code, comments, commits, docs and task files in English.
+Language: reply in the user's; code, commits, docs, task files in English.
 
 Formal SDD is not provided by this plugin.
 
-Load with `skill_view` by qualified name, never a same-named bare skill: substantial work hermes-odd:odd-workflow, hermes-odd:odd-feature-tracking; delegating hermes-odd:odd-delegation; commits, PRs hermes-odd:work-unit-commits, hermes-odd:chained-pr; dual review hermes-odd:judgment-day.
+Load with `skill_view` by qualified name, never a same-named bare skill: large work hermes-odd:odd-workflow, hermes-odd:odd-feature-tracking; delegating hermes-odd:odd-delegation; commits, PRs hermes-odd:work-unit-commits, hermes-odd:chained-pr; dual review hermes-odd:judgment-day.
 """
 
 

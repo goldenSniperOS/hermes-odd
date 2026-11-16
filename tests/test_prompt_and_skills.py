@@ -332,6 +332,164 @@ class PortableSkillTests(unittest.TestCase):
         self.assertIn("hermes-odd:chained-pr", workflow)
 
 
+def skill_text(name: str) -> str:
+    return (SKILLS_DIR / name / "SKILL.md").read_text(encoding="utf-8")
+
+
+def skill_part(name: str, heading: str) -> str:
+    """One ``## `` section of a skill, flattened."""
+    text = skill_text(name)
+    return flat(text[text.index(heading) :].split("\n## ", 1)[0])
+
+
+class UpstreamSync202611Tests(unittest.TestCase):
+    """Upstream sync 2026-11 (gentle-ai 1ab243c, gentle-shell a1c4463), T2."""
+
+    def setUp(self) -> None:
+        self.section = flat(build_odd_section())
+
+    def test_r1_authorized_work_continues(self) -> None:
+        # gentle-ai #6145 / gentle-shell #3286
+        self.assertIn("pending child is a wait", self.section)
+        self.assertIn("the work it covers", self.section)
+        workflow = flat(skill_text("odd-workflow"))
+        for phrase in (
+            "without per-step approval",
+            "pending child is a wait",
+            "Hedged wording is not a stop",
+            "never independent authorized work",
+            "blocks the completion claim",
+            "never cancels the objective",
+        ):
+            self.assertIn(phrase, workflow)
+        delegation = flat(skill_text("odd-delegation"))
+        self.assertNotIn("**Needs your decision**", delegation)
+        self.assertIn("stays `partial`", delegation)
+
+    def test_r2_informed_short_approval(self) -> None:
+        # gentle-ai #5850
+        self.assertIn("immediately preceding concrete proposal", self.section)
+        workflow = flat(skill_text("odd-workflow"))
+        for phrase in (
+            "immediately preceding concrete proposal",
+            "never re-ask",
+            "preference alone is not authorization",
+            "publish or destructive",
+            "needs to understand",
+        ):
+            self.assertIn(phrase, workflow)
+
+    def test_r3_task_size_replaces_substantial(self) -> None:
+        for phrase in ("resumable", "`git diff`", "large only when"):
+            self.assertIn(phrase, self.section)
+        workflow = flat(skill_text("odd-workflow"))
+        for phrase in ("Task size", "resume test", "`git diff` alone", "never decide"):
+            self.assertIn(phrase, workflow)
+        for path in [*SKILLS_DIR.glob("*/SKILL.md")]:
+            with self.subTest(skill=path.parent.name):
+                self.assertNotIn("substantial", path.read_text(encoding="utf-8").lower())
+        self.assertNotIn("substantial", self.section.lower())
+
+    def test_r4_writers_launch_together_with_surfaces(self) -> None:
+        # gentle-ai #6070 / #6084
+        self.assertIn("in one turn", self.section)
+        delegation = flat(skill_text("odd-delegation"))
+        for phrase in (
+            "in one turn",
+            "passes the full list again",
+            "repaired once",
+            "never resent unchanged",
+            "adds the path itself",
+            "the parent owns git",
+            "repository-wide formatters",
+            "one owner",
+            "one seam check",
+            "helpers",
+        ):
+            self.assertIn(phrase, delegation)
+        self.assertNotIn("Never run two writers in the same worktree", delegation)
+
+    def test_r5_verifier_works_by_change_kind(self) -> None:
+        # gentle-ai #6072 / gentle-shell #3101
+        verify = skill_part("odd-delegation", "## 3.")
+        for phrase in (
+            "change kind",
+            "does not re-run the writer's suite",
+            "`mktemp -d`",
+            "rejected command",
+            "at the baseline",
+            "become tests",
+        ):
+            self.assertIn(phrase, verify)
+
+    def test_r6_children_do_not_re_read_and_report_briefly(self) -> None:
+        # gentle-ai #6090 / gentle-shell #3092
+        delegation = flat(skill_text("odd-delegation"))
+        for phrase in (
+            "does not re-read",
+            "~2k tokens",
+            "never restating",
+            "`git status --short`",
+            "outside the worktree",
+            "no commit skill",
+        ):
+            self.assertIn(phrase, delegation)
+
+    def test_r7_file_is_the_source(self) -> None:
+        # gentle-ai #6073 / gentle-shell #3083
+        self.assertIn("file is the source", self.section)
+        tracking = flat(skill_text("odd-feature-tracking"))
+        for phrase in (
+            "file is the source",
+            "never author reconciliation scripts",
+            "never replay",
+            "once per task transition",
+            "## Specs",
+            "## Log",
+            "verbatim",
+            "`dropped`",
+            "`blocked`",
+            "read until `## Log`",
+        ):
+            self.assertIn(phrase, tracking)
+        self.assertLess(tracking.index("## Tasks"), tracking.index("## Log"))
+        delegation = flat(skill_text("odd-delegation"))
+        self.assertIn("read until `## Log`", delegation)
+        self.assertIn("which `S#`", delegation)
+
+    def test_r8_engram_saves_once_before_the_answer(self) -> None:
+        # gentle-ai #6069
+        when = skill_part("engram-protocol", "## When to save")
+        for phrase in ("saved once", "share a turn", "before your final answer"):
+            self.assertIn(phrase, when)
+        self.assertNotIn("right after", skill_text("engram-protocol"))
+
+    def test_r9_commit_slices_and_ceiling(self) -> None:
+        # gentle-ai #6071 + render step 6
+        text = skill_text("work-unit-commits")
+        commits = flat(text)
+        for phrase in ("ceiling", "its own commit", "high-risk item"):
+            self.assertIn(phrase, commits)
+        fm, _ = parse_frontmatter(text)
+        self.assertNotIn("implementation", fm["description"].lower())
+
+    def test_r10_tests_per_rule_and_preserved_behavior(self) -> None:
+        checks = skill_part("odd-workflow", "## 6.")
+        for phrase in (
+            "one RED test per requested rule",
+            "previous behavior",
+            "differential check",
+            "`mktemp -d`",
+            "help text",
+        ):
+            self.assertIn(phrase, checks)
+
+    def test_r11_explicit_request_runs_advisory_review(self) -> None:
+        # gentle-ai #6091
+        when = skill_part("advisory-review-lenses", "## When to run it")
+        self.assertIn("even when no rule", when)
+
+
 class FrontmatterParserTests(unittest.TestCase):
     def test_parses_nested_metadata_and_lists(self) -> None:
         fm, body = parse_frontmatter(

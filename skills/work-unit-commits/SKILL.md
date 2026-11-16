@@ -44,26 +44,35 @@ documentation change that stands on its own.
 
 ## 2. ODD task closure
 
-- Every substantial ODD task closes with at least one work-unit commit on the
-  feature branch. When the current branch is the default branch, create the
-  feature branch first, unless the user explicitly chose to commit to the
-  default branch (record that choice in the feature document).
+- Every tracked (large) ODD task closes with at least one work-unit commit
+  on the feature branch. When the current branch is the default branch,
+  create the feature branch first, unless the user explicitly chose to
+  commit to the default branch (record that choice in the feature document).
 - The message is a Conventional Commit (`feat`, `fix`, `docs`, `refactor`,
   `test`, `chore`, optional scope, `!` for breaking) that states the
   outcome, not the file list. Follow the repository's own commit rules when
   it has them.
 - Commit only after the task's outcome and checks were observed. Children
   never commit: the parent verifies a writer's report, then commits.
-- Record the commit id (short sha is enough) and the observed check results
-  under Evidence in `odd/tasks/<feature>.md`, then update the Engram mirror
-  and the `todo` projection (`hermes-odd:odd-feature-tracking`).
+- Record the commit id (short sha is enough) on the task's line and the
+  observed check results in the `## Log` of `odd/tasks/<feature>.md`, then
+  refresh the Engram mirror and the `todo` projection
+  (`hermes-odd:odd-feature-tracking`).
 - Push, pull request creation and merge are the user's decisions. A
   delegated or granted push policy is recorded in the feature document and
   followed exactly; nothing here grants it.
 - The review candidate is that work-unit commit, or the PR slice it belongs
   to: never a TODO checkbox and never the accumulated feature branch.
 
-## 3. The ~400-line heuristic (advisory)
+## 3. Slice size and the ~400-line heuristic (advisory)
+
+- Commit work units in reviewable slices of about 400 authored changed
+  lines, tests and docs alongside the behavior; the last slice closes the
+  feature.
+- A unit whose Risk line names a high-risk item gets its own commit, so
+  verification can take it alone.
+- A user's line limit is a ceiling, never an exact-count gate; never invent
+  acceptance gates the user did not ask for.
 
 - About 400 authored changed lines (additions plus deletions) per task is a
   planning heuristic only: not an acceptance criterion, cap, stop, split,

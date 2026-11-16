@@ -40,8 +40,7 @@ bounded unit and never orchestrate.
   work in the feature document and relaunch rather than claim recovery.
 - Child summaries are self-reports. Verify files, commits and command
   results yourself before telling the user.
-- Never run two writers in the same worktree. Parallel read-only mappers on
-  non-overlapping topics are fine.
+- Parallel read-only mappers on non-overlapping topics are fine.
 - One launch per distinct task: before calling `delegate_task`, check that
   the same role and mission were not already launched this turn.
 - The parent searches memory and passes what matters in `context`; children
@@ -54,17 +53,35 @@ bounded unit and never orchestrate.
   summary (the Key Learnings block); the parent saves them with `mem_save`
   after verifying them.
 
+### Parallel writers
+
+Independent units are launched together in one turn, as entries of one
+`delegate_task` call. Work in another repository goes in a fresh worktree
+from its main, never a checkout someone else may use. Units in the same
+local repository share the tree with disjoint edit surfaces:
+
+- the parent owns git; writers never stage, commit or run repository-wide
+  formatters, generators or installs;
+- a shared file has one owner, or the parent edits it at the end; units
+  that need the same file use separate worktrees;
+- the parent checks each writer's diff against its surface before
+  accepting it, then runs one seam check at the end (the full suite, once);
+- each mission names the existing helpers its unit must reuse for shared
+  state and the invariants they keep (ordering, uniqueness, validation,
+  normalization): parallel units cannot see each other.
+
 ### Mission template
 
-Write missions in English (translate the user's request; keep exact quotes,
-errors, filenames and commands verbatim). `goal` is one sentence; `context`
+Write missions in English, but hand requirements off by reference to the
+feature document's `## Specs`, never paraphrased; without a document,
+include the user's request verbatim. `goal` is one sentence; `context`
 carries everything else, because the child knows nothing of this chat:
 
 ```text
 Role: read-only mapper | bounded writer | verifier
 Repository: <absolute repo root>, branch <branch>
-Feature document: odd/tasks/<feature>.md, task <ID> (read it before edits)
-Intent and acceptance criteria: <from the feature document>
+Spec: odd/tasks/<feature>.md, T<n>, S<a>-S<b> (read until `## Log`;
+  report which `S#` you covered) | no document: <request verbatim>
 Relevant context: <paths, findings, errors>
 Skills to load before work: <exact skill_view names>
 Test-first: applies, runner <exact command> | exception: <which and why>
@@ -80,18 +97,25 @@ src/module/**
 
 Rules: do not commit, push, stage or run destructive git; do not edit
 outside the allowed surfaces; stop with status interaction_required when a
-human decision is needed, including a derived candidate list.
+human decision is needed, including a derived candidate list. When resumed
+or steered, do not re-read skills or specs already read unless they
+changed. Keep test scratch outside the worktree (`mktemp -d`); before
+returning, check `git status --short` for caches or scratch you created and
+name leftovers instead of deleting them.
 Test-first: when it applies, observe RED before implementing, then GREEN,
 then refactor with the focused tests green; for an exception, run the
 proportionate checks. Report only observed RED/GREEN; never invent a runner.
-Return: status completed|partial|blocked|interaction_required, summary,
+Return at most ~2k tokens, never restating the task, spec or unchanged
+files: status completed|partial|blocked|interaction_required, summary,
 files_changed, test-first (RED/GREEN observed, or the exception),
-validation (<command>: <observed result>), risks.
+validation (<command>: <observed result>), risks, leftovers.
 Close with a "## Key Learnings" block of 1-5 numbered standalone facts,
 or omit it when there is nothing reusable.
 ```
 
-Use `output_schema` only for fields you will read, e.g. `status` and
+Pass only skills that match the unit: no commit skill to a child that will
+not commit. A resumed or steered child does not re-read what it already
+read. Use `output_schema` only for fields you will read, e.g. `status` and
 `files_changed`. Omit the Key Learnings instruction when the child must return
 strict JSON. A failing command not named under Known environmental failures
 means `partial`, never `completed`.
@@ -99,7 +123,10 @@ means `partial`, never `completed`.
 ## 2. Allowed edit surfaces (mandatory for writers)
 
 The parent derives the surface before launching a writer: the files the
-change must touch plus directories where new files are authorized.
+change must touch plus directories where new files are authorized. Every
+new writer launch carries `## Allowed edit surfaces`; a steer or
+continuation that changes it passes the full list again (a replacement,
+not a union).
 
 - Exact repository-relative paths or narrow globs, one per line; never `.`,
   a bare repository root or an absolute path. Wrap paths containing spaces in
@@ -110,8 +137,13 @@ change must touch plus directories where new files are authorized.
 - If the surface cannot be derived, do not launch the writer and never ask
   the human to author paths. Present the derived candidate list as an
   approve/decline choice using the lossless blocking prompt rules in
-  `hermes-odd:odd-workflow`. Relay a writer's `interaction_required`
-  about surfaces the same way.
+  `hermes-odd:odd-workflow`.
+- A writer asking for another path: when it serves the authorized objective
+  and no other unit owns it, the parent adds the path itself and relaunches.
+  Ask the human only for new scope, another repository, a destructive step
+  or after a denial.
+- A rejected launch is repaired once for what the rejection names and is
+  never resent unchanged.
 
 ## 3. Verifying a change (risk-proportionate)
 
@@ -148,8 +180,29 @@ Count "unclear" as high only when a bounded look cannot tell whether items
   verifier at the feature's end; verify per unit only when that unit names
   a high-risk item.
 - Verifier blockers get one correction batch and one recheck limited to
-  them; blockers still open become one **Needs your decision** result.
+  them; with a blocker still open the unit stays `partial`, naming the
+  decision it needs, while independent authorized work continues.
 - The parent spot check (re-run one reported command before delivery) stays
   in every tier.
 - Record per task the tier applied and the checks observed. A verifier that
   cannot run is reported as unavailable, never as a pass.
+
+### Verifier mission by change kind
+
+The mission names the change kind and the baseline commit. The verifier
+does not re-run the writer's suite (the parent spot check covers it); it
+runs the spec's examples and the commands the parent authorized, plus its
+own probes from the request: boundaries, malformed input, exact errors and
+exit codes. Mutating probes run only against isolated state (a `mktemp -d`
+copy); stored data stays byte-identical after every rejected command.
+
+- External tool or environment: reproduce the real case with the real tool
+  and configuration; a mismatched fixture is not proof.
+- Prompt or contract text: compare each removed or rewritten sentence with
+  the baseline and report every lost qualifier or rule turned absolute.
+- A failure the user reported: run the user's exact command at the baseline
+  first; it counts as reproduced only when it fails there with the user's
+  error, and the fix is verified only when it then passes.
+
+It returns a verdict per `S#`, and its probes as ready-to-add regression
+tests; they become tests through the writer, never written by the verifier.

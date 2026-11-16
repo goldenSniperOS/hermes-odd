@@ -73,7 +73,7 @@ flushes can only read: recall refuses their writes.
 
 ## When to save (proactively, without being asked)
 
-Call `mcp__engram__mem_save` right after any of these:
+Call `mcp__engram__mem_save` without being asked after any of these:
 
 - an architecture or design decision;
 - a team convention, workflow change or naming/structure pattern;
@@ -85,8 +85,12 @@ Call `mcp__engram__mem_save` right after any of these:
 - a user preference or constraint;
 - a significant issue, PR or tracker artifact created or updated.
 
+A request with several fixes is saved once, when the request is done,
+unless one fix has a non-obvious root cause worth its own entry. The save
+may share a turn with other tool calls; it needs no turn of its own.
+
 After every task ask yourself: did I decide, fix, learn or establish
-something? If yes, save it now.
+something? If yes, save it before your final answer.
 
 ## What to save (structure)
 

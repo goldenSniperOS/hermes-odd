@@ -16,15 +16,17 @@ metadata:
 
 # ODD feature tracking for Hermes
 
-Substantial authorized implementation keeps three views of one plan:
+Large authorized implementation (task size in `hermes-odd:odd-workflow`
+section 3: the resume test fails) keeps three views of one plan. The file
+is the source; the other two are projections of it:
 
 | View | Where | Role |
 |---|---|---|
-| Feature document | `odd/tasks/<feature>.md` in the repository | durable authority |
+| Feature document | `odd/tasks/<feature>.md` in the repository | the source and the spec children read |
 | Engram mirror | topic `odd/<feature>/tasks`, current project | recovery copy |
 | `todo` list | Hermes session | visible projection only |
 
-Small or read-only work gets none of them.
+Small or read-only work gets none of them unless the user asks.
 
 ## Tool names (Hermes)
 
@@ -59,7 +61,7 @@ say so and mark the mirror pending; never claim persistence.
 
 ## When to create it
 
-After exploration, when the work is substantial and implementation is
+After exploration, when the task is large and implementation is
 authorized, create the document before the first source write. No
 permission prompt for tasks or storage. Tell the user in one line which
 document was created and how many tasks it holds.
@@ -69,66 +71,83 @@ the whole feature; never overwrite another feature's document.
 
 ## Feature document template
 
-One document per feature; no separate plan file or topic.
+One document per feature; no separate plan file or topic. Fixed order,
+stable content first and the growing log last:
 
 ```markdown
 # Feature: <feature name>
 
-## Objective
-## Problem
-## Why
-## Scope
-## Non-goals
-## Constraints
+<2-3 lines: objective, branch, delivery strategy, test runner>
+
+## Specs
+- S1 "<the user's exact words, errors and examples, verbatim>" — scope,
+  acceptance criteria, checks
+- S2 ...
+
 ## Tasks
-- [ ] T1 <behavior-level task> (route: inline|delegated; trigger: <evidence>)
-- [ ] T2 ...
-## Acceptance criteria
-## Checks
-<test-first: runner and observed RED/GREEN, or the exception and why;
-verification tier; applicable check commands>
+- [ ] T1 [S1] <behavior-level task> — route: inline|delegated (trigger:
+  <evidence>) — commit: <sha> or RED/GREEN evidence
+- [ ] T2 [S2] ...
+
 ## Delivery
-<strategy, forecast of authored changed lines, running count, slice boundaries;
+<forecast of authored changed lines, running count, slice boundaries;
 see hermes-odd:chained-pr and hermes-odd:work-unit-commits>
-## Progress
-<dated entries; concise rationale for meaningful accepted changes>
-## Evidence
-<commit ids and observed check results per task>
+
 ## Next step
+<one short paragraph>
+
+## Log
+- L1 <the user's original request, verbatim>
+- L2 <date> <a user correction verbatim, evidence, decision or progress>
 ```
 
 Rules:
 
-- Stable task IDs (`T1`, `T2`, ...). Never renumber completed tasks.
+- `## Specs` numbers the user's requirements as `S#` and quotes their
+  strings, error messages, commands and examples verbatim in the user's
+  language; never summarize them and never add requirements nobody asked
+  for (mark assumptions as assumptions).
+- A requirement change appends its verbatim `## Log` entry, rewrites only
+  the affected `S#` and reopens only its linked task. Keep valid completed
+  and unrelated work; findings alone never expand scope.
+- Stable task IDs (`T1`, `T2`, ...). Never renumber completed tasks. An
+  obsolete task is marked `dropped`; one waiting on something external is
+  `blocked` with its unblock condition.
 - Check a box only after its outcome and checks were observed. Record
   failed, skipped, unavailable or pending checks honestly. A checkbox grants
   no approval or review receipt.
-- Accepted user, review or verification changes update intent and tasks:
-  keep valid completed and unrelated work, add genuinely new tasks, reopen
-  invalidated ones with a reason, revise their checks. Findings alone never
-  expand scope; new business scope needs user authorization.
-- Routine corrections stay with their task; no exhaustive decision journal.
-- The parent merges bounded child results; a child's partial view never
-  replaces the whole document.
+- Routine corrections stay brief; no exhaustive decision journal.
+- Edit the file with targeted edits, never a whole-file rewrite. The parent
+  merges bounded child results; a child's partial view never replaces the
+  whole document.
+- Hand off by reference: `Spec: odd/tasks/<feature>.md, T2, S3-S4`; the
+  child must read until `## Log` before edits and report which `S#` it
+  covered.
 
 ## Mirror protocol
 
-1. Write the file first.
+1. Write the file first; the file is the source.
 2. Mirror the **full current document** plus its repository-relative
    locator, not a summary:
    `mcp__engram__mem_save(title="ODD tasks: <feature>", type="architecture",
    topic_key="odd/<feature>/tasks", project="<project>",
    content="Locator: odd/tasks/<feature>.md\n\n<full document>")`.
-3. Read both back (the file, and `mem_search` + `mem_get_observation`); the
-   two writes are not atomic.
-4. If Engram is unavailable, keep the local progress, note "mirror pending"
-   in Progress, continue safe work, and resync when it returns.
-5. If a file write is unsafe or unavailable, keep existing state and report.
-6. On irreconcilable edits keep both versions and ask only about the real
+3. Read both back with the normal read tool (the file, and `mem_search` +
+   `mem_get_observation`); the two writes are not atomic, but never author
+   reconciliation scripts or gates for them.
+4. After a failed or partial sync, check which writes already applied and
+   continue from there; never replay an applied write. A mirror that differs
+   from the file is refreshed from the file, never a blocker.
+5. If Engram is unavailable, keep the local progress, log "mirror pending",
+   continue safe work, and resync when it returns.
+6. If a file write is unsafe or unavailable, keep existing state and report.
+7. On irreconcilable edits keep both versions and ask only about the real
    conflict; never silently prefer the newer timestamp.
 
-Update file and mirror after every task transition and material plan
-change, in the same turn.
+Refresh the mirror once per task transition (a task starts, finishes, is
+blocked, reopened or dropped), on a material plan change, and at close.
+`## Log` entries between those points go to the file only and reach the
+mirror at the next one.
 
 ## Resume protocol
 
@@ -146,8 +165,8 @@ not permission to overwrite surviving progress. Memories flagged
 them; never mark them reviewed without explicit user confirmation.
 
 Before implementation or resume the parent reads both the file and the full
-observation, reconciles them, and passes the locator, task IDs, intent,
-allowed scope and checks to children, who read the document before edits.
+observation, reconciles them, and passes the locator, task IDs and linked
+`S#` to children, who read the document until `## Log` before edits.
 
 ## `todo` projection
 
@@ -157,10 +176,10 @@ Hermes `todo(todos=[{id, content, status, parent?}], merge=false|true)`:
   source write, rebuild the list with `merge=false` from the feature tasks:
   `id` = task ID, `content` = `"T1 <title>"`.
 - Status map: `[x]` -> `completed`; the task being worked -> `in_progress`
-  (only one at a time); open -> `pending`; dropped or superseded ->
-  `cancelled`.
-- On each transition update the file, the mirror and the list together;
-  use `merge=true` for single-item changes.
+  (only one at a time); open or `blocked` -> `pending`; `dropped` or
+  superseded -> `cancelled`.
+- On each task transition update the list from the file, with `merge=true`
+  for single-item changes.
 - The list is session state. A cleared or replayed list never deletes or
   replaces the durable document or mirror; rebuild it from the file on
   resume.

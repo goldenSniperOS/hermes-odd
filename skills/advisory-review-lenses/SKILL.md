@@ -29,7 +29,8 @@ receipt". `hermes-odd:judgment-day` reuses the finding block below.
 Only when the user asks for a review, or accepts your offer for a medium or
 high risk commit (auth, data, money, migrations, concurrency, public APIs,
 security-sensitive code). Offer it once with `clarify`, recommended choice
-first; never for small, low-risk work. For a dual or adversarial review load
+first; never for small, low-risk work. A user's explicit request runs it
+even when no rule here would offer it. For a dual or adversarial review load
 `hermes-odd:judgment-day` instead; never run both on the same commit.
 
 ## How to run it

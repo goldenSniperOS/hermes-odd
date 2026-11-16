@@ -90,7 +90,7 @@ against the diff yourself before counting it. Then build one ledger:
 Keep stable ledger ids (`L-001`, ...), each with location, claim, severity,
 evidence, causality and which judge reported it. The ledger is frozen for
 the rest of the judgment: later rounds may add fix-caused defects, never
-re-open or reword earlier rows. For substantial work, record the ledger
+re-open or reword earlier rows. For large tracked work, record the ledger
 summary and target identity in the ODD feature document.
 
 No confirmed findings and no contradictions -> `JUDGMENT: APPROVED`.
