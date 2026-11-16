@@ -10,11 +10,11 @@ metadata:
     category: workflow
     related_skills: [odd-workflow, odd-feature-tracking]
 ---
-<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/components/agentguidance/routing.go -->
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/orchestrator-delegation.md -->
-<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/skills/_shared/odd-orchestrator-sections.md -->
-<!-- derived-from: gentle-ai@5140c5f55baf91763198eb0bfca019c015e3b015 internal/assets/hermes/orchestrator.md -->
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/agents/gentle-ai-worker.md -->
+<!-- derived-from: gentle-ai@1ab243ca426d55dee64cf0ba693d0745cb1146c2 internal/components/agentguidance/routing.go -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/orchestrator-delegation.md -->
+<!-- derived-from: gentle-ai@1ab243ca426d55dee64cf0ba693d0745cb1146c2 internal/assets/skills/_shared/odd-orchestrator-sections.md -->
+<!-- derived-from: gentle-ai@1ab243ca426d55dee64cf0ba693d0745cb1146c2 internal/assets/hermes/orchestrator.md -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/agents/gentle-ai-worker.md -->
 
 # ODD delegation for Hermes
 

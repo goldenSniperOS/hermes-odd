@@ -10,11 +10,11 @@ metadata:
     category: workflow
     related_skills: [judgment-day, odd-delegation]
 ---
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/agents/review-risk.md -->
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/agents/review-resilience.md -->
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/agents/review-readability.md -->
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/agents/review-reliability.md -->
-<!-- derived-from: gentle-shell@1f345106ff2931383451d4e05ec76d1259471884 assets/chains/4r-review.chain.md -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/agents/review-risk.md -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/agents/review-resilience.md -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/agents/review-readability.md -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/agents/review-reliability.md -->
+<!-- derived-from: gentle-shell@a1c4463f31eef337bffcbb057e2638a1947c5a72 assets/chains/4r-review.chain.md -->
 
 # 4R advisory review (no receipt)
 
