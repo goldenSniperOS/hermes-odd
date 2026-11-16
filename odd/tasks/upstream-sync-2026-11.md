@@ -104,11 +104,12 @@ native review, Pi tools (`ask_user_choice`, codemode, `gentle_review*`) or
 - [x] T2 [S1,S3] Port behavior rules (prompt + odd-* skills + engram-protocol), tests first — delegated (context backstop) — commit a21df73; RED 11/11, GREEN 423 OK, ruff clean; section 3455 / full 3789
 - [x] T3 [S2] Re-pin lock + SUPPORTED.md triage log — delegated (context backstop) — commit c3d4412; 423 OK, drift script clean
 - [x] T2b [S1] Port Engram #2022/#5663 and CodeGraph #4151/12c1a157/e6a6e949/69da4962 guidance (found by T3 triage), tests first — inline — commit 8f6ceea; RED 3/3, GREEN 426 OK, smoke OK
-- [ ] T4 [S4] Release prep v0.9.0, CI — inline — commit
+- [x] T4 [S4] Release prep v0.9.0, CI — inline — commit eee452c; 426 OK, smoke OK, ruff clean; CI green (3.11, 3.12); tag v0.9.0 released with 4 assets
 
 ## Log
 
 - L1 (user, 2026-11-16): "Dale arranca, actualicemos el port al dia de hoy con todo lo nuevo."
+- L6 Feature closed 2026-11-16: v0.9.0 released. Follow-ups outside scope: hermes-recall prompt sync for #6069/#2022; live install update (`hermes plugins update hermes-odd`).
 - L5 T3 done (c3d4412). Worker flagged portable Engram/CodeGraph changes outside the T2 map; per L1 "con todo lo nuevo" they are ported as T2b, not marked not portable.
 - L4 T2 done 2026-11-16 (a21df73). Full render ceiling is 3800 (tests/test_setup.py:189), not 4000: ~11 chars left.
 - L3 T1 done 2026-11-16: explorer mapping (task mwjs1uwg-2-hbcs) -> T2 port map above.
